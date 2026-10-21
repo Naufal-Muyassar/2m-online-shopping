@@ -1,0 +1,6 @@
+# Sesuaikan handle tim
+/services/ml-api/   @ds-team
+/data-science/      @ds-team
+/contracts/         @ds-team @backend-team
+/apps/              @app-team
+/db/                @backend-team

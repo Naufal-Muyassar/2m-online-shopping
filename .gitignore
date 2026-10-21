@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+data-science/data/
+services/ml-api/models/*
+!services/ml-api/models/.gitkeep
+__pycache__/
+.venv/
