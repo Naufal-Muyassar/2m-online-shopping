@@ -1,5 +1,8 @@
 import { BRANCH, DEMO_ORDERS, DELIVERY_FEE, PRODUCTS, USERS } from "./constants";
 
+// Every demo product starts with this many units in the stock_snapshots stand-in.
+const DEMO_STOCK_QTY = 200;
+
 export interface Db {
   query(text: string, params?: unknown[]): Promise<{ rows: any[] }>;
 }
@@ -79,6 +82,7 @@ export async function seedBase(db: Db, passwordHash: string): Promise<void> {
       `INSERT INTO branch_products (branch_id, product_id, price, display_order) VALUES ($1,$2,$3,$4)`,
       [branch, productId, price, displayOrder++],
     );
+    await db.query(`INSERT INTO stock_snapshots (branch_id, product_id, qty) VALUES ($1,$2,$3)`, [branch, productId, DEMO_STOCK_QTY]);
   }
 }
 

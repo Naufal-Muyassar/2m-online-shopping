@@ -58,6 +58,8 @@ export interface OrderUpdate {
   setReadyAt: boolean;
   setDeliveredAt: boolean;
   setReturnPending: boolean;
+  setInvoice?: { id: string; url: string; expiresAt: Date };
+  setPaymentFeeActual?: number;
 }
 
 // The only statement in the codebase that writes orders.status.
@@ -67,6 +69,14 @@ export async function updateOrderStatus(tx: Tx, u: OrderUpdate): Promise<OrderRo
   if (u.setCourierId !== undefined) {
     params.push(u.setCourierId);
     sets.push(`assigned_courier_id = $${params.length}`);
+  }
+  if (u.setInvoice) {
+    params.push(u.setInvoice.id, u.setInvoice.url, u.setInvoice.expiresAt);
+    sets.push(`invoice_id = $${params.length - 2}`, `invoice_url = $${params.length - 1}`, `invoice_expires_at = $${params.length}`);
+  }
+  if (u.setPaymentFeeActual !== undefined) {
+    params.push(u.setPaymentFeeActual);
+    sets.push(`payment_fee_actual = $${params.length}`);
   }
   if (u.setReadyAt) sets.push("ready_at = now()");
   if (u.setDeliveredAt) sets.push("delivered_at = now()");

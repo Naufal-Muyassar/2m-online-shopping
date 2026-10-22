@@ -14,6 +14,17 @@ services:
       interval: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    # noeviction: a counter must never be silently dropped; Postgres can rebuild it, but not while checkouts run.
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
   minio:
     image: minio/minio
     command: server /data --console-address ":9001"

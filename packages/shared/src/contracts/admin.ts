@@ -4,6 +4,20 @@ import { COURIER_STATUSES, ORDER_STATUSES } from "../constants";
 // super_admin names the branch explicitly; branch_admin's comes from the token
 export const adminBranchQuerySchema = z.object({ branch_id: z.string().uuid().optional() });
 
+// GET /branches (public; also feeds the super_admin branch switcher)
+export const branchesResponseSchema = z.object({
+  branches: z.array(
+    z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      lat: z.number(),
+      lng: z.number(),
+      service_radius_m: z.number().int(),
+    }),
+  ),
+});
+export type BranchesResponse = z.infer<typeof branchesResponseSchema>;
+
 // GET /admin/orders
 export const adminOrderSchema = z.object({
   id: z.string().uuid(),
@@ -24,6 +38,7 @@ export type AdminOrdersResponse = z.infer<typeof adminOrdersResponseSchema>;
 export const adminCourierSchema = z.object({
   user_id: z.string().uuid(),
   name: z.string(),
+  partner_name: z.string(),
   status: z.enum(COURIER_STATUSES),
   last_status_change: z.string(),
   last_ping_at: z.string().nullable(),

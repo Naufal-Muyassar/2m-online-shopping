@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+.git
+.env
+.env.*
+!.env.example
+apps/admin-web
+apps/courier-pwa
+apps/customer-web
+services
+data-science
+docs

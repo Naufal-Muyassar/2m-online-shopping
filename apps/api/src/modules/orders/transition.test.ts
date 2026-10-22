@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { randomUUID } from "node:crypto";
 import { ORDER_STATUSES, findTransition, type Actor, type OrderStatus } from "@2m/shared";
 import { pool, withTransaction, type Tx } from "../../shared/db";
 import { AppError } from "../../shared/errors";
@@ -44,6 +45,7 @@ async function attempt(tx: Tx, fx: Fixture, from: OrderStatus, to: OrderStatus, 
         reason: to === "FAILED" ? "CUSTOMER_UNREACHABLE" : "test reason",
         note: "test note",
         courier_id: fx.courierId,
+        invoice: { id: `inv-${randomUUID()}`, url: "https://checkout.test/x", expires_at: new Date(Date.now() + 900_000) },
       },
     });
     return "ok";
@@ -52,6 +54,22 @@ async function attempt(tx: Tx, fx: Fixture, from: OrderStatus, to: OrderStatus, 
     throw err;
   }
 }
+
+describe("PENDING_PAYMENT", () => {
+  it("requires invoice data", async () => {
+    const rollback = new Error("rollback");
+    await withTransaction(async (tx) => {
+      const fx = await createFixture(tx);
+      const orderId = await insertOrder(tx, fx, "CREATED");
+      await expect(
+        transition(tx, { orderId, to: "PENDING_PAYMENT", actor: { id: null, role: "system" } }),
+      ).rejects.toMatchObject({ code: "VALIDATION_ERROR", details: { missing: ["invoice_url"] } });
+      throw rollback;
+    }).catch((err) => {
+      if (err !== rollback) throw err;
+    });
+  });
+});
 
 let fx: Fixture;
 describe("concurrent transitions", () => {

@@ -17,6 +17,15 @@ export const loginRequestSchema = z.object({
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
+// POST /auth/register (customers only; responds with LoginResponse)
+export const registerRequestSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  phone: z.string().trim().regex(/^\+?[0-9]{8,16}$/, "Nomor telepon tidak valid"),
+  email: z.string().trim().email().optional(),
+  password: z.string().min(8).max(100),
+});
+export type RegisterRequest = z.infer<typeof registerRequestSchema>;
+
 export const loginResponseSchema = z.object({
   access_token: z.string(),
   user: authUserSchema,

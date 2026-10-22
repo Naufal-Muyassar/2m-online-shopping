@@ -1,0 +1,90 @@
+name: deploy-api
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/**"
+      - "db/**"
+      - "infra/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-api.yml"
+
+concurrency: deploy-api
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/2m-api
+
+jobs:
+  test:
+    uses: ./.github/workflows/app-check.yml
+    with:
+      filter: api
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          API_IMAGE: ${{ env.IMAGE }}:${{ github.sha }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: GHCR_USER,GHCR_TOKEN,API_IMAGE
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /opt/sembako
+            git fetch origin main && git reset --hard origin/main
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            set -a; . ./.env; set +a
+            export API_IMAGE
+            C="docker compose -f infra/docker/compose.prod.yml"
+            echo "$API_IMAGE" > .previous_image.new
+            [ -f .current_image ] && cp .current_image .previous_image || true
+            $C pull
+            $C up -d postgres
+            $C run --rm --no-deps api node --import tsx scripts/db.ts migrate
+            $C up -d --remove-orphans
+            for i in $(seq 1 30); do
+              if curl -fsS http://localhost/healthz >/dev/null 2>&1 && \
+                 [ "$($C ps -q api | xargs docker inspect -f '{{.State.Health.Status}}')" = "healthy" ]; then
+                mv .previous_image.new .current_image
+                echo "deploy healthy"; exit 0
+              fi
+              sleep 5
+            done
+            echo "api unhealthy after deploy" >&2
+            $C logs --tail=100 api >&2
+            exit 1

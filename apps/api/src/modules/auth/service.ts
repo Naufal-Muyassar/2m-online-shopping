@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import type { AuthUser } from "@2m/shared";
+import type { AuthUser, RegisterRequest } from "@2m/shared";
 import { env } from "../../config/env";
 import { pool, withTransaction } from "../../shared/db";
 import { AppError } from "../../shared/errors";
@@ -37,6 +37,27 @@ export async function login(identifier: string, password: string, userAgent: str
   const user = await repo.findUserByIdentifier(pool, identifier);
   if (!user || !user.is_active || !(await bcrypt.compare(password, user.password_hash))) throw invalidCredentials();
 
+  const refreshToken = newRefreshToken();
+  await repo.insertSession(pool, {
+    userId: user.id,
+    tokenHash: hashToken(refreshToken),
+    ttlDays: env.REFRESH_TOKEN_TTL_DAYS,
+    userAgent,
+  });
+  return { accessToken: signAccess(user), refreshToken, user: toUser(user) };
+}
+
+export async function register(input: RegisterRequest, userAgent: string | null) {
+  const passwordHash = await bcrypt.hash(input.password, 10);
+  let user: repo.UserRow | null;
+  try {
+    user = await repo.insertCustomer(pool, { ...input, email: input.email ?? null, passwordHash });
+  } catch (err) {
+    if ((err as { code?: string }).code === "23505") {
+      throw new AppError(409, "ACCOUNT_EXISTS", "Phone number or email is already registered");
+    }
+    throw err;
+  }
   const refreshToken = newRefreshToken();
   await repo.insertSession(pool, {
     userId: user.id,

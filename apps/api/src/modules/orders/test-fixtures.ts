@@ -49,6 +49,14 @@ export async function createFixture(db: Db): Promise<Fixture> {
   return { branchId, addressId, courierId: users.courier, users };
 }
 
+export async function giveStock(db: Db, branchId: string, productId: string, qty: number): Promise<void> {
+  await db.query(
+    `INSERT INTO stock_snapshots (branch_id, product_id, qty) VALUES ($1, $2, $3)
+     ON CONFLICT (branch_id, product_id) DO UPDATE SET qty = EXCLUDED.qty, updated_at = now()`,
+    [branchId, productId, qty],
+  );
+}
+
 export async function insertOrder(db: Db, fx: Fixture, status: OrderStatus): Promise<string> {
   const assigned = status === "ASSIGNED" || status === "ON_DELIVERY";
   const id = (

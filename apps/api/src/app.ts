@@ -9,9 +9,14 @@ import { courierRoutes } from "./modules/courier/routes";
 import { adminRoutes } from "./modules/admin/routes";
 import { eventsRoutes } from "./modules/events/routes";
 import { branchesRoutes } from "./modules/branches/routes";
+import { cartRoutes } from "./modules/cart/routes";
+import { addressRoutes } from "./modules/address/routes";
+import { pricingRoutes } from "./modules/pricing/routes";
+import { webhooksRoutes } from "./modules/payments/routes";
 
 export function createApp() {
   const app = express();
+  app.use("/api/v1/webhooks", webhooksRoutes);
   app.use(express.json());
 
   app.get(
@@ -30,6 +35,9 @@ export function createApp() {
   v1.use("/admin", adminRoutes);
   v1.use("/events", eventsRoutes);
   v1.use("/branches", branchesRoutes);
+  v1.use("/cart", cartRoutes);
+  v1.use("/addresses", addressRoutes);
+  v1.use("/calculate-price", pricingRoutes);
   app.use("/api/v1", v1);
 
   app.use(notFoundHandler);

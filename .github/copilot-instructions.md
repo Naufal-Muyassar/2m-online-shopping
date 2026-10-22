@@ -58,7 +58,7 @@ db/{migrations,seeds,metrics}   infra/{docker,nginx,scripts}   docs/{adr,runbook
 
 | From → To | Allowed actor | Requires |
 |---|---|---|
-| CREATED → PENDING_PAYMENT | system | invoice data (enforced once payments exist) |
+| CREATED → PENDING_PAYMENT | system | invoice data (id, url, expires_at) |
 | CREATED → CANCELLED | system, customer | reason |
 | PENDING_PAYMENT → PAID | system, super_admin (demo "force paid", audited) | – |
 | PENDING_PAYMENT → CANCELLED | system, customer | reason |

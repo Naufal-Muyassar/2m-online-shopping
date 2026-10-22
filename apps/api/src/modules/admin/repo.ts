@@ -44,6 +44,7 @@ export async function listBoardOrders(db: Pool, branchId: string): Promise<Admin
 interface AdminCourierRow {
   user_id: string;
   name: string;
+  partner_name: string;
   status: AdminCourier["status"];
   last_status_change: Date;
   last_ping_at: Date | null;
@@ -54,10 +55,11 @@ interface AdminCourierRow {
 
 export async function listBranchCouriers(db: Pool, branchId: string): Promise<AdminCourier[]> {
   const res = await db.query<AdminCourierRow>(
-    `SELECT c.user_id, u.name, c.status, c.last_status_change, c.last_ping_at,
+    `SELECT c.user_id, u.name, p.name AS partner_name, c.status, c.last_status_change, c.last_ping_at,
             o.id AS order_id, o.code AS order_code, o.status AS order_status
      FROM couriers c
      JOIN users u ON u.id = c.user_id
+     JOIN courier_partners p ON p.id = c.partner_id
      LEFT JOIN LATERAL (
        SELECT id, code, status FROM orders
        WHERE assigned_courier_id = c.user_id
@@ -71,6 +73,7 @@ export async function listBranchCouriers(db: Pool, branchId: string): Promise<Ad
   return res.rows.map((r) => ({
     user_id: r.user_id,
     name: r.name,
+    partner_name: r.partner_name,
     status: r.status,
     last_status_change: r.last_status_change.toISOString(),
     last_ping_at: r.last_ping_at?.toISOString() ?? null,

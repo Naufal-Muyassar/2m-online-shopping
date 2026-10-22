@@ -1,5 +1,12 @@
 import { Router, type Response } from "express";
-import { loginRequestSchema, type LoginResponse, type MeResponse, type RefreshResponse } from "@2m/shared";
+import {
+  loginRequestSchema,
+  registerRequestSchema,
+  type LoginResponse,
+  type MeResponse,
+  type RefreshResponse,
+  type RegisterRequest,
+} from "@2m/shared";
 import { env } from "../../config/env";
 import { asyncHandler, validate } from "../../shared/http";
 import { authenticate } from "./middleware";
@@ -34,6 +41,17 @@ authRoutes.post(
     setRefreshCookie(res, result.refreshToken);
     const body: LoginResponse = { access_token: result.accessToken, user: result.user };
     res.json(body);
+  }),
+);
+
+authRoutes.post(
+  "/register",
+  validate(registerRequestSchema),
+  asyncHandler(async (req, res) => {
+    const result = await service.register(req.body as RegisterRequest, req.get("user-agent") ?? null);
+    setRefreshCookie(res, result.refreshToken);
+    const body: LoginResponse = { access_token: result.accessToken, user: result.user };
+    res.status(201).json(body);
   }),
 );
 

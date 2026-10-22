@@ -18,6 +18,9 @@ export interface TransitionMeta {
   note?: string;
   courier_id?: string;
   idempotency_key?: string;
+  // Required for CREATED → PENDING_PAYMENT: an order only waits for payment once it has a payable invoice.
+  invoice?: { id: string; url: string; expires_at: Date };
+  payment_fee_actual?: number;
 }
 
 export interface TransitionInput {
@@ -60,6 +63,7 @@ export async function transition(
     if (req === "lng" && !isCoord(meta.lng, 180)) missing.push("lng");
     if (req === "proof_or_note" && !hasProof && !hasText(meta.note)) missing.push("proof_or_note");
   }
+  if (to === "PENDING_PAYMENT" && !meta.invoice?.url) missing.push("invoice_url");
   if (missing.length > 0) throw new AppError(400, "VALIDATION_ERROR", "Missing required transition data", { missing });
   if (to === "FAILED" && !(FAILED_REASONS as readonly string[]).includes(meta.reason ?? "")) {
     throw new AppError(400, "VALIDATION_ERROR", "Invalid failed reason", { allowed: FAILED_REASONS });
@@ -81,6 +85,10 @@ export async function transition(
     setReadyAt: to === "READY" && from === "PICKING",
     setDeliveredAt: to === "DELIVERED",
     setReturnPending: to === "FAILED",
+    setInvoice: to === "PENDING_PAYMENT" && meta.invoice
+      ? { id: meta.invoice.id, url: meta.invoice.url, expiresAt: meta.invoice.expires_at }
+      : undefined,
+    setPaymentFeeActual: to === "PAID" ? meta.payment_fee_actual : undefined,
   });
   if (!updated) throw new AppError(409, "CONFLICT", "Order status changed concurrently");
 

@@ -26,6 +26,18 @@ export async function findUserById(db: Pool | Tx, id: string): Promise<UserRow |
   return res.rows[0] ?? null;
 }
 
+export async function insertCustomer(
+  db: Pool,
+  u: { name: string; phone: string; email: string | null; passwordHash: string },
+): Promise<UserRow> {
+  const res = await db.query<UserRow>(
+    `INSERT INTO users (role, name, phone, email, password_hash) VALUES ('customer', $1, $2, $3, $4)
+     RETURNING id, role, name, password_hash, branch_id, NULL::uuid AS partner_id, is_active`,
+    [u.name, u.phone, u.email, u.passwordHash],
+  );
+  return res.rows[0]!;
+}
+
 export async function insertSession(
   db: Pool | Tx,
   s: { userId: string; tokenHash: string; ttlDays: number; userAgent: string | null },

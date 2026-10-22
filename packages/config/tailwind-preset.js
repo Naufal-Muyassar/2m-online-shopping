@@ -1,4 +1,4 @@
-const hsl = (name) => `hsl(var(--${name}))`;
+const hsl = (name) => `hsl(var(--${name}) / <alpha-value>)`;
 
 export default {
   darkMode: ["class"],
