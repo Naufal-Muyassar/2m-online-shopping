@@ -11,6 +11,8 @@ services:
         value: development
       - key: DATABASE_URL
         sync: false
+      - key: DATABASE_SSL
+        value: "true"
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: S3_ENDPOINT
@@ -34,7 +36,7 @@ services:
     routes:
       - type: rewrite
         source: /api/*
-        destination: https://2m-api.onrender.com/api/*
+        destination: https://twom-online-shopping.onrender.com/api/*
       - type: rewrite
         source: /*
         destination: /index.html
@@ -47,7 +49,7 @@ services:
     routes:
       - type: rewrite
         source: /api/*
-        destination: https://2m-api.onrender.com/api/*
+        destination: https://twom-online-shopping.onrender.com/api/*
       - type: rewrite
         source: /*
         destination: /index.html

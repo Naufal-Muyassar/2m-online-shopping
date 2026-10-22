@@ -11,7 +11,10 @@ const migrationsDir = fileURLToPath(new URL("../../../db/migrations", import.met
 
 async function migrate(): Promise<void> {
   await runner({
-    databaseUrl: env.DATABASE_URL,
+    databaseUrl: {
+      connectionString: env.DATABASE_URL,
+      ssl: env.DATABASE_SSL ? { rejectUnauthorized: false } : undefined,
+    },
     dir: migrationsDir,
     direction: "up",
     migrationsTable: "pgmigrations",
@@ -21,7 +24,10 @@ async function migrate(): Promise<void> {
 }
 
 async function withClient<T>(fn: (c: Client) => Promise<T>): Promise<T> {
-  const client = new Client({ connectionString: env.DATABASE_URL });
+  const client = new Client({
+    connectionString: env.DATABASE_URL,
+    ssl: env.DATABASE_SSL ? { rejectUnauthorized: false } : undefined,
+  });
   await client.connect();
   try {
     return await fn(client);
