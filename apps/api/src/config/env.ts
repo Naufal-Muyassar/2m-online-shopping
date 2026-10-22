@@ -8,6 +8,8 @@ const schema = z.object({
   PORT: z.coerce.number().int().default(3000),
   LOG_LEVEL: z.string().default("info"),
   DATABASE_URL: z.string().min(1),
+  // Supabase poolers present a certificate chain Node does not trust; "true" encrypts without verifying it.
+  DATABASE_SSL: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
   // Stock counters live here (fast path of reservations). Falls back to a local Redis outside production.
   REDIS_URL: optionalString.pipe(z.string().url().optional()),
   JWT_ACCESS_SECRET: z.string().min(16),
