@@ -29,7 +29,7 @@ services:
   - type: web
     name: 2m-courier-pwa
     runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter courier-pwa build
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter courier-pwa build
     staticPublishPath: apps/courier-pwa/dist
     routes:
       - type: rewrite
@@ -42,7 +42,7 @@ services:
   - type: web
     name: 2m-admin-web
     runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter admin-web build
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter admin-web build
     staticPublishPath: apps/admin-web/dist
     routes:
       - type: rewrite
