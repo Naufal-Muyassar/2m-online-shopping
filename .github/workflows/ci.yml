@@ -1,0 +1,65 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.f.outputs.api }}
+      courier: ${{ steps.f.outputs.courier }}
+      admin: ${{ steps.f.outputs.admin }}
+      customer: ${{ steps.f.outputs.customer }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            shared: &shared
+              - 'packages/**'
+              - 'pnpm-lock.yaml'
+              - 'package.json'
+            api:
+              - *shared
+              - 'apps/api/**'
+            courier:
+              - *shared
+              - 'apps/courier-pwa/**'
+            admin:
+              - *shared
+              - 'apps/admin-web/**'
+            customer:
+              - *shared
+              - 'apps/customer-web/**'
+
+  api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    uses: ./.github/workflows/app-check.yml
+    with:
+      filter: api
+
+  courier-pwa:
+    needs: changes
+    if: needs.changes.outputs.courier == 'true'
+    uses: ./.github/workflows/app-check.yml
+    with:
+      filter: courier-pwa
+
+  admin-web:
+    needs: changes
+    if: needs.changes.outputs.admin == 'true'
+    uses: ./.github/workflows/app-check.yml
+    with:
+      filter: admin-web
+
+  customer-web:
+    needs: changes
+    if: needs.changes.outputs.customer == 'true'
+    uses: ./.github/workflows/app-check.yml
+    with:
+      filter: customer-web

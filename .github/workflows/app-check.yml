@@ -1,0 +1,23 @@
+name: app-check
+
+on:
+  workflow_call:
+    inputs:
+      filter:
+        required: true
+        type: string
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter ${{ inputs.filter }}... typecheck
+      - run: pnpm lint
+      - run: pnpm --filter ${{ inputs.filter }}... test

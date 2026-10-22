@@ -1,0 +1,16 @@
+- P0: `.env.example` DATABASE_URL given a local value and API variables appended; existing lines kept.
+- P0: `apps/api` build runs `tsc --noEmit` (workspace packages are consumed as TS source; runtime uses tsx until a bundling decision is made).
+- P0: Courier PWA uses vite-plugin-pwa generateSW (app-shell precache) with the manifest served from `public/manifest.webmanifest`; `src/sw.ts` stays an empty module.
+- P1: Migrations are plain `.sql` files in `db/migrations`, run by `apps/api/scripts/db.ts` (node-pg-migrate programmatic runner, also does reset + seeding because `pg`/`bcryptjs` resolve only from apps/api); seed data lives in `db/seeds/demo`.
+- P1: `branch_id` also added to `order_items`, `proof_of_delivery` and `audit_logs` (nullable there) to satisfy "branch_id on every operational table".
+- P1: `order_state_transitions.from_status` is nullable; demo seed inserts PAID orders directly plus a NULL→PAID system transition row (seed-only bootstrap, not via transition()).
+- P1: `addresses.geohash` is left NULL in seeds; `db:reset*` refuses to run when NODE_ENV=production; all demo users share password `demo1234`.
+- P0: Scaffold README owners follow CODEOWNERS handles (@backend-team / @app-team / @ds-team).
+- P2: transition() meta gains an optional `note` (satisfies FAILED "proof or note"); stored as `REASON: note` in order_state_transitions.reason.
+- P2: transition() clears/sets orders.assigned_courier_id (READY→ASSIGNED sets, ASSIGNED→READY clears); courier status changes are left to dispatch (P3). ready_at is set only on PICKING→READY so a reassigned order keeps its FIFO position.
+- P2: Error codes: invalid pair 409 INVALID_TRANSITION, unpermitted actor/not the assigned courier 403 FORBIDDEN, missing meta 400 VALIDATION_ERROR, DELIVERED without proof 409 PROOF_REQUIRED; an out-of-branch order is 404 for branch_admin.
+- P2: Tests read DATABASE_URL from the environment/root `.env` (vitest.config.ts); the matrix test rolls back, the concurrency test commits one tagged fixture set (append-only tables cannot be cleaned).
+- P3: PATCH /orders/:id/reassign is served by the dispatch router, which is now mounted at `/api/v1/orders` (the empty `/dispatch` mount was removed). Reassign releases the courier (IDLE), then assigns the given `courier_id` (must be IDLE in the branch, else 409 COURIER_UNAVAILABLE) or returns the order to the FIFO queue via `drainBranch`.
+- P3: Courier order "pin" = address lat/lng; "active" = ASSIGNED, ON_DELIVERY, or FAILED with return_pending; the status body also accepts an optional `note` (FAILED needs reason + proof or note). Proof upload/registration is only allowed while the order is ON_DELIVERY, and `photo_key` must match `proofs/{order_id}/{uuid}.jpg`.
+- P3: Presigned PUT URLs sign `Content-Type: image/jpeg` (the PWA must send that header); new env `S3_FORCE_PATH_STYLE` (default true) for MinIO. A ping's `order_id` is stored only if the order is assigned to that courier.
+- P3: Admin board = non-terminal orders + terminal ones updated in the last 24h + FAILED with return_pending; both admin GETs also allow super_admin (explicit `branch_id`). Outbox worker: batch 20, max 8 attempts, backoff 5 s × 2^n capped at 600 s; events without a registered handler follow the retry → FAILED path.

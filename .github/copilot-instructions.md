@@ -111,4 +111,5 @@ then `transition(READY → ASSIGNED)` + courier → DELIVERING. Two triggers: (a
 - Do not re-verify your own work in loops. Run `pnpm typecheck` once at the end, plus only the tests the prompt names, once. If something fails, fix it and re-run once.
 - Do not create README/docs/changelogs/comments beyond what the prompt asks. Comment only non-obvious invariants.
 - Stay inside the prompt's scope. No refactors, renames, extra dependencies, or edits to unrelated files. No git commands.
+- Keep existing folders and files (.env.example, README.md, CODEOWNERS, pnpm-workspace.yaml, contracts/, data-science/). Only add what is missing and extend; never overwrite.
 - Final reply: at most 12 lines — what was created, assumptions added, anything not done. No code dump.
