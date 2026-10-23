@@ -52,8 +52,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       throw new Error("Akun ini bukan akun kurir.");
     }
     setAccessToken(res.data.access_token);
+    queryClient.removeQueries({ queryKey: ["courier"] });
     setUser(res.data.user);
-  }, []);
+  }, [queryClient]);
 
   const logout = useCallback(async () => {
     try {

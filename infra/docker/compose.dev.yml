@@ -26,8 +26,8 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio
-    command: server /data --console-address ":9001"
+    image: bitnamilegacy/minio:latest
+    command: server /bitnami/minio/data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
@@ -35,10 +35,10 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - miniodata:/data
+      - miniodata:/bitnami/minio/data
 
   minio-init:
-    image: minio/mc
+    image: bitnamilegacy/minio-client:latest
     depends_on:
       - minio
     entrypoint: >

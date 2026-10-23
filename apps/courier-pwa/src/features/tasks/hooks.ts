@@ -22,19 +22,21 @@ export const keys = {
   order: (id: string) => ["courier", "orders", id] as const,
 };
 
-export function useMe() {
+export function useMe(enabled = true) {
   return useQuery({
     queryKey: keys.me,
     queryFn: async () => (await api.get<CourierMe>("/courier/me")).data,
+    enabled,
     refetchInterval: POLL_MS,
   });
 }
 
 // refetchIntervalInBackground defaults to false, so polling pauses while the tab is hidden.
-export function useOrders() {
+export function useOrders(enabled = true) {
   return useQuery({
     queryKey: keys.orders,
     queryFn: async () => (await api.get<CourierOrdersResponse>("/courier/orders")).data,
+    enabled,
     refetchInterval: POLL_MS,
   });
 }

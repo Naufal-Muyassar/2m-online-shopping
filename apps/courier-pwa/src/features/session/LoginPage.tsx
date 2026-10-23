@@ -1,17 +1,17 @@
 import { useState, type FormEvent } from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSession } from "./session";
 import { errorMessage } from "@/lib/api";
+import { FaSignInAlt } from "react-icons/fa";
 
 export function LoginPage() {
   const { user, login } = useSession();
+  const navigate = useNavigate();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  if (user) return <Navigate to="/" replace />;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -19,6 +19,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await login(identifier.trim(), password);
+      navigate("/", { replace: true });
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -31,6 +32,7 @@ export function LoginPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
       <h1 className="text-3xl font-bold">2M Kurir</h1>
+      {user && <p className="text-sm text-muted-foreground">Sedang masuk sebagai {user.name}.</p>}
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-base font-medium">
           Nomor HP
@@ -60,6 +62,7 @@ export function LoginPage() {
           </p>
         )}
         <Button type="submit" loading={submitting}>
+          <FaSignInAlt aria-hidden="true" className="mr-2 inline" />
           Masuk
         </Button>
       </form>

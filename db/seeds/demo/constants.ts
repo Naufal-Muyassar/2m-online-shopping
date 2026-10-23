@@ -14,9 +14,9 @@ export const USERS = {
   superAdmin: { name: "Super Admin", phone: "081200000001", email: "super@2m.local" },
   branchAdmin: { name: "Admin Cabang", phone: "081200000002", email: "admin@2m.local" },
   couriers: [
-    { name: "Kurir Satu", phone: "081200000011", minutesIdle: 30 },
-    { name: "Kurir Dua", phone: "081200000012", minutesIdle: 20 },
-    { name: "Kurir Tiga", phone: "081200000013", minutesIdle: 10 },
+    { name: "Kurir Satu", phone: "081200000011" },
+    { name: "Kurir Dua", phone: "081200000012" },
+    { name: "Kurir Tiga", phone: "081200000013" },
   ],
   customers: [
     {

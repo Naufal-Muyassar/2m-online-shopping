@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { CourierOrder } from "@2m/shared";
+import { FaChevronRight } from "react-icons/fa";
 
 export const STATUS_LABELS: Record<string, string> = {
   ASSIGNED: "Siap diantar",
@@ -14,8 +15,9 @@ export function OrderCard({ order }: { order: CourierOrder }) {
     <Link to={`/orders/${order.id}`} className="block rounded-xl border border-border p-4 active:bg-muted">
       <div className="flex items-center justify-between gap-2">
         <span className="text-lg font-bold">{order.code}</span>
-        <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
+        <span className="flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-sm font-medium">
           {STATUS_LABELS[order.status] ?? order.status}
+          <FaChevronRight aria-hidden="true" className="text-xs" />
         </span>
       </div>
       <p className="mt-1 text-base">{order.address.receiver_name}</p>

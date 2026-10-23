@@ -18,7 +18,7 @@ const hashToken = (token: string): string => createHash("sha256").update(token).
 const newRefreshToken = (): string => randomBytes(32).toString("base64url");
 
 function toUser(u: repo.UserRow): AuthUser {
-  return { id: u.id, role: u.role, name: u.name, branch_id: u.branch_id, partner_id: u.partner_id };
+  return { id: u.id, role: u.role, name: u.name, phone: u.phone, branch_id: u.branch_id, partner_id: u.partner_id };
 }
 
 function signAccess(u: repo.UserRow): string {
@@ -36,6 +36,7 @@ const invalidCredentials = () => new AppError(401, "INVALID_CREDENTIALS", "Inval
 export async function login(identifier: string, password: string, userAgent: string | null) {
   const user = await repo.findUserByIdentifier(pool, identifier);
   if (!user || !user.is_active || !(await bcrypt.compare(password, user.password_hash))) throw invalidCredentials();
+  if (user.role === "courier") await repo.setCourierOfflineOnLogin(pool, user.id);
 
   const refreshToken = newRefreshToken();
   await repo.insertSession(pool, {

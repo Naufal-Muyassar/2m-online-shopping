@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FAILED_REASONS, type FailedReason } from "@2m/shared";
 import { Button } from "@/components/ui/button";
+import { FaCheck, FaExclamationTriangle, FaRedoAlt, FaTimes } from "react-icons/fa";
 import { useToast } from "@/components/ui/toast";
 import { errorMessage } from "@/lib/api";
 import { STEPS, useProofSubmit } from "./useProofSubmit";
@@ -116,9 +117,11 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
       )}
 
       <Button variant={failed ? "destructive" : "primary"} loading={running} disabled={!canSubmit} onClick={submit}>
+        {error ? <FaRedoAlt aria-hidden="true" className="mr-2 inline" /> : failed ? <FaExclamationTriangle aria-hidden="true" className="mr-2 inline" /> : <FaCheck aria-hidden="true" className="mr-2 inline" />}
         {error ? "Coba lagi" : failed ? "Kirim laporan gagal" : "Kirim bukti & selesai"}
       </Button>
       <Button variant="secondary" disabled={running} onClick={onCancel}>
+        <FaTimes aria-hidden="true" className="mr-2 inline" />
         Batal
       </Button>
     </section>

@@ -7,6 +7,7 @@ import { getFreshFix } from "@/platform/geo";
 import { ProofFlow } from "@/features/proof/ProofFlow";
 import { useOrder, useOrderStatus } from "./hooks";
 import { STATUS_LABELS } from "./OrderCard";
+import { FaArrowLeft, FaCheck, FaExclamationTriangle, FaMapMarkerAlt, FaPhone, FaTruck } from "react-icons/fa";
 
 type Panel = "none" | "deliver" | "fail";
 
@@ -55,6 +56,7 @@ export function OrderDetailPage() {
           {errorMessage(query.error)}
         </p>
         <Link to="/" className="mt-4 inline-block underline">
+          <FaArrowLeft aria-hidden="true" className="mr-2 inline" />
           Kembali
         </Link>
       </main>
@@ -68,7 +70,8 @@ export function OrderDetailPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-4">
       <Link to="/" className="min-h-12 text-base underline">
-        ← Kembali
+        <FaArrowLeft aria-hidden="true" className="mr-2 inline" />
+        Kembali
       </Link>
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{order.code}</h1>
@@ -87,6 +90,7 @@ export function OrderDetailPage() {
         <h2 className="font-bold">Penerima</h2>
         <p className="text-lg">{a.receiver_name}</p>
         <a href={`tel:${a.receiver_phone}`} className="mt-1 flex min-h-12 items-center text-lg font-semibold text-primary underline">
+          <FaPhone aria-hidden="true" className="mr-2" />
           {a.receiver_phone}
         </a>
         <p className="mt-2">
@@ -101,6 +105,7 @@ export function OrderDetailPage() {
           rel="noreferrer"
           className="mt-3 flex min-h-14 items-center justify-center rounded-lg border border-border text-lg font-semibold"
         >
+          <FaMapMarkerAlt aria-hidden="true" className="mr-2" />
           Buka di Google Maps
         </a>
       </section>
@@ -120,6 +125,7 @@ export function OrderDetailPage() {
       {order.status === "ASSIGNED" && (
         <>
           <Button loading={statusMutation.isPending} onClick={() => void start()}>
+            <FaTruck aria-hidden="true" className="mr-2 inline" />
             Mulai antar
           </Button>
           {startError && (
@@ -132,8 +138,12 @@ export function OrderDetailPage() {
 
       {order.status === "ON_DELIVERY" && panel === "none" && (
         <>
-          <Button onClick={() => setPanel("deliver")}>Selesai</Button>
+          <Button onClick={() => setPanel("deliver")}>
+            <FaCheck aria-hidden="true" className="mr-2 inline" />
+            Selesai
+          </Button>
           <Button variant="destructive" onClick={() => setPanel("fail")}>
+            <FaExclamationTriangle aria-hidden="true" className="mr-2 inline" />
             Gagal kirim
           </Button>
         </>

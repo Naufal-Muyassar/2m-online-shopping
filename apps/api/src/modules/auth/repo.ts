@@ -6,6 +6,7 @@ export interface UserRow {
   id: string;
   role: Role;
   name: string;
+  phone: string;
   password_hash: string;
   branch_id: string | null;
   partner_id: string | null;
@@ -13,7 +14,7 @@ export interface UserRow {
 }
 
 const USER_SELECT = `
-  SELECT u.id, u.role, u.name, u.password_hash, u.branch_id, c.partner_id, u.is_active
+  SELECT u.id, u.role, u.name, u.phone, u.password_hash, u.branch_id, c.partner_id, u.is_active
   FROM users u LEFT JOIN couriers c ON c.user_id = u.id`;
 
 export async function findUserByIdentifier(db: Pool, identifier: string): Promise<UserRow | null> {
@@ -26,13 +27,21 @@ export async function findUserById(db: Pool | Tx, id: string): Promise<UserRow |
   return res.rows[0] ?? null;
 }
 
+export async function setCourierOfflineOnLogin(db: Pool, userId: string): Promise<void> {
+  await db.query(
+    `UPDATE couriers SET status = 'OFFLINE', last_status_change = now()
+     WHERE user_id = $1 AND status = 'IDLE'`,
+    [userId],
+  );
+}
+
 export async function insertCustomer(
   db: Pool,
   u: { name: string; phone: string; email: string | null; passwordHash: string },
 ): Promise<UserRow> {
   const res = await db.query<UserRow>(
     `INSERT INTO users (role, name, phone, email, password_hash) VALUES ('customer', $1, $2, $3, $4)
-     RETURNING id, role, name, password_hash, branch_id, NULL::uuid AS partner_id, is_active`,
+    RETURNING id, role, name, phone, password_hash, branch_id, NULL::uuid AS partner_id, is_active`,
     [u.name, u.phone, u.email, u.passwordHash],
   );
   return res.rows[0]!;

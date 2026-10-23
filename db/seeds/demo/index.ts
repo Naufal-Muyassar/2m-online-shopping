@@ -56,8 +56,8 @@ export async function seedBase(db: Db, passwordHash: string): Promise<void> {
     const id = await insertUser("courier", c.name, c.phone, null, branch);
     await db.query(
       `INSERT INTO couriers (user_id, partner_id, branch_id, status, last_status_change)
-       VALUES ($1,$2,$3,'IDLE', now() - make_interval(mins => $4))`,
-      [id, partner, branch, c.minutesIdle],
+       VALUES ($1,$2,$3,'OFFLINE', now())`,
+      [id, partner, branch],
     );
   }
 

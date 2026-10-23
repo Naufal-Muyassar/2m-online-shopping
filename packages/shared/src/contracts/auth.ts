@@ -5,6 +5,7 @@ export const authUserSchema = z.object({
   id: z.string().uuid(),
   role: z.enum(ROLES),
   name: z.string(),
+  phone: z.string(),
   branch_id: z.string().uuid().nullable(),
   partner_id: z.string().uuid().nullable(),
 });

@@ -1,21 +1,23 @@
 import { useSession } from "@/features/session/session";
+import { SideBarNavigation } from "@/components/SideBarNavigation";
 import { Button } from "@/components/ui/button";
+import { FaPlay } from "react-icons/fa";
 import { useToast } from "@/components/ui/toast";
 import { errorMessage } from "@/lib/api";
 import { useMe, useOrders, useSetCourierStatus } from "./hooks";
 import { OrderCard } from "./OrderCard";
 
 export function HomePage() {
-  const { user, logout } = useSession();
+  const { user, loading } = useSession();
   const { notify } = useToast();
-  const me = useMe();
-  const orders = useOrders();
+  const sessionReady = !loading && user !== null;
+  const me = useMe(sessionReady);
+  const orders = useOrders(sessionReady);
   const setStatus = useSetCourierStatus();
 
   const status = me.data?.status;
   const delivering = status === "DELIVERING";
-
-  const toggle = () => {
+  const toggleFromNavigation = () => {
     if (!status || delivering) return;
     const next = status === "OFFLINE" ? "IDLE" : "OFFLINE";
     setStatus.mutate(next, {
@@ -24,28 +26,37 @@ export function HomePage() {
     });
   };
 
+  const startWorking = () => {
+    if (status !== "OFFLINE") return;
+    setStatus.mutate("IDLE", {
+      onSuccess: () => notify("success", "Anda sekarang siap menerima pesanan."),
+      onError: (err) => notify("error", errorMessage(err)),
+    });
+  };
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-5 p-4">
-      <header className="flex items-center justify-between">
+    <main className="relative mx-auto flex min-h-screen max-w-md flex-col gap-5 p-4">
+      <header className="relative flex items-center gap-3">
+        <SideBarNavigation
+          name={user?.name}
+          status={status}
+          pending={setStatus.isPending}
+          onToggleStatus={toggleFromNavigation}
+        />
         <div>
           <h1 className="text-2xl font-bold">Halo, {user?.name}</h1>
           <p className="text-sm text-muted-foreground">
             Status: {status === "IDLE" ? "Siap" : status === "DELIVERING" ? "Sedang mengantar" : status === "OFFLINE" ? "Offline" : "…"}
           </p>
         </div>
-        <button type="button" className="min-h-12 px-3 text-base underline" onClick={() => void logout()}>
-          Keluar
-        </button>
       </header>
 
-      <Button
-        variant={status === "OFFLINE" ? "primary" : "secondary"}
-        disabled={!status || delivering}
-        loading={setStatus.isPending}
-        onClick={toggle}
-      >
-        {delivering ? "Sedang mengantar" : status === "OFFLINE" ? "Mulai bekerja (IDLE)" : "Berhenti (OFFLINE)"}
-      </Button>
+      {status === "OFFLINE" && (
+        <Button loading={setStatus.isPending} onClick={startWorking}>
+          <FaPlay aria-hidden="true" className="mr-2 inline" />
+          Mulai bekerja
+        </Button>
+      )}
       {setStatus.isError && (
         <p role="alert" className="text-destructive">
           {errorMessage(setStatus.error)}
