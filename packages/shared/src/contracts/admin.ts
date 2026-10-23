@@ -42,6 +42,7 @@ export const adminCourierSchema = z.object({
   status: z.enum(COURIER_STATUSES),
   last_status_change: z.string(),
   last_ping_at: z.string().nullable(),
+  motor_cluster: z.string().nullable().optional(),
   current_order: z.object({ id: z.string().uuid(), code: z.string(), status: z.enum(ORDER_STATUSES) }).nullable(),
 });
 export type AdminCourier = z.infer<typeof adminCourierSchema>;

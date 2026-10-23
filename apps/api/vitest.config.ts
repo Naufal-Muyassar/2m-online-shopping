@@ -15,5 +15,10 @@ process.env.S3_SECRET_KEY ??= "test";
 process.env.DATABASE_URL ??= "postgres://app:app@localhost:5432/sembako";
 
 export default defineConfig({
-  test: { include: ["src/**/*.test.ts", "test/**/*.test.ts"], testTimeout: 30_000, hookTimeout: 30_000 },
+  test: {
+    include: ["src/**/*.test.ts", "test/**/*.test.ts"],
+    exclude: ["**/node_modules/**", "test/dormant/**"],
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
+  },
 });

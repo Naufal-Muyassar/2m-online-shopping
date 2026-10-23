@@ -15,6 +15,9 @@ const RESERVATION_TTL_SEC = INVOICE_DURATION_SEC + 600;
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+// Statuses in which an assigned courier is shown to the customer.
+const COURIER_VISIBLE: readonly string[] = ["PICKING", "ON_DELIVERY", "DELIVERED", "FAILED"];
+
 function newCode(): string {
   const day = new Date(Date.now() + 7 * 3600_000).toISOString().slice(2, 10).replace(/-/g, "");
   const suffix = Array.from({ length: 4 }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join("");
@@ -34,15 +37,16 @@ export async function createOrder(userId: string, req: CreateOrderRequest): Prom
       for (let attempt = 0; attempt < 5 && !inserted; attempt++) {
         const res = await tx.query<{ id: string; created_at: Date }>(
           `INSERT INTO orders (code, branch_id, customer_id, address_id, status, subtotal, delivery_fee, payment_fee,
-                               voucher_discount, grand_total, pricing_snapshot, payment_method, is_bulk_order)
-           VALUES ($1,$2,$3,$4,'CREATED',$5,$6,$7,$8,$9,$10,$11,$12)
+                               voucher_discount, grand_total, pricing_snapshot, payment_method, is_bulk_order,
+                               route_distance_km, courier_wage)
+           VALUES ($1,$2,$3,$4,'CREATED',$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
            ON CONFLICT (code) DO NOTHING
            RETURNING id, created_at`,
           [
             newCode(), req.branch_id, userId, req.address_id, b.subtotal, b.final_shipping_cost, b.payment_fee,
             b.voucher_discount, b.grand_total,
-            JSON.stringify({ ...b, address_id: req.address_id, payment_method: req.payment_method }),
-            req.payment_method, q.isBulkOrder,
+            JSON.stringify({ ...b, ...q.snapshotExtra, address_id: req.address_id, payment_method: req.payment_method }),
+            req.payment_method, q.isBulkOrder, b.route_distance_km, q.courierWage,
           ],
         );
         inserted = res.rows[0];
@@ -93,9 +97,11 @@ export async function listCustomerOrders(db: Db, userId: string): Promise<OrderS
 
 export async function getCustomerOrder(userId: string, orderId: string): Promise<CustomerOrderDetail> {
   const orderRes = await pool.query(
-    `SELECT id, code, status, grand_total, subtotal, delivery_fee, payment_fee, voucher_discount, payment_method, created_at,
-            invoice_url, invoice_expires_at
-     FROM orders WHERE id = $1 AND customer_id = $2`,
+    `SELECT o.id, o.code, o.status, o.grand_total, o.subtotal, o.delivery_fee, o.payment_fee, o.voucher_discount,
+            o.payment_method, o.created_at, o.invoice_url, o.invoice_expires_at,
+            split_part(cu.name, ' ', 1) AS courier_first_name
+     FROM orders o LEFT JOIN users cu ON cu.id = o.assigned_courier_id
+     WHERE o.id = $1 AND o.customer_id = $2`,
     [orderId, userId],
   );
   const o = orderRes.rows[0];
@@ -121,6 +127,7 @@ export async function getCustomerOrder(userId: string, orderId: string): Promise
     payment_fee: o.payment_fee,
     voucher_discount: o.voucher_discount,
     payment_method: o.payment_method,
+    courier_first_name: COURIER_VISIBLE.includes(o.status) ? (o.courier_first_name ?? null) : null,
     items: items.rows,
     timeline: timeline.rows.map((t) => ({
       status: t.status,

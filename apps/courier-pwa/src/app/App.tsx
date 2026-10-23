@@ -28,7 +28,7 @@ function UpdateBanner({ onDelivery }: { onDelivery: boolean }) {
 function Shell() {
   const me = useMe();
   const orders = useOrders();
-  const active = orders.data?.active.find((o) => o.status === "ON_DELIVERY" || o.status === "ASSIGNED");
+  const active = orders.data?.active.find((o) => o.status === "ON_DELIVERY" || o.status === "PICKING");
   const hasOnDelivery = orders.data?.active.some((o) => o.status === "ON_DELIVERY") ?? false;
   const onDelivery = me.data?.status === "DELIVERING" || hasOnDelivery;
 

@@ -13,5 +13,5 @@ export default defineConfig({
       workbox: { globPatterns: ["**/*.{js,css,html,svg}"], navigateFallbackDenylist: [/^\/api\//] },
     }),
   ],
-  server: { port: 5173, proxy: { "/api": "http://localhost:3000" } },
+  server: { port: 5172, strictPort: true, proxy: { "/api": "http://localhost:3000" } },
 });

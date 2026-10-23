@@ -14,9 +14,9 @@ export const USERS = {
   superAdmin: { name: "Super Admin", phone: "081200000001", email: "super@2m.local" },
   branchAdmin: { name: "Admin Cabang", phone: "081200000002", email: "admin@2m.local" },
   couriers: [
-    { name: "Kurir Satu", phone: "081200000011", minutesIdle: 30 },
-    { name: "Kurir Dua", phone: "081200000012", minutesIdle: 20 },
-    { name: "Kurir Tiga", phone: "081200000013", minutesIdle: 10 },
+    { name: "Kurir Satu", phone: "081200000011", minutesIdle: 30, motorCode: "M1", motorCluster: "A" },
+    { name: "Kurir Dua", phone: "081200000012", minutesIdle: 20, motorCode: "M3", motorCluster: "B" },
+    { name: "Kurir Tiga", phone: "081200000013", minutesIdle: 10, motorCode: "M5", motorCluster: "A" },
   ],
   customers: [
     {
@@ -33,6 +33,23 @@ export const USERS = {
 };
 
 export const DELIVERY_FEE = 8000;
+
+// Low and out-of-stock states stay visible in the demo: three products with 3 units, one with none.
+export const DEMO_STOCK_OVERRIDES: Readonly<Record<string, number>> = {
+  "GAL-19L": 3,
+  "TLR-TRAY": 3,
+  "SUSU-UHT": 3,
+  "TSU-4": 0,
+};
+
+// Local dev origins (fixed ports, see each vite.config.ts).
+export const DEMO_URLS = {
+  api: "http://localhost:3000",
+  customer: "http://localhost:5171",
+  courier: "http://localhost:5172",
+  admin: "http://localhost:5173",
+  minio: "http://localhost:9001",
+};
 
 // [sku, name, unit, category, weight_kg, price]
 export const PRODUCTS: ReadonlyArray<readonly [string, string, string, string, number, number]> = [

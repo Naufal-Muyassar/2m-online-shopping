@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { ORDER_STATUSES, findTransition, type Actor, type OrderStatus } from "@2m/shared";
+import { ACTIVE_TRANSITIONS, ORDER_STATUSES, type Actor, type OrderStatus } from "@2m/shared";
 import { pool, withTransaction, type Tx } from "../../shared/db";
 import { AppError } from "../../shared/errors";
 import { transition } from "./service";
@@ -15,7 +15,7 @@ describe("transition matrix", () => {
       const fx = await createFixture(tx);
       for (const from of ORDER_STATUSES) {
         for (const to of ORDER_STATUSES) {
-          const rule = findTransition(from, to);
+          const rule = ACTIVE_TRANSITIONS.find((t) => t.from === from && t.to === to);
           for (const role of ACTORS) {
             const outcome = await attempt(tx, fx, from, to, role);
             if (!rule) expect(outcome, `${from}→${to} as ${role}`).toBe("INVALID_TRANSITION");
@@ -32,6 +32,8 @@ describe("transition matrix", () => {
 });
 
 async function attempt(tx: Tx, fx: Fixture, from: OrderStatus, to: OrderStatus, role: Actor): Promise<string> {
+  // A successful claim flips the courier to DELIVERING; every attempt starts from IDLE.
+  await tx.query(`UPDATE couriers SET status = 'IDLE' WHERE user_id = $1`, [fx.courierId]);
   const orderId = await insertOrder(tx, fx, from);
   try {
     await transition(tx, {

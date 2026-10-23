@@ -3,9 +3,12 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { formatIDR } from "@2m/shared";
 import { useAuth } from "../../lib/auth";
 import { errorMessage } from "../../lib/api";
-import { useCartMutations, useProducts } from "../../lib/queries";
+import { useCart, useCartMutations, useProducts } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
+
+// Exact remaining stock is shown only at or below this level.
+const STOCK_NOTICE_AT = 20;
 
 function useDebounced<T>(value: T, ms: number): T {
   const [v, setV] = useState(value);
@@ -28,6 +31,9 @@ export function CatalogPage() {
   const q = useDebounced(search.trim(), 300);
   const { data, isLoading, isError } = useProducts(branchId, category, q, page);
   const { add } = useCartMutations(branchId);
+  const cart = useCart(branchId, !!user).data;
+  const qtyInCart = new Map(cart?.items.map((i) => [i.product_id, i.qty]));
+  const maxPerSku = cart?.limits.max_qty_per_sku ?? Infinity;
 
   useEffect(() => setPage(1), [q, category]);
 
@@ -67,26 +73,33 @@ export function CatalogPage() {
       {isError && <p className="text-sm text-destructive">Gagal memuat produk.</p>}
       {data && data.products.length === 0 && <p className="text-sm text-muted-foreground">Produk tidak ditemukan.</p>}
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {data?.products.map((p) => (
-          <li key={p.id} className="flex flex-col justify-between rounded-lg border p-3">
-            <div>
-              <p className="text-sm font-medium">{p.name}</p>
-              <p className="text-xs text-muted-foreground">
-                per {p.unit} · {p.weight_kg} kg
-              </p>
-            </div>
-            <div className="mt-3 space-y-2">
-              <p className="font-semibold">{formatIDR(p.price)}</p>
-              <button
-                disabled={p.stock_status === "out" || add.isPending}
-                onClick={() => addToCart(p.id, p.name)}
-                className="w-full rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
-              >
-                {p.stock_status === "out" ? "Habis" : "Tambah"}
-              </button>
-            </div>
-          </li>
-        ))}
+        {data?.products.map((p) => {
+          const out = p.sellable_qty <= 0;
+          const atLimit = (qtyInCart.get(p.id) ?? 0) >= Math.min(p.sellable_qty, maxPerSku);
+          return (
+            <li key={p.id} className="flex flex-col justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">{p.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  per {p.unit} · {p.weight_kg} kg
+                </p>
+                <p className={cn("mt-1 text-xs", out || p.sellable_qty <= STOCK_NOTICE_AT ? "text-destructive" : "text-muted-foreground")}>
+                  {out ? "Habis" : p.sellable_qty <= STOCK_NOTICE_AT ? `Stok: ${p.sellable_qty}` : "Tersedia"}
+                </p>
+              </div>
+              <div className="mt-3 space-y-2">
+                <p className="font-semibold">{formatIDR(p.price)}</p>
+                <button
+                  disabled={out || atLimit || add.isPending}
+                  onClick={() => addToCart(p.id, p.name)}
+                  className="w-full rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+                >
+                  {out ? "Habis" : atLimit ? "Batas tercapai" : "Tambah"}
+                </button>
+              </div>
+            </li>
+          );
+        })}
       </ul>
       {data && (page > 1 || data.has_more) && (
         <div className="flex items-center justify-center gap-3 text-sm">

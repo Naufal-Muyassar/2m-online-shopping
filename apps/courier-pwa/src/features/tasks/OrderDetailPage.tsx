@@ -1,14 +1,146 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import type { CourierOrder } from "@2m/shared";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { errorMessage } from "@/lib/api";
 import { getFreshFix } from "@/platform/geo";
 import { ProofFlow } from "@/features/proof/ProofFlow";
-import { useOrder, useOrderStatus } from "./hooks";
+import { useOrder, useOrderStatus, usePickItem, useReleaseOrder } from "./hooks";
 import { STATUS_LABELS } from "./OrderCard";
 
 type Panel = "none" | "deliver" | "fail";
+
+const STEPS = [
+  { status: "PICKING", label: "Siapkan barang" },
+  { status: "ON_DELIVERY", label: "Antar" },
+] as const;
+
+function Stepper({ status }: { status: string }) {
+  const current = STEPS.findIndex((s) => s.status === status);
+  return (
+    <ol className="flex gap-2" aria-label="Tahap pesanan">
+      {STEPS.map((s, i) => (
+        <li
+          key={s.status}
+          className={`flex-1 rounded-lg px-3 py-2 text-center text-sm font-semibold ${
+            i === current ? "bg-primary text-primary-foreground" : i < current ? "bg-secondary" : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {i + 1}. {s.label}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function PickingChecklist({ order }: { order: CourierOrder }) {
+  const { notify } = useToast();
+  const pick = usePickItem(order.id);
+  const ready = order.items.filter((i) => i.picked_qty >= i.qty).length;
+
+  const set = (itemId: string, pickedQty: number) =>
+    pick.mutate({ itemId, pickedQty }, { onError: (err) => notify("error", errorMessage(err)) });
+
+  return (
+    <section className="rounded-xl border border-border p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-bold">Barang</h2>
+        <span className="text-sm font-medium">
+          {ready} dari {order.items.length} item siap
+        </span>
+      </div>
+      <ul className="mt-2 flex flex-col gap-2">
+        {order.items.map((it) => {
+          const done = it.picked_qty >= it.qty;
+          return (
+            <li key={it.id} className={`rounded-lg border p-2 ${done ? "border-primary bg-primary/5" : "border-border"}`}>
+              <button
+                type="button"
+                className="flex min-h-12 w-full items-center justify-between gap-2 text-left"
+                disabled={pick.isPending}
+                onClick={() => set(it.id, it.qty)}
+              >
+                <span className="flex items-center gap-2">
+                  <span aria-hidden>{done ? "✓" : "○"}</span>
+                  <span>{it.name}</span>
+                </span>
+                <span className="font-semibold">
+                  {it.picked_qty}/{it.qty}
+                </span>
+              </button>
+              <div className="mt-1 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  aria-label={`Kurangi ${it.name}`}
+                  className="min-h-12 min-w-12 rounded-lg border border-border text-xl"
+                  disabled={pick.isPending || it.picked_qty <= 0}
+                  onClick={() => set(it.id, it.picked_qty - 1)}
+                >
+                  −
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Tambah ${it.name}`}
+                  className="min-h-12 min-w-12 rounded-lg border border-border text-xl"
+                  disabled={pick.isPending || it.picked_qty >= it.qty}
+                  onClick={() => set(it.id, it.picked_qty + 1)}
+                >
+                  +
+                </button>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function ReleaseDialog({ orderId, onClose, onReleased }: { orderId: string; onClose: () => void; onReleased: () => void }) {
+  const { notify } = useToast();
+  const release = useReleaseOrder(orderId);
+  const [reason, setReason] = useState("");
+
+  const submit = () =>
+    release.mutate(reason.trim(), {
+      onSuccess: () => {
+        notify("success", "Order dilepas.");
+        onReleased();
+      },
+      onError: (err) => notify("error", errorMessage(err)),
+    });
+
+  return (
+    <div role="dialog" aria-modal="true" aria-label="Lepas order" className="fixed inset-0 z-50 flex items-end bg-black/50 p-4">
+      <div className="mx-auto flex w-full max-w-md flex-col gap-3 rounded-xl bg-background p-4">
+        <h2 className="text-xl font-bold">Lepas order?</h2>
+        <p className="text-muted-foreground">Order kembali ke daftar job dan bisa diambil kurir lain.</p>
+        <label className="flex flex-col gap-1 font-medium">
+          Alasan
+          <textarea
+            className="min-h-24 rounded-lg border border-input bg-background p-3 text-lg"
+            maxLength={200}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            disabled={release.isPending}
+          />
+        </label>
+        {release.isError && (
+          <p role="alert" className="text-destructive">
+            {errorMessage(release.error)}
+          </p>
+        )}
+        <Button variant="destructive" loading={release.isPending} disabled={reason.trim() === ""} onClick={submit}>
+          Ya, lepas order
+        </Button>
+        <Button variant="secondary" disabled={release.isPending} onClick={onClose}>
+          Batal
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function OrderDetailPage() {
   const { id = "" } = useParams();
@@ -17,6 +149,7 @@ export function OrderDetailPage() {
   const query = useOrder(id);
   const statusMutation = useOrderStatus();
   const [panel, setPanel] = useState<Panel>("none");
+  const [releasing, setReleasing] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [startKey, setStartKey] = useState(() => crypto.randomUUID());
 
@@ -64,6 +197,7 @@ export function OrderDetailPage() {
   const a = order.address;
   const maps = `https://www.google.com/maps/dir/?api=1&destination=${a.lat},${a.lng}`;
   const returning = order.status === "FAILED" && order.return_pending;
+  const allPicked = order.items.every((i) => i.picked_qty >= i.qty);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-4">
@@ -77,11 +211,15 @@ export function OrderDetailPage() {
         </span>
       </header>
 
+      {(order.status === "PICKING" || order.status === "ON_DELIVERY") && <Stepper status={order.status} />}
+
       {returning && (
         <p className="rounded-lg bg-destructive/10 p-3 font-medium text-destructive">
           Kembalikan barang ke cabang – menunggu konfirmasi admin
         </p>
       )}
+
+      {order.status === "PICKING" && <PickingChecklist order={order} />}
 
       <section className="rounded-xl border border-border p-4">
         <h2 className="font-bold">Penerima</h2>
@@ -95,44 +233,55 @@ export function OrderDetailPage() {
           {a.unit ? `, ${a.unit}` : ""}
         </p>
         {a.courier_note && <p className="mt-2 rounded-lg bg-muted p-2 text-sm">Catatan: {a.courier_note}</p>}
-        <a
-          href={maps}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 flex min-h-14 items-center justify-center rounded-lg border border-border text-lg font-semibold"
-        >
-          Buka di Google Maps
-        </a>
+        {order.status === "ON_DELIVERY" && (
+          <a
+            href={maps}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 flex min-h-14 items-center justify-center rounded-lg border border-border text-lg font-semibold"
+          >
+            Buka di Google Maps
+          </a>
+        )}
       </section>
 
-      <section className="rounded-xl border border-border p-4">
-        <h2 className="font-bold">Barang</h2>
-        <ul className="mt-1 divide-y divide-border">
-          {order.items.map((it) => (
-            <li key={it.sku} className="flex justify-between py-2">
-              <span>{it.name}</span>
-              <span className="font-semibold">×{it.qty}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {order.status !== "PICKING" && (
+        <section className="rounded-xl border border-border p-4">
+          <h2 className="font-bold">Barang</h2>
+          <ul className="mt-1 divide-y divide-border">
+            {order.items.map((it) => (
+              <li key={it.id} className="flex justify-between py-2">
+                <span>{it.name}</span>
+                <span className="font-semibold">×{it.qty}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
-      {order.status === "ASSIGNED" && (
+      {order.status === "PICKING" && (
         <>
-          <Button loading={statusMutation.isPending} onClick={() => void start()}>
-            Mulai antar
+          <Button loading={statusMutation.isPending} disabled={!allPicked} onClick={() => void start()}>
+            Jalan
           </Button>
+          {!allPicked && <p className="text-center text-sm text-muted-foreground">Siapkan semua barang dulu untuk berangkat.</p>}
           {startError && (
             <p role="alert" className="text-destructive">
               {startError}
             </p>
+          )}
+          <Button variant="secondary" disabled={statusMutation.isPending} onClick={() => setReleasing(true)}>
+            Lepas order
+          </Button>
+          {releasing && (
+            <ReleaseDialog orderId={order.id} onClose={() => setReleasing(false)} onReleased={() => navigate("/")} />
           )}
         </>
       )}
 
       {order.status === "ON_DELIVERY" && panel === "none" && (
         <>
-          <Button onClick={() => setPanel("deliver")}>Selesai</Button>
+          <Button onClick={() => setPanel("deliver")}>Sudah sampai</Button>
           <Button variant="destructive" onClick={() => setPanel("fail")}>
             Gagal kirim
           </Button>

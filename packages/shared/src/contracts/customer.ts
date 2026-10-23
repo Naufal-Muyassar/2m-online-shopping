@@ -35,6 +35,7 @@ export const productSchema = z.object({
   category: z.string(),
   weight_kg: z.number(),
   price: z.number().int(),
+  sellable_qty: z.number().int().min(0),
   stock_status: z.enum(STOCK_STATUSES),
 });
 export type Product = z.infer<typeof productSchema>;
@@ -115,6 +116,7 @@ export const priceBreakdownSchema = z.object({
   payment_fee: z.number().int(),
   grand_total: z.number().int(),
   distance_km: z.number(),
+  route_distance_km: z.number(),
   total_weight_kg: z.number(),
 });
 export type PriceBreakdown = z.infer<typeof priceBreakdownSchema>;
@@ -145,6 +147,8 @@ export const customerOrderDetailSchema = orderSummarySchema.extend({
   payment_fee: z.number().int(),
   voucher_discount: z.number().int(),
   payment_method: z.string().nullable(),
+  // Set from PICKING onward; never the phone number.
+  courier_first_name: z.string().nullable(),
   items: z.array(
     z.object({ name: z.string(), unit_price: z.number().int(), qty: z.number().int(), sku: z.string() }),
   ),

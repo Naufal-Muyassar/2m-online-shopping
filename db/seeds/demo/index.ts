@@ -1,4 +1,4 @@
-import { BRANCH, DEMO_ORDERS, DELIVERY_FEE, PRODUCTS, USERS } from "./constants";
+import { BRANCH, DEMO_ORDERS, DELIVERY_FEE, DEMO_STOCK_OVERRIDES, PRODUCTS, USERS } from "./constants";
 
 // Every demo product starts with this many units in the stock_snapshots stand-in.
 const DEMO_STOCK_QTY = 200;
@@ -18,8 +18,11 @@ export async function seedBase(db: Db, passwordHash: string): Promise<void> {
 
   await db.query(
     `INSERT INTO branch_pricing_config
-       (branch_id, base_fee, per_km, free_km, weight_threshold_kg, surcharge_per_kg, fee_min, fee_max, min_order)
-     VALUES ($1, 5000, 2000, 1, 20, 500, 5000, 30000, 30000)`,
+       (branch_id, base_fee, per_km, free_km, weight_threshold_kg, surcharge_per_kg, fee_min, fee_max, min_order,
+        pricing_model, wage_base, wage_per_km, failed_rate, failed_pay_fraction, failed_fee_charged_fraction,
+        overhead_per_day, drops_per_day, round_to, cap_min_fee, cap_free_km, cap_per_km)
+     VALUES ($1, 5000, 2000, 1, 20, 500, 5000, 30000, 30000,
+             'ds_v2', 3500, 1500, 0.03, 0.5, 0, 10000, 15, 500, 7500, 4, 1333.33)`,
     [branch],
   );
   await db.query(
@@ -55,9 +58,9 @@ export async function seedBase(db: Db, passwordHash: string): Promise<void> {
   for (const c of USERS.couriers) {
     const id = await insertUser("courier", c.name, c.phone, null, branch);
     await db.query(
-      `INSERT INTO couriers (user_id, partner_id, branch_id, status, last_status_change)
-       VALUES ($1,$2,$3,'IDLE', now() - make_interval(mins => $4))`,
-      [id, partner, branch, c.minutesIdle],
+      `INSERT INTO couriers (user_id, partner_id, branch_id, status, last_status_change, motor_code, motor_cluster)
+       VALUES ($1,$2,$3,'IDLE', now() - make_interval(mins => $4), $5, $6)`,
+      [id, partner, branch, c.minutesIdle, c.motorCode, c.motorCluster],
     );
   }
 
@@ -82,7 +85,11 @@ export async function seedBase(db: Db, passwordHash: string): Promise<void> {
       `INSERT INTO branch_products (branch_id, product_id, price, display_order) VALUES ($1,$2,$3,$4)`,
       [branch, productId, price, displayOrder++],
     );
-    await db.query(`INSERT INTO stock_snapshots (branch_id, product_id, qty) VALUES ($1,$2,$3)`, [branch, productId, DEMO_STOCK_QTY]);
+    await db.query(`INSERT INTO stock_snapshots (branch_id, product_id, qty) VALUES ($1,$2,$3)`, [
+      branch,
+      productId,
+      DEMO_STOCK_OVERRIDES[sku] ?? DEMO_STOCK_QTY,
+    ]);
   }
 }
 

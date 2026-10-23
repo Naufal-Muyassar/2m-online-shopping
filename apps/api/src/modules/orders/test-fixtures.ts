@@ -58,7 +58,7 @@ export async function giveStock(db: Db, branchId: string, productId: string, qty
 }
 
 export async function insertOrder(db: Db, fx: Fixture, status: OrderStatus): Promise<string> {
-  const assigned = status === "ASSIGNED" || status === "ON_DELIVERY";
+  const assigned = status === "PICKING" || status === "ON_DELIVERY";
   const id = (
     await db.query(
       `INSERT INTO orders (code, branch_id, customer_id, address_id, status, subtotal, grand_total, assigned_courier_id)

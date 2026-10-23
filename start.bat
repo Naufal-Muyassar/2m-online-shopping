@@ -20,13 +20,11 @@ if "%FIRST%"=="1" (
   call pnpm db:migrate || exit /b 1
 )
 
-start "2M Worker" cmd /k "pnpm --filter api worker"
-
 echo.
 echo API:         http://localhost:3000
-echo Courier PWA: http://localhost:5173
-echo Admin web:   http://localhost:5174
-echo Customer:    http://localhost:5175
+echo Customer:    http://localhost:5171
+echo Courier PWA: http://localhost:5172
+echo Admin web:   http://localhost:5173
 echo MinIO:       http://localhost:9001  (minioadmin / minioadmin)
 echo.
-pnpm dev
+pnpm dev:all

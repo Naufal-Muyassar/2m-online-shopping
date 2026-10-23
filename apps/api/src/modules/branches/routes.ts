@@ -5,7 +5,7 @@ import { pool } from "../../shared/db";
 import { AppError } from "../../shared/errors";
 import { asyncHandler, validate } from "../../shared/http";
 import * as catalog from "../catalog/repo";
-import { stockProvider } from "../catalog/stock";
+import { stockStatusOf } from "../catalog/stock";
 
 export const branchesRoutes = Router();
 
@@ -30,12 +30,8 @@ branchesRoutes.get(
       catalog.listProducts(pool, branchId, query),
       catalog.listCategories(pool, branchId),
     ]);
-    const stock = await stockProvider.statusFor(
-      branchId,
-      rows.map((r) => r.id),
-    );
     const body: ProductsResponse = {
-      products: rows.map((r) => ({ ...r, stock_status: stock.get(r.id) ?? "available" })),
+      products: rows.map((r) => ({ ...r, stock_status: stockStatusOf(r.sellable_qty) })),
       categories,
       page: query.page,
       page_size: catalog.PAGE_SIZE,

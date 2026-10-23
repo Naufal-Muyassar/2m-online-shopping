@@ -29,6 +29,18 @@ export interface PricingConfig {
   fee_max: number;
   min_order: number;
   circuity_factor: number;
+  pricing_model: "ds_v2" | "linear";
+  wage_base: number;
+  wage_per_km: number;
+  failed_rate: number;
+  failed_pay_fraction: number;
+  failed_fee_charged_fraction: number;
+  overhead_per_day: number;
+  drops_per_day: number;
+  round_to: number;
+  cap_min_fee: number;
+  cap_free_km: number;
+  cap_per_km: number;
 }
 
 export async function findCartId(db: Db, userId: string, branchId: string): Promise<string | null> {
@@ -113,7 +125,12 @@ export async function getLimits(db: Db, branchId: string): Promise<BranchLimits 
 export async function getPricingConfig(db: Db, branchId: string): Promise<PricingConfig | null> {
   const res = await db.query<PricingConfig>(
     `SELECT base_fee, per_km, free_km::float8 AS free_km, weight_threshold_kg::float8 AS weight_threshold_kg,
-            surcharge_per_kg, fee_min, fee_max, min_order, circuity_factor::float8 AS circuity_factor
+            surcharge_per_kg, fee_min, fee_max, min_order, circuity_factor::float8 AS circuity_factor,
+            pricing_model, wage_base, wage_per_km, failed_rate::float8 AS failed_rate,
+            failed_pay_fraction::float8 AS failed_pay_fraction,
+            failed_fee_charged_fraction::float8 AS failed_fee_charged_fraction,
+            overhead_per_day, drops_per_day, round_to, cap_min_fee, cap_free_km::float8 AS cap_free_km,
+            cap_per_km::float8 AS cap_per_km
      FROM branch_pricing_config WHERE branch_id = $1`,
     [branchId],
   );

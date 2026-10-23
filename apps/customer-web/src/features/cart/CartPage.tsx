@@ -51,7 +51,7 @@ export function CartPage() {
                   <span className="w-8 text-center text-sm">{i.qty}</span>
                   <button
                     aria-label="Tambah"
-                    disabled={busy}
+                    disabled={busy || i.qty >= cart.limits.max_qty_per_sku}
                     onClick={() => setQty.mutate({ productId: i.product_id, qty: i.qty + 1 }, { onError: fail })}
                     className="h-8 w-8 rounded-md border disabled:opacity-50"
                   >

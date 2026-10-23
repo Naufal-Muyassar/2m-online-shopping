@@ -1,5 +1,5 @@
 import type { Pool } from "pg";
-import type { OrderStatus } from "@2m/shared";
+import type { CourierStatus, OrderStatus } from "@2m/shared";
 import type { Tx } from "../../shared/db";
 
 export interface OrderRow {
@@ -50,13 +50,33 @@ export async function clearReturnPending(tx: Tx, orderId: string): Promise<void>
   await tx.query(`UPDATE orders SET return_pending = false, updated_at = now() WHERE id = $1`, [orderId]);
 }
 
+export async function lockCourier(
+  tx: Tx,
+  courierId: string,
+): Promise<{ branch_id: string; status: CourierStatus } | null> {
+  const res = await tx.query<{ branch_id: string; status: CourierStatus }>(
+    `SELECT branch_id, status FROM couriers WHERE user_id = $1 FOR UPDATE`,
+    [courierId],
+  );
+  return res.rows[0] ?? null;
+}
+
+export async function hasUnpickedItems(tx: Tx, orderId: string): Promise<boolean> {
+  const res = await tx.query(
+    `SELECT 1 FROM order_items WHERE order_id = $1 AND COALESCE(picked_qty, 0) < qty LIMIT 1`,
+    [orderId],
+  );
+  return res.rowCount === 1;
+}
+
 export interface OrderUpdate {
   orderId: string;
   from: OrderStatus;
   to: OrderStatus;
   setCourierId: string | null | undefined;
-  setReadyAt: boolean;
+  setAcceptedAt: boolean;
   setDeliveredAt: boolean;
+  setCourierPay?: "full" | "failed";
   setReturnPending: boolean;
   setInvoice?: { id: string; url: string; expiresAt: Date };
   setPaymentFeeActual?: number;
@@ -78,9 +98,15 @@ export async function updateOrderStatus(tx: Tx, u: OrderUpdate): Promise<OrderRo
     params.push(u.setPaymentFeeActual);
     sets.push(`payment_fee_actual = $${params.length}`);
   }
-  if (u.setReadyAt) sets.push("ready_at = now()");
+  if (u.setAcceptedAt) sets.push("accepted_at = now()");
   if (u.setDeliveredAt) sets.push("delivered_at = now()");
   if (u.setReturnPending) sets.push("return_pending = true");
+  if (u.setCourierPay === "full") sets.push("courier_pay_final = courier_wage");
+  if (u.setCourierPay === "failed") {
+    sets.push(
+      "courier_pay_final = round(courier_wage * COALESCE((pricing_snapshot->'courier_wage'->>'failed_pay_fraction')::numeric, 0))::int",
+    );
+  }
   const res = await tx.query<OrderRow>(
     `UPDATE orders SET ${sets.join(", ")} WHERE id = $1 AND status = $2 RETURNING ${ORDER_COLUMNS}`,
     params,
