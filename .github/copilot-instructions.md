@@ -52,9 +52,9 @@ db/{migrations,seeds,metrics}   infra/{docker,nginx,scripts}   docs/{adr,runbook
 
 ## 5. Domain spec
 
-**Order states (11):** CREATED, PENDING_PAYMENT, PAID, ACCEPTED, PICKING, READY, ASSIGNED, ON_DELIVERY, DELIVERED, FAILED, CANCELLED. DELIVERED, FAILED, CANCELLED are terminal.
+**Order states (11):** CREATED, PENDING_PAYMENT, PAID, ACCEPTED, PICKING, READY, ASSIGNED, ON_DELIVERY, DELIVERED, FAILED, CANCELLED. DELIVERED, FAILED, CANCELLED are terminal. READY and ASSIGNED stay in the enum but are DORMANT (old FIFO dispatch; `FIFO_TRANSITIONS_DORMANT` is exported and unused). Flow: PAID → (admin) ACCEPTED = job pool → (courier claims) PICKING → (courier "Jalan") ON_DELIVERY → DELIVERED | FAILED.
 
-**Allowed transitions** (anything else → 409 `INVALID_TRANSITION`):
+**Allowed transitions** (`ACTIVE_TRANSITIONS`; anything else → 409 `INVALID_TRANSITION`):
 
 | From → To | Allowed actor | Requires |
 |---|---|---|
@@ -62,16 +62,13 @@ db/{migrations,seeds,metrics}   infra/{docker,nginx,scripts}   docs/{adr,runbook
 | CREATED → CANCELLED | system, customer | reason |
 | PENDING_PAYMENT → PAID | system, super_admin (demo "force paid", audited) | – |
 | PENDING_PAYMENT → CANCELLED | system, customer | reason |
-| PAID → ACCEPTED | branch_admin | – |
+| PAID → ACCEPTED | branch_admin | – (sets `accepted_at`) |
 | PAID → CANCELLED | branch_admin, super_admin | reason |
-| ACCEPTED → PICKING | branch_admin | – |
+| ACCEPTED → PICKING | courier (claim), branch_admin (manual assign, audited) | courier IDLE in the order's branch; admin passes `courier_id` |
 | ACCEPTED → CANCELLED | branch_admin, super_admin | reason |
-| PICKING → READY | branch_admin | – |
-| PICKING → CANCELLED | super_admin | reason |
-| READY → ASSIGNED | system (dispatch), branch_admin (manual) | courier_id |
-| READY → CANCELLED | super_admin | reason |
-| ASSIGNED → ON_DELIVERY | courier (the assigned one) | lat, lng |
-| ASSIGNED → READY | system, branch_admin (reassign) | audit entry; courier released |
+| PICKING → ACCEPTED | courier (assigned), branch_admin | reason; audited; courier → IDLE |
+| PICKING → ON_DELIVERY | courier (the assigned one) | every item `picked_qty >= qty` (else 409 `PICKING_INCOMPLETE`); lat, lng |
+| PICKING → CANCELLED | super_admin | reason; courier → IDLE |
 | ON_DELIVERY → DELIVERED | courier (the assigned one) | photo proof registered, lat, lng |
 | ON_DELIVERY → FAILED | courier (the assigned one) | reason enum + proof or note; sets `return_pending = true` |
 
@@ -79,24 +76,20 @@ Failed reasons: `CUSTOMER_UNREACHABLE`, `ADDRESS_NOT_FOUND`, `REFUSED`, `OTHER`.
 
 **Roles:** `customer`, `courier`, `branch_admin` (scoped to one branch), `super_admin` (all branches).
 
-**Courier status:** `IDLE | DELIVERING | OFFLINE`. A courier toggles IDLE↔OFFLINE only when not DELIVERING. ASSIGNED sets DELIVERING. DELIVERED sets IDLE unless `return_pending`; a failed order keeps the courier DELIVERING until a branch admin calls `confirm-return`. `last_status_change` is updated on every courier status change.
+**Courier status:** `IDLE | DELIVERING | OFFLINE`. A courier toggles IDLE↔OFFLINE only when not DELIVERING. Claiming (ACCEPTED→PICKING) sets DELIVERING; releasing sets IDLE. DELIVERED sets IDLE unless `return_pending`; a failed order keeps the courier DELIVERING until a branch admin calls `confirm-return`. `last_status_change` is updated on every courier status change.
 
-**Dispatch (FIFO per branch), one order per courier, one transaction:**
-
-```sql
-SELECT user_id FROM couriers
-WHERE branch_id = $1 AND status = 'IDLE'
-ORDER BY last_status_change ASC
-LIMIT 1 FOR UPDATE SKIP LOCKED
-```
-
-then `transition(READY → ASSIGNED)` + courier → DELIVERING. Two triggers: (a) an order becomes READY; (b) a courier becomes IDLE → `drain(branch_id)` assigns the oldest READY orders (`ORDER BY ready_at ASC`). No READY→ASSIGNED without an idle courier; the order simply stays READY.
+**Claim model (replaces FIFO dispatch), one order per courier, one transaction:** the order row is locked first, then the courier row (`order → courier`, always). The conditional `UPDATE … WHERE status='ACCEPTED'` plus the locks make exactly one concurrent claimant win; the rest get 409 `JOB_TAKEN`; a non-IDLE courier gets 409 `COURIER_BUSY`. The `dispatch` module is dormant: unmounted, no call sites, tests in `apps/api/test/dormant/` (excluded from the default run).
 
 **Courier API contract:**
 
-- `POST /api/v1/courier/orders/:id/status` body `{ to, lat, lng, accuracy, client_ts, idempotency_key, reason? }`; `to` ∈ ON_DELIVERY | DELIVERED | FAILED.
-- `POST /api/v1/courier/orders/:id/proof/upload-url` → `{ upload_url, photo_key }` (signed PUT; the file goes straight to object storage, never through Node). `POST …/proof` `{ photo_key, lat, lng }` registers it. DELIVERED requires a registered proof.
+- `GET /api/v1/courier/jobs` → `{ jobs, can_claim, reason? }`. IDLE courier: ACCEPTED, unassigned orders of own branch, `accepted_at ASC`, max 20, each `{ id, code, accepted_at, item_count, total_weight_kg, route_distance_km, courier_wage, area_hint }` (no receiver name/phone, full address or pin). Not IDLE: `{ jobs: [], can_claim: false, reason: 'OFFLINE' | 'BUSY' }`.
+- `POST /api/v1/courier/jobs/:id/claim` body `{ lat, lng, accuracy, client_ts, idempotency_key }` → order detail (now with receiver, address, pin, items with `picked_qty`).
+- `PATCH /api/v1/courier/orders/:id/items/:itemId` body `{ picked_qty }` (assigned courier, only while PICKING, `0 <= picked_qty <= qty`). `POST …/orders/:id/release` body `{ reason }` (PICKING→ACCEPTED).
+- `GET /api/v1/courier/orders`: active = PICKING, ON_DELIVERY, or FAILED with `return_pending`.
+- `POST /api/v1/courier/orders/:id/status` body `{ to, lat, lng, accuracy, client_ts, idempotency_key, reason? }`; `to` ∈ ON_DELIVERY | DELIVERED | FAILED (ON_DELIVERY valid from PICKING).
+- `POST /api/v1/courier/orders/:id/proof/upload-url` → `{ upload_url, photo_key }` (signed PUT; the file goes straight to object storage, never through Node). `POST …/proof` `{ photo_key, lat, lng }` registers it (ON_DELIVERY only). DELIVERED requires a registered proof.
 - `POST /api/v1/courier/pings` body `{ pings: [{ lat, lng, accuracy, battery?, order_id?, client_ts }] }` → `courier_pings` table (not the outbox).
+- Admin: `POST /api/v1/admin/orders/:id/transition` accepts only `to: ACCEPTED`; `POST …/assign` `{ courier_id }` (ACCEPTED→PICKING); `POST …/release` `{ reason }` (PICKING→ACCEPTED); `confirm-return` unchanged.
 
 ## 6. Demo scope (31 Oct)
 

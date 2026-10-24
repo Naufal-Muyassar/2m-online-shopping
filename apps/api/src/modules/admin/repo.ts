@@ -48,6 +48,7 @@ interface AdminCourierRow {
   status: AdminCourier["status"];
   last_status_change: Date;
   last_ping_at: Date | null;
+  motor_cluster: string | null;
   order_id: string | null;
   order_code: string | null;
   order_status: AdminOrder["status"] | null;
@@ -55,7 +56,7 @@ interface AdminCourierRow {
 
 export async function listBranchCouriers(db: Pool, branchId: string): Promise<AdminCourier[]> {
   const res = await db.query<AdminCourierRow>(
-    `SELECT c.user_id, u.name, p.name AS partner_name, c.status, c.last_status_change, c.last_ping_at,
+    `SELECT c.user_id, u.name, p.name AS partner_name, c.status, c.last_status_change, c.last_ping_at, c.motor_cluster,
             o.id AS order_id, o.code AS order_code, o.status AS order_status
      FROM couriers c
      JOIN users u ON u.id = c.user_id
@@ -63,7 +64,7 @@ export async function listBranchCouriers(db: Pool, branchId: string): Promise<Ad
      LEFT JOIN LATERAL (
        SELECT id, code, status FROM orders
        WHERE assigned_courier_id = c.user_id
-         AND (status IN ('ASSIGNED','ON_DELIVERY') OR (status = 'FAILED' AND return_pending))
+         AND (status IN ('PICKING','ON_DELIVERY') OR (status = 'FAILED' AND return_pending))
        ORDER BY updated_at DESC LIMIT 1
      ) o ON true
      WHERE c.branch_id = $1
@@ -77,6 +78,7 @@ export async function listBranchCouriers(db: Pool, branchId: string): Promise<Ad
     status: r.status,
     last_status_change: r.last_status_change.toISOString(),
     last_ping_at: r.last_ping_at?.toISOString() ?? null,
+    motor_cluster: r.motor_cluster,
     current_order: r.order_id && r.order_code && r.order_status ? { id: r.order_id, code: r.order_code, status: r.order_status } : null,
   }));
 }

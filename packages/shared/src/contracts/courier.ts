@@ -23,10 +23,12 @@ export const courierStatusResponseSchema = z.object({ status: z.enum(COURIER_STA
 export type CourierStatusResponse = z.infer<typeof courierStatusResponseSchema>;
 
 export const courierOrderItemSchema = z.object({
+  id: z.string().uuid(),
   sku: z.string(),
   name: z.string(),
   qty: z.number().int(),
   weight_kg: z.number(),
+  picked_qty: z.number().int().min(0),
 });
 
 export const courierOrderSchema = z.object({
@@ -58,6 +60,46 @@ export const courierOrdersResponseSchema = z.object({
   recent: z.array(courierOrderSchema),
 });
 export type CourierOrdersResponse = z.infer<typeof courierOrdersResponseSchema>;
+
+// GET /courier/jobs: receiver, full address and pin stay hidden until the job is claimed
+export const courierJobSchema = z.object({
+  id: z.string().uuid(),
+  code: z.string(),
+  accepted_at: z.string().nullable(),
+  item_count: z.number().int(),
+  total_weight_kg: z.number(),
+  route_distance_km: z.number().nullable(),
+  courier_wage: z.number().int().nullable(),
+  area_hint: z.string(),
+});
+export type CourierJob = z.infer<typeof courierJobSchema>;
+export const courierJobsResponseSchema = z.object({
+  jobs: z.array(courierJobSchema),
+  can_claim: z.boolean(),
+  reason: z.enum(["OFFLINE", "BUSY"]).optional(),
+});
+export type CourierJobsResponse = z.infer<typeof courierJobsResponseSchema>;
+
+// POST /courier/jobs/:id/claim → CourierOrder
+export const courierClaimRequestSchema = z.object({
+  lat,
+  lng,
+  accuracy: z.number().min(0),
+  client_ts: z.string().datetime({ offset: true }),
+  idempotency_key: z.string().uuid(),
+});
+export type CourierClaimRequest = z.infer<typeof courierClaimRequestSchema>;
+
+// PATCH /courier/orders/:id/items/:itemId
+export const courierItemParamsSchema = z.object({ id: z.string().uuid(), itemId: z.string().uuid() });
+export const pickItemRequestSchema = z.object({ picked_qty: z.number().int().min(0) });
+export type PickItemRequest = z.infer<typeof pickItemRequestSchema>;
+export const pickItemResponseSchema = z.object({ id: z.string().uuid(), picked_qty: z.number().int().min(0) });
+export type PickItemResponse = z.infer<typeof pickItemResponseSchema>;
+
+// POST /courier/orders/:id/release (PICKING → ACCEPTED)
+export const courierReleaseRequestSchema = z.object({ reason: z.string().trim().min(1).max(200) });
+export type CourierReleaseRequest = z.infer<typeof courierReleaseRequestSchema>;
 
 // POST /courier/orders/:id/status
 export const COURIER_STATUS_TARGETS = ["ON_DELIVERY", "DELIVERED", "FAILED"] as const;

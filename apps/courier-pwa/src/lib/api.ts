@@ -29,6 +29,8 @@ const CODE_MESSAGES: Record<string, string> = {
   PROOF_REQUIRED: "Foto bukti pengiriman wajib diunggah.",
   INVALID_TRANSITION: "Status pesanan sudah berubah. Muat ulang halaman.",
   INVALID_STATE: "Status pesanan sudah berubah. Muat ulang halaman.",
+  JOB_TAKEN: "Order sudah diambil kurir lain",
+  PICKING_INCOMPLETE: "Semua barang harus disiapkan sebelum berangkat.",
 };
 
 export function errorMessage(error: unknown): string {

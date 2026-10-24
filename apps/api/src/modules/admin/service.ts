@@ -4,7 +4,6 @@ import { audit } from "../../shared/audit";
 import { AppError } from "../../shared/errors";
 import { clearReturnPending, getOrderBranch, lockOrder } from "../orders/repo";
 import { transition } from "../orders/service";
-import { drainBranch } from "../dispatch/service";
 import { setCourierStatus } from "../courier/repo";
 import * as repo from "./repo";
 
@@ -36,13 +35,12 @@ export async function confirmReturn(input: { orderId: string; adminId: string; b
       after: { return_pending: false, courier_id: order.assigned_courier_id },
     });
   });
-  await drainBranch(input.branchId);
   return { order_id: input.orderId };
 }
 
 export async function adminTransition(input: {
   orderId: string;
-  to: Extract<OrderStatus, "ACCEPTED" | "PICKING" | "READY">;
+  to: Extract<OrderStatus, "ACCEPTED">;
   adminId: string;
   branchId: string;
   idempotencyKey?: string;
@@ -51,7 +49,7 @@ export async function adminTransition(input: {
   if ((await getOrderBranch(pool, input.orderId)) !== input.branchId) {
     throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
   }
-  const result = await withTransaction((tx) =>
+  return withTransaction((tx) =>
     transition(tx, {
       orderId: input.orderId,
       to: input.to,
@@ -59,8 +57,46 @@ export async function adminTransition(input: {
       meta: { idempotency_key: input.idempotencyKey },
     }),
   );
-  if (input.to === "READY" && !result.replayed) await drainBranch(input.branchId);
-  return result;
+}
+
+export async function assignOrder(input: {
+  orderId: string;
+  courierId: string;
+  adminId: string;
+  branchId: string;
+  idempotencyKey?: string;
+}) {
+  if ((await getOrderBranch(pool, input.orderId)) !== input.branchId) {
+    throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+  }
+  return withTransaction((tx) =>
+    transition(tx, {
+      orderId: input.orderId,
+      to: "PICKING",
+      actor: { id: input.adminId, role: "branch_admin" },
+      meta: { courier_id: input.courierId, idempotency_key: input.idempotencyKey },
+    }),
+  );
+}
+
+export async function releaseOrder(input: {
+  orderId: string;
+  reason: string;
+  adminId: string;
+  branchId: string;
+  idempotencyKey?: string;
+}) {
+  if ((await getOrderBranch(pool, input.orderId)) !== input.branchId) {
+    throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+  }
+  return withTransaction((tx) =>
+    transition(tx, {
+      orderId: input.orderId,
+      to: "ACCEPTED",
+      actor: { id: input.adminId, role: "branch_admin" },
+      meta: { reason: input.reason, idempotency_key: input.idempotencyKey },
+    }),
+  );
 }
 
 // DEMO: stands in for the payment gateway until payments exist.

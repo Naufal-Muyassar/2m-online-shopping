@@ -34,6 +34,23 @@ export const USERS = {
 
 export const DELIVERY_FEE = 8000;
 
+// Low and out-of-stock states stay visible in the demo: three products with 3 units, one with none.
+export const DEMO_STOCK_OVERRIDES: Readonly<Record<string, number>> = {
+  "GAL-19L": 3,
+  "TLR-TRAY": 3,
+  "SUSU-UHT": 3,
+  "TSU-4": 0,
+};
+
+// Local dev origins (fixed ports, see each vite.config.ts).
+export const DEMO_URLS = {
+  api: "http://localhost:3000",
+  customer: "http://localhost:5171",
+  courier: "http://localhost:5172",
+  admin: "http://localhost:5173",
+  minio: "http://localhost:9001",
+};
+
 // [sku, name, unit, category, weight_kg, price]
 export const PRODUCTS: ReadonlyArray<readonly [string, string, string, string, number, number]> = [
   ["BRS-5KG", "Beras Premium 5 kg", "pak", "beras", 5, 72000],

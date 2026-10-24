@@ -1,9 +1,18 @@
-import type { CourierStatusRequest, CourierOrderStatusRequest, PingsRequest, ProofRegisterRequest } from "@2m/shared";
+import type {
+  CourierClaimRequest,
+  CourierJobsResponse,
+  CourierReleaseRequest,
+  CourierStatusRequest,
+  CourierOrderStatusRequest,
+  PickItemRequest,
+  PingsRequest,
+  ProofRegisterRequest,
+} from "@2m/shared";
 import { pool, withTransaction } from "../../shared/db";
 import { AppError } from "../../shared/errors";
 import { isProofKeyFor, presignPut, proofKeyFor } from "../../shared/storage";
+import { lockOrder, transitionKeyExists } from "../orders/repo";
 import { transition } from "../orders/service";
-import { drainBranch } from "../dispatch/service";
 import * as repo from "./repo";
 
 async function requireCourier(courierId: string): Promise<repo.CourierRow> {
@@ -22,15 +31,66 @@ export async function me(courierId: string) {
 }
 
 export async function setStatus(courierId: string, status: CourierStatusRequest["status"]) {
-  const { branchId, changed } = await withTransaction(async (tx) => {
+  await withTransaction(async (tx) => {
     const c = await repo.getCourier(tx, courierId, true);
     if (!c) throw new AppError(404, "COURIER_NOT_FOUND", "Courier profile not found");
     if (c.status === "DELIVERING") throw new AppError(409, "COURIER_BUSY", "Cannot change status while delivering");
     await repo.setCourierStatus(tx, courierId, status);
-    return { branchId: c.branch_id, changed: c.status !== status };
   });
-  if (status === "IDLE" && changed) await drainBranch(branchId);
   return { status };
+}
+
+export async function listJobs(courierId: string): Promise<CourierJobsResponse> {
+  const courier = await requireCourier(courierId);
+  if (courier.status !== "IDLE") {
+    return { jobs: [], can_claim: false, reason: courier.status === "OFFLINE" ? "OFFLINE" : "BUSY" };
+  }
+  return { jobs: await repo.listJobs(pool, courier.branch_id), can_claim: true };
+}
+
+export async function claimJob(courierId: string, orderId: string, body: CourierClaimRequest) {
+  const courier = await requireCourier(courierId);
+  return withTransaction(async (tx) => {
+    const order = await lockOrder(tx, orderId);
+    // Out-of-branch jobs look nonexistent.
+    if (!order || order.branch_id !== courier.branch_id) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+    if (order.status !== "ACCEPTED" && !(await transitionKeyExists(tx, orderId, body.idempotency_key))) {
+      throw new AppError(409, "JOB_TAKEN", "Order is no longer available");
+    }
+    await transition(tx, {
+      orderId,
+      to: "PICKING",
+      actor: { id: courierId, role: "courier" },
+      meta: { lat: body.lat, lng: body.lng, accuracy: body.accuracy, client_ts: body.client_ts, idempotency_key: body.idempotency_key },
+    });
+    return (await repo.getCourierOrder(tx, courierId, orderId))!;
+  });
+}
+
+export async function pickItem(courierId: string, orderId: string, itemId: string, body: PickItemRequest) {
+  return withTransaction(async (tx) => {
+    const order = await lockOrder(tx, orderId);
+    if (!order || order.assigned_courier_id !== courierId) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+    if (order.status !== "PICKING") throw new AppError(409, "INVALID_STATE", "Order is not being picked");
+    const qty = await repo.getItemQty(tx, orderId, itemId);
+    if (qty === null) throw new AppError(404, "ITEM_NOT_FOUND", "Item not found");
+    if (body.picked_qty > qty) {
+      throw new AppError(400, "VALIDATION_ERROR", "picked_qty exceeds ordered qty", { max: qty });
+    }
+    await repo.setPickedQty(tx, itemId, body.picked_qty);
+    return { id: itemId, picked_qty: body.picked_qty };
+  });
+}
+
+export async function releaseOrder(courierId: string, orderId: string, body: CourierReleaseRequest) {
+  return withTransaction((tx) =>
+    transition(tx, {
+      orderId,
+      to: "ACCEPTED",
+      actor: { id: courierId, role: "courier" },
+      meta: { reason: body.reason },
+    }),
+  );
 }
 
 export async function listOrders(courierId: string) {
@@ -65,7 +125,6 @@ export async function updateOrderStatus(courierId: string, orderId: string, body
     }
     return r;
   });
-  if (!result.replayed && body.to === "DELIVERED") await drainBranch(result.order.branch_id);
   return result;
 }
 

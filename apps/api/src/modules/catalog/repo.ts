@@ -1,6 +1,7 @@
 import type { Pool } from "pg";
 import type { Branch } from "@2m/shared";
 import type { Tx } from "../../shared/db";
+import { SELLABLE_EXPR, SELLABLE_JOINS } from "../inventory/repo";
 
 type Db = Pool | Tx;
 
@@ -14,6 +15,7 @@ export interface ProductRow {
   category: string;
   weight_kg: number;
   price: number;
+  sellable_qty: number;
 }
 
 export async function listActiveBranches(db: Db): Promise<Branch[]> {
@@ -47,8 +49,9 @@ export async function listProducts(
   }
   params.push(PAGE_SIZE + 1, (opts.page - 1) * PAGE_SIZE);
   const res = await db.query<ProductRow>(
-    `SELECT p.id, p.sku, p.name, p.unit, p.category, p.weight_kg::float8 AS weight_kg, bp.price
-     FROM branch_products bp JOIN products p ON p.id = bp.product_id
+    `SELECT p.id, p.sku, p.name, p.unit, p.category, p.weight_kg::float8 AS weight_kg, bp.price,
+            GREATEST(${SELLABLE_EXPR}, 0) AS sellable_qty
+     FROM branch_products bp JOIN products p ON p.id = bp.product_id${SELLABLE_JOINS}
      WHERE ${where}
      ORDER BY bp.display_order, p.name
      LIMIT $${params.length - 1} OFFSET $${params.length}`,

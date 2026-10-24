@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AdminCourier, AdminCouriersResponse } from "@2m/shared";
+import type { AdminCouriersResponse } from "@2m/shared";
 import { api, errorMessage } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { useToast } from "../../lib/toast";
@@ -16,81 +15,12 @@ function pingAge(iso: string | null): string {
   return `${Math.floor(sec / 3600)} jam`;
 }
 
-function ReassignDialog({
-  orderId,
-  orderCode,
-  idleCouriers,
-  onClose,
-}: {
-  orderId: string;
-  orderCode: string;
-  idleCouriers: AdminCourier[];
-  onClose: () => void;
-}) {
-  const { branchId } = useBranch();
-  const toast = useToast();
-  const queryClient = useQueryClient();
-  const [target, setTarget] = useState("");
-
-  const reassign = useMutation({
-    mutationFn: async () =>
-      api.patch(`/orders/${orderId}/reassign`, {
-        ...(target ? { courier_id: target } : {}),
-        idempotency_key: crypto.randomUUID(),
-      }),
-    onSuccess: () => {
-      toast("success", `${orderCode} di-reassign`);
-      void queryClient.invalidateQueries({ queryKey: ["admin-couriers", branchId] });
-      void queryClient.invalidateQueries({ queryKey: ["admin-orders", branchId] });
-      onClose();
-    },
-    onError: (err) => toast("error", errorMessage(err)),
-  });
-
-  return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-sm space-y-4 rounded-lg bg-background p-5 shadow-lg">
-        <h2 className="text-lg font-semibold">Reassign {orderCode}</h2>
-        <label className="block text-sm">
-          Kurir tujuan
-          <select
-            className="mt-1 w-full rounded-md border px-3 py-2"
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
-          >
-            <option value="">Otomatis (antrean kurir terlama idle)</option>
-            {idleCouriers.map((c) => (
-              <option key={c.user_id} value={c.user_id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        {reassign.isError && <p className="text-sm text-destructive">{errorMessage(reassign.error)}</p>}
-        <div className="flex justify-end gap-2">
-          <button className="rounded-md border px-3 py-1.5" onClick={onClose} disabled={reassign.isPending}>
-            Batal
-          </button>
-          <button
-            className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground disabled:opacity-60"
-            onClick={() => reassign.mutate()}
-            disabled={reassign.isPending}
-          >
-            {reassign.isPending ? "Memproses…" : "Reassign"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function CouriersTab() {
   const { user } = useAuth();
   const { branchId } = useBranch();
   const toast = useToast();
   const queryClient = useQueryClient();
   const isBranchAdmin = user?.role === "branch_admin";
-  const [reassigning, setReassigning] = useState<{ id: string; code: string } | null>(null);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin-couriers", branchId],
@@ -115,7 +45,7 @@ export function CouriersTab() {
   if (isError) return <p className="p-4 text-sm text-destructive">{errorMessage(error)}</p>;
 
   const couriers = data?.couriers ?? [];
-  const idle = couriers.filter((c) => c.status === "IDLE");
+  const showCluster = couriers.some((c) => c.motor_cluster != null);
 
   return (
     <div className="p-4">
@@ -124,6 +54,7 @@ export function CouriersTab() {
           <tr>
             <th className="py-2">Nama</th>
             <th>Partner</th>
+            {showCluster && <th>Motor</th>}
             <th>Status</th>
             <th>Ping terakhir</th>
             <th>Order</th>
@@ -137,18 +68,11 @@ export function CouriersTab() {
               <tr key={c.user_id} className="border-b">
                 <td className="py-2 font-medium">{c.name}</td>
                 <td>{c.partner_name}</td>
+                {showCluster && <td>{c.motor_cluster ?? "-"}</td>}
                 <td>{c.status}</td>
                 <td>{pingAge(c.last_ping_at)}</td>
                 <td>{order ? `${order.code} (${order.status})` : "-"}</td>
                 <td className="space-x-2 text-right">
-                  {isBranchAdmin && order?.status === "ASSIGNED" && (
-                    <button
-                      className="rounded border px-2 py-1"
-                      onClick={() => setReassigning({ id: order.id, code: order.code })}
-                    >
-                      Reassign
-                    </button>
-                  )}
                   {isBranchAdmin && order?.status === "FAILED" && (
                     <button
                       className="rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-60"
@@ -165,14 +89,6 @@ export function CouriersTab() {
         </tbody>
       </table>
       {couriers.length === 0 && <p className="py-4 text-sm text-muted-foreground">Belum ada kurir.</p>}
-      {reassigning && (
-        <ReassignDialog
-          orderId={reassigning.id}
-          orderCode={reassigning.code}
-          idleCouriers={idle}
-          onClose={() => setReassigning(null)}
-        />
-      )}
     </div>
   );
 }

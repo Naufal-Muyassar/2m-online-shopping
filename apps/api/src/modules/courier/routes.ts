@@ -1,12 +1,19 @@
 import { Router } from "express";
 import {
+  courierClaimRequestSchema,
+  courierItemParamsSchema,
   courierOrderStatusRequestSchema,
+  courierReleaseRequestSchema,
   courierStatusRequestSchema,
   orderIdParamsSchema,
+  pickItemRequestSchema,
   pingsRequestSchema,
   proofRegisterRequestSchema,
+  type CourierClaimRequest,
   type CourierOrderStatusRequest,
+  type CourierReleaseRequest,
   type CourierStatusRequest,
+  type PickItemRequest,
   type PingsRequest,
   type ProofRegisterRequest,
 } from "@2m/shared";
@@ -34,9 +41,45 @@ courierRoutes.put(
 );
 
 courierRoutes.get(
+  "/jobs",
+  asyncHandler(async (req, res) => {
+    res.json(await service.listJobs(req.auth!.sub));
+  }),
+);
+
+courierRoutes.post(
+  "/jobs/:id/claim",
+  validate(orderIdParamsSchema, "params"),
+  validate(courierClaimRequestSchema),
+  asyncHandler(async (req, res) => {
+    res.json(await service.claimJob(req.auth!.sub, req.params.id as string, req.body as CourierClaimRequest));
+  }),
+);
+
+courierRoutes.get(
   "/orders",
   asyncHandler(async (req, res) => {
     res.json(await service.listOrders(req.auth!.sub));
+  }),
+);
+
+courierRoutes.patch(
+  "/orders/:id/items/:itemId",
+  validate(courierItemParamsSchema, "params"),
+  validate(pickItemRequestSchema),
+  asyncHandler(async (req, res) => {
+    res.json(
+      await service.pickItem(req.auth!.sub, req.params.id as string, req.params.itemId as string, req.body as PickItemRequest),
+    );
+  }),
+);
+
+courierRoutes.post(
+  "/orders/:id/release",
+  validate(orderIdParamsSchema, "params"),
+  validate(courierReleaseRequestSchema),
+  asyncHandler(async (req, res) => {
+    res.json(await service.releaseOrder(req.auth!.sub, req.params.id as string, req.body as CourierReleaseRequest));
   }),
 );
 
