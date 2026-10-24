@@ -19,7 +19,7 @@ function UpdateBanner({ onDelivery }: { onDelivery: boolean }) {
         type="button"
         disabled={onDelivery}
         onClick={applyUpdate}
-        className="min-h-12 rounded-lg bg-primary px-4 font-semibold text-primary-foreground disabled:opacity-50"
+        className="min-h-12 rounded-lg bg-primary px-4 font-semibold text-primary-foreground transition duration-150 hover:brightness-95 active:scale-[0.99] disabled:opacity-50"
       >
         <FaSyncAlt aria-hidden="true" className="mr-2 inline" />
         Perbarui

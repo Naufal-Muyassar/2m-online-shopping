@@ -30,7 +30,7 @@ export function ProfilePage() {
           type="button"
           aria-label="Kembali ke dashboard"
           onClick={() => navigate("/")}
-          className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-lg active:bg-muted"
+          className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-lg transition-colors duration-150 hover:bg-muted active:scale-95"
         >
           <FaArrowLeft aria-hidden="true" />
         </button>

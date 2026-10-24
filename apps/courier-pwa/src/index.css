@@ -5,24 +5,57 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --primary: 142 72% 29%;
+    --foreground: 0 0% 0%;
+    --primary: 240 98.1% 20.8%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
+    --secondary: 240 25% 96%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 240 25% 96%;
+    --muted-foreground: 0 0% 42%;
+    --accent: 356 45% 96%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 356.2 82.1% 41.6%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 142 72% 29%;
+    --border: 240 20% 88%;
+    --input: 240 20% 88%;
+    --ring: 240 98.1% 20.8%;
     --radius: 0.5rem;
   }
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply text-primary;
+  }
+}
+
+@keyframes menu-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-slide-in {
+  animation: menu-slide-in 180ms ease-out both;
+  transform-origin: top left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

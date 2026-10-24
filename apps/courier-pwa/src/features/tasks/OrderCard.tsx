@@ -23,7 +23,7 @@ export function OrderCard({ order }: { order: CourierOrder }) {
       <p className="mt-1 text-base">{order.address.receiver_name}</p>
       <p className="text-sm text-muted-foreground">{order.address.street}</p>
       {returning && (
-        <p className="mt-2 rounded-lg bg-destructive/10 p-2 text-sm font-medium text-destructive">
+        <p className="mt-2 rounded-lg bg-destructive/10 p-2 text-sm font-medium text-foreground">
           Kembalikan barang ke cabang – menunggu konfirmasi admin
         </p>
       )}

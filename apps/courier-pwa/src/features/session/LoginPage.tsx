@@ -57,7 +57,7 @@ export function LoginPage() {
           />
         </label>
         {error && (
-          <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-destructive">
+          <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-foreground">
             {error}
           </p>
         )}

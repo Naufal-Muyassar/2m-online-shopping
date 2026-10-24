@@ -20,7 +20,7 @@ export function Button({ variant = "primary", loading, disabled, className, chil
       type="button"
       disabled={disabled || loading}
       className={cn(
-        "min-h-14 w-full rounded-lg px-4 text-lg font-semibold transition active:scale-[0.99] disabled:opacity-50",
+        "min-h-14 w-full rounded-lg px-4 text-lg font-semibold transition duration-150 hover:brightness-95 active:scale-[0.99] disabled:opacity-50",
         VARIANTS[variant],
         className,
       )}

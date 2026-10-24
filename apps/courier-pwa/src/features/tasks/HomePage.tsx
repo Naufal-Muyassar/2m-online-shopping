@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/toast";
 import { errorMessage } from "@/lib/api";
 import { useMe, useOrders, useSetCourierStatus } from "./hooks";
 import { OrderCard } from "./OrderCard";
+import { LoggedOutDashboard } from "./LoggedOutDashboard";
 
 export function HomePage() {
   const { user, loading } = useSession();
@@ -34,10 +35,17 @@ export function HomePage() {
     });
   };
 
+  if (loading) {
+    return <main className="flex min-h-screen items-center justify-center p-4 text-muted-foreground">Memuat sesi…</main>;
+  }
+
+  if (!user) return <LoggedOutDashboard />;
+
   return (
     <main className="relative mx-auto flex min-h-screen max-w-md flex-col gap-5 p-4">
       <header className="relative flex items-center gap-3">
         <SideBarNavigation
+          isLoggedIn
           name={user?.name}
           status={status}
           pending={setStatus.isPending}
@@ -58,7 +66,7 @@ export function HomePage() {
         </Button>
       )}
       {setStatus.isError && (
-        <p role="alert" className="text-destructive">
+        <p role="alert" className="text-foreground">
           {errorMessage(setStatus.error)}
         </p>
       )}
@@ -67,7 +75,7 @@ export function HomePage() {
         <h2 className="text-lg font-bold">Pesanan saat ini</h2>
         {orders.isLoading && <p className="text-muted-foreground">Memuat…</p>}
         {orders.isError && (
-          <p role="alert" className="text-destructive">
+          <p role="alert" className="text-foreground">
             {errorMessage(orders.error)}
           </p>
         )}

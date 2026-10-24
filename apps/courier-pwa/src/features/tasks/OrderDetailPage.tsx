@@ -52,7 +52,7 @@ export function OrderDetailPage() {
   if (query.isError || !order) {
     return (
       <main className="mx-auto max-w-md p-4">
-        <p role="alert" className="text-destructive">
+        <p role="alert" className="text-foreground">
           {errorMessage(query.error)}
         </p>
         <Link to="/" className="mt-4 inline-block underline">
@@ -81,7 +81,7 @@ export function OrderDetailPage() {
       </header>
 
       {returning && (
-        <p className="rounded-lg bg-destructive/10 p-3 font-medium text-destructive">
+        <p className="rounded-lg bg-destructive/10 p-3 font-medium text-foreground">
           Kembalikan barang ke cabang – menunggu konfirmasi admin
         </p>
       )}
@@ -89,7 +89,7 @@ export function OrderDetailPage() {
       <section className="rounded-xl border border-border p-4">
         <h2 className="font-bold">Penerima</h2>
         <p className="text-lg">{a.receiver_name}</p>
-        <a href={`tel:${a.receiver_phone}`} className="mt-1 flex min-h-12 items-center text-lg font-semibold text-primary underline">
+          <a href={`tel:${a.receiver_phone}`} className="mt-1 flex min-h-12 items-center text-lg font-semibold text-primary underline transition-colors hover:text-destructive">
           <FaPhone aria-hidden="true" className="mr-2" />
           {a.receiver_phone}
         </a>
@@ -129,7 +129,7 @@ export function OrderDetailPage() {
             Mulai antar
           </Button>
           {startError && (
-            <p role="alert" className="text-destructive">
+            <p role="alert" className="text-foreground">
               {startError}
             </p>
           )}

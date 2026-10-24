@@ -102,7 +102,7 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
       {step >= 0 && (
         <ol className="flex flex-col gap-1 text-base" aria-label="Progres">
           {STEPS.map((label, i) => (
-            <li key={label} className={i < step ? "text-primary" : i === step ? "font-semibold" : "text-muted-foreground"}>
+            <li key={label} className={i < step ? "text-foreground" : i === step ? "font-semibold" : "text-muted-foreground"}>
               {i < step ? "✓" : i === step && running ? "…" : "•"} {label}
               {i === 2 && step === 2 && running ? ` (${uploadPct}%)` : ""}
             </li>
@@ -111,7 +111,7 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
       )}
 
       {error && (
-        <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-destructive">
+        <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-foreground">
           {error}
         </p>
       )}
