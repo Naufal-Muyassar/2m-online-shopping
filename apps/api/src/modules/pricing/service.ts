@@ -8,7 +8,7 @@ import { assertInCoverage } from "../address/service";
 import { stockProvider } from "../catalog/stock";
 import * as cartRepo from "../cart/repo";
 import { requireBranchConfig, toCart, totalsOf, validateLines } from "../cart/service";
-import { computePaymentFee, computeShipping, type PaymentFeeConfig } from "./calc";
+import { computePaymentFee, computeShipping, courierWageFull, type PaymentFeeConfig } from "./calc";
 
 type Db = Pool | Tx;
 
@@ -18,6 +18,8 @@ export interface Quote {
   address: Address;
   breakdown: PriceBreakdown;
   isBulkOrder: boolean;
+  snapshotExtra: Record<string, unknown>;
+  courierWage: number;
 }
 
 async function paymentFeeConfig(db: Db, method: string): Promise<PaymentFeeConfig> {
@@ -71,6 +73,8 @@ export async function quote(
   const branch = (await addressRepo.branchGeo(db, req.branch_id))!;
   const distanceKm = Math.round(((haversineM(branch.lat, branch.lng, address.lat, address.lng) * pricing.circuity_factor) / 1000) * 100) / 100;
   const shipping = computeShipping(pricing, distanceKm, weightKg);
+  const { fee_floor: feeFloor, fee_cap: feeCap, ...shippingFees } = shipping;
+  const wageFull = courierWageFull(pricing, distanceKm);
   const voucherDiscount = 0;
   const paymentFee = computePaymentFee(await paymentFeeConfig(db, req.payment_method), subtotal + shipping.final_shipping_cost);
 
@@ -79,13 +83,29 @@ export async function quote(
     lines,
     address,
     isBulkOrder: toCart(req.branch_id, lines, limits, pricing.min_order).is_bulk_order,
+    // Internal cost data: stored on the order, never sent to the customer.
+    snapshotExtra: {
+      route_distance_km: distanceKm,
+      fee_floor: feeFloor,
+      fee_cap: feeCap,
+      courier_wage: {
+        scheme_version: "ds_v2",
+        wage_base: pricing.wage_base,
+        wage_per_km: pricing.wage_per_km,
+        route_km: distanceKm,
+        full: wageFull,
+        failed_pay_fraction: pricing.failed_pay_fraction,
+      },
+    },
+    courierWage: wageFull,
     breakdown: {
       subtotal,
-      ...shipping,
+      ...shippingFees,
       voucher_discount: voucherDiscount,
       payment_fee: paymentFee,
       grand_total: subtotal + shipping.final_shipping_cost - voucherDiscount + paymentFee,
       distance_km: distanceKm,
+      route_distance_km: distanceKm,
       total_weight_kg: weightKg,
     },
   };

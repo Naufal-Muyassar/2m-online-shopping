@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { pool } from "../../shared/db";
-import { createFixture, insertOrder, type Fixture } from "../orders/test-fixtures";
-import { drainBranch, tryAssign } from "./service";
+import { pool } from "../../src/shared/db";
+import { createFixture, insertOrder, type Fixture } from "../../src/modules/orders/test-fixtures";
+import { drainBranch, tryAssign } from "../../src/modules/dispatch/service";
 
 let fx: Fixture;
 const courierIds: string[] = [];

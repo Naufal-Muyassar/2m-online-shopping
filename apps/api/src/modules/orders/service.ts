@@ -2,6 +2,7 @@ import { FAILED_REASONS, findTransition, type Actor, type OrderStatus } from "@2
 import type { Tx } from "../../shared/db";
 import { audit } from "../../shared/audit";
 import { AppError } from "../../shared/errors";
+import { setCourierStatus } from "../courier/repo";
 import * as repo from "./repo";
 
 export interface TransitionActor {
@@ -50,7 +51,8 @@ export async function transition(
   if (!rule.actors.includes(actor.role)) {
     throw new AppError(403, "FORBIDDEN", `Role ${actor.role} may not move order from ${from} to ${to}`);
   }
-  if (actor.role === "courier" && order.assigned_courier_id !== actor.id) {
+  const isClaim = from === "ACCEPTED" && to === "PICKING";
+  if (actor.role === "courier" && !isClaim && order.assigned_courier_id !== actor.id) {
     throw new AppError(403, "FORBIDDEN", "Order is not assigned to this courier");
   }
 
@@ -59,6 +61,7 @@ export async function transition(
   for (const req of rule.requires) {
     if (req === "reason" && !hasText(meta.reason)) missing.push("reason");
     if (req === "courier_id" && !meta.courier_id) missing.push("courier_id");
+    if (req === "courier_idle" && actor.role !== "courier" && !meta.courier_id) missing.push("courier_id");
     if (req === "lat" && !isCoord(meta.lat, 90)) missing.push("lat");
     if (req === "lng" && !isCoord(meta.lng, 180)) missing.push("lng");
     if (req === "proof_or_note" && !hasProof && !hasText(meta.note)) missing.push("proof_or_note");
@@ -76,21 +79,42 @@ export async function transition(
       missing: ["courier_id"],
     });
   }
+  if (rule.requires.includes("items_picked") && (await repo.hasUnpickedItems(tx, orderId))) {
+    throw new AppError(409, "PICKING_INCOMPLETE", "All items must be picked first");
+  }
+
+  // Lock order is always order → courier, so concurrent claims cannot deadlock.
+  const claimantId = isClaim ? ((actor.role === "courier" ? actor.id : meta.courier_id) ?? undefined) : undefined;
+  if (claimantId) {
+    const courier = await repo.lockCourier(tx, claimantId);
+    if (!courier || courier.branch_id !== order.branch_id) {
+      throw new AppError(403, "FORBIDDEN", "Courier does not belong to the order's branch");
+    }
+    if (courier.status !== "IDLE") throw new AppError(409, "COURIER_BUSY", "Courier is not idle");
+  }
+  const releasedCourierId =
+    from === "PICKING" && (to === "ACCEPTED" || to === "CANCELLED") ? order.assigned_courier_id : null;
 
   const updated = await repo.updateOrderStatus(tx, {
     orderId,
     from,
     to,
-    setCourierId: to === "ASSIGNED" ? meta.courier_id : from === "ASSIGNED" && to === "READY" ? null : undefined,
-    setReadyAt: to === "READY" && from === "PICKING",
+    setCourierId: claimantId ?? (from === "PICKING" && to === "ACCEPTED" ? null : undefined),
+    setAcceptedAt: to === "ACCEPTED" && from === "PAID",
     setDeliveredAt: to === "DELIVERED",
     setReturnPending: to === "FAILED",
+    setCourierPay: to === "DELIVERED" ? "full" : to === "FAILED" ? "failed" : undefined,
     setInvoice: to === "PENDING_PAYMENT" && meta.invoice
       ? { id: meta.invoice.id, url: meta.invoice.url, expiresAt: meta.invoice.expires_at }
       : undefined,
     setPaymentFeeActual: to === "PAID" ? meta.payment_fee_actual : undefined,
   });
-  if (!updated) throw new AppError(409, "CONFLICT", "Order status changed concurrently");
+  if (!updated) {
+    if (isClaim) throw new AppError(409, "JOB_TAKEN", "Order is no longer available");
+    throw new AppError(409, "CONFLICT", "Order status changed concurrently");
+  }
+  if (claimantId) await setCourierStatus(tx, claimantId, "DELIVERING");
+  if (releasedCourierId) await setCourierStatus(tx, releasedCourierId, "IDLE");
 
   const reason = to === "FAILED" && hasText(meta.note) ? `${meta.reason}: ${meta.note}` : (meta.reason ?? null);
   await repo.insertTransition(tx, {
@@ -124,7 +148,7 @@ export async function transition(
       entityType: "order",
       entityId: orderId,
       before: { status: from },
-      after: { status: to, reason, courier_id: order.assigned_courier_id },
+      after: { status: to, reason, courier_id: updated.assigned_courier_id ?? order.assigned_courier_id },
     });
   }
 
@@ -133,7 +157,8 @@ export async function transition(
 
 function auditAction(from: OrderStatus, to: OrderStatus, role: Actor): string | null {
   if (from === "PENDING_PAYMENT" && to === "PAID" && role === "super_admin") return "ORDER_FORCE_PAID";
-  if (from === "ASSIGNED" && to === "READY") return "ORDER_REASSIGN";
+  if (from === "ACCEPTED" && to === "PICKING" && role === "branch_admin") return "ORDER_MANUAL_ASSIGN";
+  if (from === "PICKING" && to === "ACCEPTED") return "ORDER_RELEASED";
   if (to === "CANCELLED" && (role === "branch_admin" || role === "super_admin")) return "ORDER_CANCEL";
   return null;
 }

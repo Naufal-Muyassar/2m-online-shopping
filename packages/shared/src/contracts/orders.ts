@@ -24,12 +24,26 @@ export type OrderTransitionResponse = z.infer<typeof orderTransitionResponseSche
 export const orderIdParamsSchema = z.object({ id: z.string().uuid() });
 
 // POST /admin/orders/:id/transition (branch_admin)
-export const ADMIN_TRANSITION_TARGETS = ["ACCEPTED", "PICKING", "READY"] as const;
+export const ADMIN_TRANSITION_TARGETS = ["ACCEPTED"] as const;
 export const adminTransitionRequestSchema = z.object({
   to: z.enum(ADMIN_TRANSITION_TARGETS),
   idempotency_key: z.string().uuid().optional(),
 });
 export type AdminTransitionRequest = z.infer<typeof adminTransitionRequestSchema>;
+
+// POST /admin/orders/:id/assign (branch_admin, ACCEPTED → PICKING)
+export const adminAssignRequestSchema = z.object({
+  courier_id: z.string().uuid(),
+  idempotency_key: z.string().uuid().optional(),
+});
+export type AdminAssignRequest = z.infer<typeof adminAssignRequestSchema>;
+
+// POST /admin/orders/:id/release (branch_admin, PICKING → ACCEPTED)
+export const adminReleaseRequestSchema = z.object({
+  reason: z.string().trim().min(1).max(200),
+  idempotency_key: z.string().uuid().optional(),
+});
+export type AdminReleaseRequest = z.infer<typeof adminReleaseRequestSchema>;
 
 // POST /admin/orders/:id/force-paid (super_admin, DEMO)
 export const forcePaidRequestSchema = z.object({

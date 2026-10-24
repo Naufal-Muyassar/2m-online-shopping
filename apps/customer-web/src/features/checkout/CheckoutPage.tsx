@@ -84,10 +84,11 @@ export function CheckoutPage() {
         {b && (
           <>
             <Row label={`Subtotal (${b.total_weight_kg} kg)`} value={formatIDR(b.subtotal)} />
-            <Row label={`Ongkir (${b.distance_km} km)`} value={formatIDR(b.final_shipping_cost)} />
-            {b.weight_surcharge > 0 && (
-              <p className="text-xs text-muted-foreground">Termasuk biaya berat {formatIDR(b.weight_surcharge)}</p>
-            )}
+            <Row label={`Ongkir (±${b.route_distance_km} km)`} value={formatIDR(b.final_shipping_cost)} />
+            <div className="space-y-0.5 pl-3 text-xs text-muted-foreground">
+              <Row label="Tarif dasar" value={formatIDR(b.base_delivery_fee)} />
+              {b.weight_surcharge > 0 && <Row label="Biaya berat" value={formatIDR(b.weight_surcharge)} />}
+            </div>
             {b.voucher_discount > 0 && <Row label="Diskon voucher" value={`−${formatIDR(b.voucher_discount)}`} />}
             {b.payment_fee > 0 && <Row label="Biaya pembayaran" value={formatIDR(b.payment_fee)} />}
             <hr className="my-2" />
@@ -103,7 +104,7 @@ export function CheckoutPage() {
       >
         {createOrder.isPending ? "Memproses…" : "Bayar"}
       </button>
-      <p className="text-center text-xs text-muted-foreground">Anda akan diarahkan ke halaman pembayaran Xendit.</p>
+      <p className="text-center text-xs text-muted-foreground">Anda akan diarahkan ke halaman pembayaran.</p>
     </main>
   );
 }

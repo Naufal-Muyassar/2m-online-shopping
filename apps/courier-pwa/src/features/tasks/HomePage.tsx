@@ -79,11 +79,25 @@ export function HomePage() {
             {errorMessage(orders.error)}
           </p>
         )}
-        {orders.data?.active.map((o) => <OrderCard key={o.id} order={o} />)}
-        {orders.data && orders.data.active.length === 0 && (
-          <p className="rounded-xl bg-muted p-4 text-muted-foreground">
-            {status === "OFFLINE" ? "Anda offline. Ubah ke siap untuk menerima pesanan." : "Menunggu pesanan baru…"}
-          </p>
+        {status === "OFFLINE" && (
+          <>
+            <h2 className="text-lg font-bold">Anda offline</h2>
+            <p className="rounded-xl bg-muted p-4 text-muted-foreground">
+              Anda offline. Ubah ke siap untuk melihat order yang tersedia.
+            </p>
+          </>
+        )}
+        {delivering && (
+          <>
+            <h2 className="text-lg font-bold">Pesanan saat ini</h2>
+            {orders.isLoading && <p className="text-muted-foreground">Memuat…</p>}
+            {orders.isError && (
+              <p role="alert" className="text-destructive">
+                {errorMessage(orders.error)}
+              </p>
+            )}
+            {orders.data?.active.map((o) => <OrderCard key={o.id} order={o} />)}
+          </>
         )}
       </section>
 

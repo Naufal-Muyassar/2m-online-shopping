@@ -27,6 +27,12 @@ services:
         sync: false
       - key: S3_FORCE_PATH_STYLE
         value: "true"
+      - key: REDIS_URL
+        sync: false
+      - key: PAYMENT_PROVIDER
+        value: mock
+      - key: CUSTOMER_WEB_URL
+        sync: false
 
   - type: web
     name: 2m-courier-pwa
@@ -46,6 +52,19 @@ services:
     runtime: static
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter admin-web build
     staticPublishPath: apps/admin-web/dist
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://twom-online-shopping.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
+    name: 2m-customer-web
+    runtime: static
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter customer-web build
+    staticPublishPath: apps/customer-web/dist
     routes:
       - type: rewrite
         source: /api/*

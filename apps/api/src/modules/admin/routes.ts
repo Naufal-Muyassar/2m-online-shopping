@@ -1,9 +1,13 @@
 import { Router } from "express";
 import {
+  adminAssignRequestSchema,
   adminBranchQuerySchema,
+  adminReleaseRequestSchema,
   adminTransitionRequestSchema,
   forcePaidRequestSchema,
   orderIdParamsSchema,
+  type AdminAssignRequest,
+  type AdminReleaseRequest,
   type AdminTransitionRequest,
   type ForcePaidRequest,
 } from "@2m/shared";
@@ -65,6 +69,46 @@ adminRoutes.post(
       idempotencyKey: body.idempotency_key,
     });
     res.json(result);
+  }),
+);
+
+adminRoutes.post(
+  "/orders/:id/assign",
+  authenticate,
+  requireRole("branch_admin"),
+  validate(orderIdParamsSchema, "params"),
+  validate(adminAssignRequestSchema),
+  asyncHandler(async (req, res) => {
+    const body = req.body as AdminAssignRequest;
+    res.json(
+      await service.assignOrder({
+        orderId: req.params.id as string,
+        courierId: body.courier_id,
+        adminId: req.auth!.sub,
+        branchId: branchScope(req),
+        idempotencyKey: body.idempotency_key,
+      }),
+    );
+  }),
+);
+
+adminRoutes.post(
+  "/orders/:id/release",
+  authenticate,
+  requireRole("branch_admin"),
+  validate(orderIdParamsSchema, "params"),
+  validate(adminReleaseRequestSchema),
+  asyncHandler(async (req, res) => {
+    const body = req.body as AdminReleaseRequest;
+    res.json(
+      await service.releaseOrder({
+        orderId: req.params.id as string,
+        reason: body.reason,
+        adminId: req.auth!.sub,
+        branchId: branchScope(req),
+        idempotencyKey: body.idempotency_key,
+      }),
+    );
   }),
 );
 

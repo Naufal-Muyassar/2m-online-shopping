@@ -3,8 +3,8 @@ import type { CourierOrder } from "@2m/shared";
 import { FaChevronRight } from "react-icons/fa";
 
 export const STATUS_LABELS: Record<string, string> = {
-  ASSIGNED: "Siap diantar",
-  ON_DELIVERY: "Sedang diantar",
+  PICKING: "Sedang disiapkan",
+  ON_DELIVERY: "Dalam perjalanan",
   DELIVERED: "Terkirim",
   FAILED: "Gagal kirim",
 };

@@ -1,5 +1,5 @@
 import type { Pool } from "pg";
-import type { CourierOrder, CourierStatus, PingsRequest } from "@2m/shared";
+import type { CourierJob, CourierOrder, CourierStatus, PingsRequest } from "@2m/shared";
 import type { Tx } from "../../shared/db";
 
 type Db = Pool | Tx;
@@ -31,7 +31,7 @@ export async function setCourierStatus(tx: Tx, courierId: string, status: Courie
   );
 }
 
-const ACTIVE = `(o.status IN ('ASSIGNED','ON_DELIVERY') OR (o.status = 'FAILED' AND o.return_pending))`;
+const ACTIVE = `(o.status IN ('PICKING','ON_DELIVERY') OR (o.status = 'FAILED' AND o.return_pending))`;
 
 interface OrderCardRow {
   id: string;
@@ -61,8 +61,17 @@ async function loadCards(db: Db, where: string, params: unknown[], tail = ""): P
     params,
   );
   if (orders.rows.length === 0) return [];
-  const items = await db.query<{ order_id: string; sku: string; name: string; qty: number; weight_kg: number }>(
-    `SELECT order_id, sku, name, qty, weight_kg::float8 AS weight_kg FROM order_items WHERE order_id = ANY($1::uuid[]) ORDER BY name`,
+  const items = await db.query<{
+    id: string;
+    order_id: string;
+    sku: string;
+    name: string;
+    qty: number;
+    weight_kg: number;
+    picked_qty: number;
+  }>(
+    `SELECT id, order_id, sku, name, qty, weight_kg::float8 AS weight_kg, COALESCE(picked_qty, 0) AS picked_qty
+     FROM order_items WHERE order_id = ANY($1::uuid[]) ORDER BY name`,
     [orders.rows.map((o) => o.id)],
   );
   return orders.rows.map((o) => ({
@@ -74,7 +83,9 @@ async function loadCards(db: Db, where: string, params: unknown[], tail = ""): P
     ready_at: o.ready_at?.toISOString() ?? null,
     delivered_at: o.delivered_at?.toISOString() ?? null,
     updated_at: o.updated_at.toISOString(),
-    items: items.rows.filter((i) => i.order_id === o.id).map(({ sku, name, qty, weight_kg }) => ({ sku, name, qty, weight_kg })),
+    items: items.rows
+      .filter((i) => i.order_id === o.id)
+      .map(({ id, sku, name, qty, weight_kg, picked_qty }) => ({ id, sku, name, qty, weight_kg, picked_qty })),
     address: {
       street: o.street,
       rt_rw: o.rt_rw,
@@ -102,6 +113,44 @@ export const listRecentOrders = (db: Db, courierId: string) =>
 export async function getCourierOrder(db: Db, courierId: string, orderId: string): Promise<CourierOrder | null> {
   const cards = await loadCards(db, "o.id = $1 AND o.assigned_courier_id = $2", [orderId, courierId]);
   return cards[0] ?? null;
+}
+
+export async function listJobs(db: Db, branchId: string): Promise<CourierJob[]> {
+  const res = await db.query<{
+    id: string;
+    code: string;
+    accepted_at: Date | null;
+    item_count: number;
+    total_weight_kg: number;
+    route_distance_km: number | null;
+    courier_wage: number | null;
+    area_hint: string;
+  }>(
+    `SELECT o.id, o.code, o.accepted_at,
+            (SELECT count(*)::int FROM order_items i WHERE i.order_id = o.id) AS item_count,
+            (SELECT COALESCE(round(sum(i.weight_kg * i.qty), 3), 0)::float8 FROM order_items i WHERE i.order_id = o.id) AS total_weight_kg,
+            (o.route_distance_km)::float8 AS route_distance_km,
+            o.courier_wage,
+            left(a.street, 40) AS area_hint
+     FROM orders o JOIN addresses a ON a.id = o.address_id
+     WHERE o.branch_id = $1 AND o.status = 'ACCEPTED' AND o.assigned_courier_id IS NULL
+     ORDER BY o.accepted_at ASC
+     LIMIT 20`,
+    [branchId],
+  );
+  return res.rows.map((r) => ({ ...r, accepted_at: r.accepted_at?.toISOString() ?? null }));
+}
+
+export async function getItemQty(tx: Tx, orderId: string, itemId: string): Promise<number | null> {
+  const res = await tx.query<{ qty: number }>(`SELECT qty FROM order_items WHERE id = $1 AND order_id = $2`, [
+    itemId,
+    orderId,
+  ]);
+  return res.rows[0]?.qty ?? null;
+}
+
+export async function setPickedQty(tx: Tx, itemId: string, pickedQty: number): Promise<void> {
+  await tx.query(`UPDATE order_items SET picked_qty = $2 WHERE id = $1`, [itemId, pickedQty]);
 }
 
 export async function getAssignedOrder(

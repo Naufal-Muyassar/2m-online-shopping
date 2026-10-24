@@ -17,19 +17,22 @@ export interface SellableRow {
 
 // sellable = snapshot - (ACTIVE + COMMITTED reservations) - buffer. Not clamped: Redis counters must stay
 // symmetric with release increments, so callers clamp for display only. No snapshot row means no stock.
-// Pass null to cover every branch product.
-export async function computeSellable(db: Db, scope: { branchId: string; productIds: readonly string[] } | null): Promise<SellableRow[]> {
-  const res = await db.query<SellableRow>(
-    `SELECT bp.branch_id, bp.product_id,
-            (COALESCE(s.qty, 0) - bp.stock_buffer - COALESCE(r.held, 0))::int AS sellable
-     FROM branch_products bp
+// Both fragments expect branch_products aliased as bp; the catalog listing reuses them so there is one formula.
+export const SELLABLE_JOINS = `
      LEFT JOIN stock_snapshots s ON s.branch_id = bp.branch_id AND s.product_id = bp.product_id
      LEFT JOIN (
        SELECT branch_id, product_id, sum(qty) AS held
        FROM stock_reservations
        WHERE status IN ('ACTIVE', 'COMMITTED')
        GROUP BY branch_id, product_id
-     ) r ON r.branch_id = bp.branch_id AND r.product_id = bp.product_id
+     ) r ON r.branch_id = bp.branch_id AND r.product_id = bp.product_id`;
+export const SELLABLE_EXPR = `(COALESCE(s.qty, 0) - bp.stock_buffer - COALESCE(r.held, 0))::int`;
+
+// Pass null to cover every branch product.
+export async function computeSellable(db: Db, scope: { branchId: string; productIds: readonly string[] } | null): Promise<SellableRow[]> {
+  const res = await db.query<SellableRow>(
+    `SELECT bp.branch_id, bp.product_id, ${SELLABLE_EXPR} AS sellable
+     FROM branch_products bp${SELLABLE_JOINS}
      WHERE ($1::uuid IS NULL OR (bp.branch_id = $1 AND bp.product_id = ANY($2::uuid[])))`,
     [scope?.branchId ?? null, scope?.productIds ?? []],
   );
