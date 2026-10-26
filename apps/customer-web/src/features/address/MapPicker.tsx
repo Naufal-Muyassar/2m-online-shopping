@@ -52,5 +52,5 @@ export function MapPicker({ branch, value, onChange }: Props) {
     else pin.current = L.circleMarker(value, { radius: 9, color: "#dc2626", fillColor: "#dc2626", fillOpacity: 0.8 }).addTo(m);
   }, [value?.lat, value?.lng]);
 
-  return <div ref={el} className="h-72 w-full rounded-lg border" role="application" aria-label="Peta pin alamat" />;
+  return <div ref={el} className="isolate h-72 w-full overflow-hidden rounded-lg border border-border shadow-md" role="application" aria-label="Peta pin alamat" />;
 }

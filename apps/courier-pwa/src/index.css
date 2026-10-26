@@ -2,37 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
-    --primary: 240 98.1% 20.8%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 25% 96%;
-    --secondary-foreground: 0 0% 0%;
-    --muted: 240 25% 96%;
-    --muted-foreground: 0 0% 42%;
-    --accent: 356 45% 96%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 356.2 82.1% 41.6%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 20% 88%;
-    --input: 240 20% 88%;
-    --ring: 240 98.1% 20.8%;
-    --radius: 0.5rem;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-
-  h1,
-  h2,
-  h3 {
-    @apply text-primary;
-  }
-}
-
 @keyframes menu-slide-in {
   from {
     opacity: 0;

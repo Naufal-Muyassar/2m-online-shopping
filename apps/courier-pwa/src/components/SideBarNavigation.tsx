@@ -24,20 +24,20 @@ export function SideBarNavigation({ isLoggedIn, name, status, pending, onToggleS
         aria-expanded={menuOpen}
         aria-controls="dashboard-navigation"
         onClick={() => setMenuOpen((open) => !open)}
-        className="flex size-12 items-center justify-center rounded-full border border-border bg-secondary text-xl transition-colors duration-150 hover:bg-muted active:scale-95"
+        className="avatar size-11 text-lg transition-transform duration-150 active:scale-95"
       >
-        <FaUserCircle aria-hidden="true" />
+        {name ? name.trim().charAt(0) : <FaUserCircle aria-hidden="true" />}
       </button>
       {menuOpen && (
         <nav
           id="dashboard-navigation"
-          aria-label="Navigasi utama"
-          className="menu-slide-in absolute left-0 top-14 z-50 flex w-64 flex-col gap-1 rounded-lg border border-border bg-background p-2 shadow-lg"
+          aria-label="Menu profil"
+          className="menu-slide-in absolute left-0 top-14 z-50 flex w-64 flex-col gap-1 rounded-md border border-border bg-surface p-2 shadow-md"
         >
           <Link
             to="/profile"
             onClick={() => setMenuOpen(false)}
-            className="flex min-h-12 items-center gap-3 rounded-md px-3 text-base font-semibold transition-colors duration-150 hover:bg-muted active:scale-[0.99]"
+            className="flex min-h-11 items-center gap-3 rounded-sm px-3 text-base font-semibold transition-colors duration-150 hover:bg-muted active:scale-[0.98]"
           >
             <FaUser aria-hidden="true" className="text-muted-foreground" />
             Profil{name ? ` ${name}` : ""}
@@ -45,7 +45,7 @@ export function SideBarNavigation({ isLoggedIn, name, status, pending, onToggleS
           {isLoggedIn && (
             <button
               type="button"
-              className="flex min-h-12 items-center gap-3 rounded-md px-3 text-left text-base font-semibold transition-colors duration-150 hover:bg-muted active:scale-[0.99] disabled:opacity-50"
+              className="flex min-h-11 items-center gap-3 rounded-sm px-3 text-left text-base font-semibold transition-colors duration-150 hover:bg-muted active:scale-[0.98] disabled:opacity-60"
               disabled={!status || delivering || pending}
               onClick={() => {
                 onToggleStatus();

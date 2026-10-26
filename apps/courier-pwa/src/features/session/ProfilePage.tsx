@@ -24,43 +24,44 @@ export function ProfilePage() {
   ];
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-4">
-      <header className="flex items-center gap-3">
-        <button
-          type="button"
-          aria-label="Kembali ke dashboard"
-          onClick={() => navigate("/")}
-          className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-lg transition-colors duration-150 hover:bg-muted active:scale-95"
-        >
+    <>
+      <header className="app-header">
+        <button type="button" aria-label="Kembali ke dashboard" onClick={() => navigate("/")} className="icon-btn shrink-0">
           <FaArrowLeft aria-hidden="true" />
         </button>
-        <h1 className="text-2xl font-bold">Profil</h1>
+        <h1 className="text-xl font-bold">Profil</h1>
       </header>
 
-      <section className="flex flex-col items-center gap-3 py-3" aria-label="Foto profil">
-        <div className="flex size-32 items-center justify-center overflow-hidden rounded-full border-4 border-secondary bg-muted text-6xl text-muted-foreground">
-          <FaUser aria-hidden="true" />
-        </div>
-        <p className="text-lg font-semibold">{user?.name ?? "Pengguna"}</p>
-      </section>
-
-      <section className="flex flex-col gap-1" aria-labelledby="account-information-heading">
-        <h2 id="account-information-heading" className="mb-2 text-lg font-bold">Informasi akun</h2>
-        {profileDetails.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="flex min-h-16 items-center gap-3 border-b border-border py-3">
-            <Icon aria-hidden="true" className="shrink-0 text-muted-foreground" />
-            <div className="min-w-0">
-              <p className="text-sm text-muted-foreground">{label}</p>
-              <p className="break-all text-base font-medium">{value}</p>
-            </div>
+      <main className="app-main gap-6">
+        <section className="flex flex-col items-center gap-3 py-3" aria-label="Foto profil">
+          <div className="avatar size-28 text-5xl shadow-glow ring-4 ring-surface">
+            {user?.name ? user.name.trim().charAt(0) : <FaUser aria-hidden="true" />}
           </div>
-        ))}
-      </section>
+          <p className="text-lg font-bold">{user?.name ?? "Pengguna"}</p>
+        </section>
 
-      <Button variant={user ? "secondary" : "primary"} disabled={loading} onClick={() => void handleSessionAction()}>
-        {user ? <FaSignOutAlt aria-hidden="true" className="mr-2 inline" /> : <FaSignInAlt aria-hidden="true" className="mr-2 inline" />}
-        {loading ? "Memuat…" : user ? "Keluar" : "Masuk"}
-      </Button>
-    </main>
+        <section className="card flex animate-rise flex-col" aria-labelledby="account-information-heading">
+          <h2 id="account-information-heading" className="eyebrow mb-1">
+            Informasi akun
+          </h2>
+          {profileDetails.map(({ label, value, icon: Icon }) => (
+            <div key={label} className="flex min-h-16 items-center gap-3 border-b border-border py-3 last:border-b-0">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-surface text-primary">
+                <Icon aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm text-muted-foreground">{label}</p>
+                <p className="break-all text-base font-medium">{value}</p>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        <Button variant={user ? "secondary" : "hero"} disabled={loading} onClick={() => void handleSessionAction()}>
+          {user ? <FaSignOutAlt aria-hidden="true" className="mr-2 inline" /> : <FaSignInAlt aria-hidden="true" className="mr-2 inline" />}
+          {loading ? "Memuat…" : user ? "Keluar" : "Masuk"}
+        </Button>
+      </main>
+    </>
   );
 }

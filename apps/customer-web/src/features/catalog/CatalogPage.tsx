@@ -6,6 +6,8 @@ import { errorMessage } from "../../lib/api";
 import { useCart, useCartMutations, useProducts } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
+import { IconSearch } from "../../components/Icons";
+import { btnPrimary, btnSecondary, EmptyState, ErrorCard, rise } from "../../components/States";
 
 // Exact remaining stock is shown only at or below this level.
 const STOCK_NOTICE_AT = 20;
@@ -49,50 +51,68 @@ export function CatalogPage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl space-y-4 p-4">
-      <input
-        type="search"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Cari produk…"
-        className="w-full rounded-md border px-3 py-2"
-        aria-label="Cari produk"
-      />
-      <div className="flex flex-wrap gap-2">
-        {[undefined, ...(data?.categories ?? [])].map((c) => (
-          <button
-            key={c ?? "all"}
-            onClick={() => setCategory(c)}
-            className={cn("rounded-full border px-3 py-1 text-sm capitalize", category === c ? "bg-primary text-primary-foreground" : "hover:bg-secondary")}
-          >
-            {c ?? "Semua"}
-          </button>
-        ))}
+    <main className="app-main">
+      <div className="sticky-toolbar space-y-2">
+        <div className="relative">
+          <IconSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xl text-muted-foreground" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cari produk…"
+            className="field pl-10"
+            aria-label="Cari produk"
+          />
+        </div>
+        <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4">
+          {[undefined, ...(data?.categories ?? [])].map((c) => (
+            <button
+              key={c ?? "all"}
+              onClick={() => setCategory(c)}
+              aria-pressed={category === c}
+              className={cn(
+                "inline-flex min-h-11 shrink-0 snap-start items-center whitespace-nowrap rounded-full border px-4 text-sm capitalize",
+                category === c ? "border-primary bg-primary-surface font-bold text-primary-pressed" : "border-border bg-surface hover:bg-muted",
+              )}
+            >
+              {c ?? "Semua"}
+            </button>
+          ))}
+        </div>
       </div>
-      {isLoading && <p className="text-sm text-muted-foreground">Memuat…</p>}
-      {isError && <p className="text-sm text-destructive">Gagal memuat produk.</p>}
-      {data && data.products.length === 0 && <p className="text-sm text-muted-foreground">Produk tidak ditemukan.</p>}
+      {isLoading && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" aria-busy="true" aria-label="Memuat">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="skeleton h-48 rounded-lg" />
+          ))}
+        </div>
+      )}
+      {isError && <ErrorCard message="Gagal memuat produk." />}
+      {data && data.products.length === 0 && (
+        <EmptyState icon={<IconSearch />} title="Produk tidak ditemukan." />
+      )}
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {data?.products.map((p) => {
+        {data?.products.map((p, i) => {
           const out = p.sellable_qty <= 0;
+          const low = p.sellable_qty <= STOCK_NOTICE_AT;
           const atLimit = (qtyInCart.get(p.id) ?? 0) >= Math.min(p.sellable_qty, maxPerSku);
           return (
-            <li key={p.id} className="flex flex-col justify-between rounded-lg border p-3">
-              <div>
-                <p className="text-sm font-medium">{p.name}</p>
+            <li key={p.id} className="card flex animate-rise flex-col justify-between p-3" style={rise(i)}>
+              <div className="space-y-1">
+                <p className="text-sm font-bold">{p.name}</p>
                 <p className="text-xs text-muted-foreground">
                   per {p.unit} · {p.weight_kg} kg
                 </p>
-                <p className={cn("mt-1 text-xs", out || p.sellable_qty <= STOCK_NOTICE_AT ? "text-destructive" : "text-muted-foreground")}>
-                  {out ? "Habis" : p.sellable_qty <= STOCK_NOTICE_AT ? `Stok: ${p.sellable_qty}` : "Tersedia"}
-                </p>
+                <span className={cn("pill", out ? "pill-danger" : low ? "pill-warning" : "pill-success")}>
+                  {out ? "Habis" : low ? `Stok: ${p.sellable_qty}` : "Tersedia"}
+                </span>
               </div>
               <div className="mt-3 space-y-2">
-                <p className="font-semibold">{formatIDR(p.price)}</p>
+                <p className="text-base font-bold">{formatIDR(p.price)}</p>
                 <button
                   disabled={out || atLimit || add.isPending}
                   onClick={() => addToCart(p.id, p.name)}
-                  className="w-full rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+                  className={cn(btnPrimary, "w-full px-3 text-sm")}
                 >
                   {out ? "Habis" : atLimit ? "Batas tercapai" : "Tambah"}
                 </button>
@@ -103,11 +123,11 @@ export function CatalogPage() {
       </ul>
       {data && (page > 1 || data.has_more) && (
         <div className="flex items-center justify-center gap-3 text-sm">
-          <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-md border px-3 py-1.5 disabled:opacity-50">
+          <button disabled={page <= 1} onClick={() => setPage(page - 1)} className={cn(btnSecondary, "px-4 text-sm")}>
             Sebelumnya
           </button>
           <span>Halaman {page}</span>
-          <button disabled={!data.has_more} onClick={() => setPage(page + 1)} className="rounded-md border px-3 py-1.5 disabled:opacity-50">
+          <button disabled={!data.has_more} onClick={() => setPage(page + 1)} className={cn(btnSecondary, "px-4 text-sm")}>
             Berikutnya
           </button>
         </div>

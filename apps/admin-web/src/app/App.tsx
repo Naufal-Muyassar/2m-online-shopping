@@ -22,19 +22,21 @@ function Shell() {
   const [tab, setTab] = useState<TabId>("board");
 
   return (
-    <div className="min-h-screen">
-      <header className="flex flex-wrap items-center gap-4 border-b px-4 py-2">
-        <h1 className="font-semibold">2M Admin</h1>
-        <nav className="flex gap-1">
+    <div className="min-h-dvh">
+      <header className="app-header flex-wrap gap-x-4">
+        <h1 className="text-lg font-bold">2M Admin</h1>
+        <nav className="flex flex-wrap gap-1">
           {TABS.map((t) => (
             <button
               key={t.id}
               disabled={t.soon}
               onClick={() => setTab(t.id)}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm",
-                tab === t.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary",
-                t.soon && "cursor-not-allowed opacity-50 hover:bg-transparent",
+                "min-h-11 rounded-full px-4 text-sm transition-colors",
+                tab === t.id
+                  ? "bg-primary-surface font-bold text-primary-pressed"
+                  : "text-muted-foreground hover:bg-muted",
+                t.soon && "cursor-not-allowed opacity-60 hover:bg-transparent",
               )}
             >
               {t.label}
@@ -45,7 +47,7 @@ function Shell() {
         <div className="ml-auto flex items-center gap-3 text-sm">
           {user?.role === "super_admin" && (
             <select
-              className="rounded-md border px-2 py-1"
+              className="field w-auto"
               value={branchId ?? ""}
               onChange={(e) => setBranchId(e.target.value)}
               aria-label="Cabang"
@@ -57,8 +59,14 @@ function Shell() {
               ))}
             </select>
           )}
-          <span>{user?.name}</span>
-          <button className="rounded-md border px-2 py-1" onClick={() => void logout()}>
+          <span className="avatar" aria-hidden="true">
+            {user?.name?.charAt(0)}
+          </span>
+          <span className="font-medium">{user?.name}</span>
+          <button
+            className="min-h-11 rounded-full border bg-surface px-4 font-medium hover:bg-muted"
+            onClick={() => void logout()}
+          >
             Keluar
           </button>
         </div>
@@ -69,9 +77,17 @@ function Shell() {
   );
 }
 
+function PageSkeleton() {
+  return (
+    <div className="grid min-h-dvh place-items-center p-4" role="status" aria-busy="true" aria-label="Memuat">
+      <div className="skeleton h-24 w-full max-w-sm" />
+    </div>
+  );
+}
+
 export function App() {
   const { user, loading } = useAuth();
-  if (loading) return <p className="p-4 text-sm">Memuat…</p>;
+  if (loading) return <PageSkeleton />;
   if (!user) return <LoginPage />;
   return (
     <BranchProvider>

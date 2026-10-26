@@ -5,9 +5,12 @@ import { errorMessage } from "../../lib/api";
 import { useCheckout } from "../../lib/checkout";
 import { useAddressMutations, useAddresses, useBranches } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
+import { cn } from "../../lib/utils";
+import { IconPin } from "../../components/Icons";
+import { btnPrimary, btnSecondary, EmptyState, PageSkeleton, rise } from "../../components/States";
 import { MapPicker, type LatLng } from "./MapPicker";
 
-const field = "mt-1 w-full rounded-md border px-3 py-2";
+const field = "field";
 
 interface FormState {
   label: string;
@@ -72,51 +75,55 @@ function AddressForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3 rounded-lg border p-4">
-      <h2 className="font-medium">{editing ? "Ubah alamat" : "Alamat baru"}</h2>
+    <form onSubmit={onSubmit} className="card animate-rise space-y-3">
+      <h2 className="text-lg font-bold">{editing ? "Ubah alamat" : "Alamat baru"}</h2>
       <MapPicker branch={{ lat: branch.lat, lng: branch.lng, radiusM: branch.service_radius_m }} value={pin} onChange={setPin} />
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <span>{pin ? `Pin: ${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)}` : "Ketuk peta untuk menaruh pin"}</span>
-        <button type="button" onClick={locateMe} className="rounded-md border px-2 py-1 text-foreground">
+        <button type="button" onClick={locateMe} className={cn(btnSecondary, "px-4 text-sm")}>
           Lokasi saya
         </button>
       </div>
-      <label className="block text-sm">
-        Label
+      <label className="block space-y-1">
+        <span className="field-label">Label</span>
         <input className={field} value={form.label} onChange={set("label")} required maxLength={40} />
       </label>
-      <label className="block text-sm">
-        Alamat lengkap
+      <label className="block space-y-1">
+        <span className="field-label">Alamat lengkap</span>
         <textarea className={field} value={form.street} onChange={set("street")} required maxLength={300} rows={2} />
       </label>
       <div className="grid grid-cols-2 gap-3">
-        <label className="block text-sm">
-          RT/RW
+        <label className="block space-y-1">
+          <span className="field-label">RT/RW</span>
           <input className={field} value={form.rt_rw} onChange={set("rt_rw")} maxLength={20} />
         </label>
-        <label className="block text-sm">
-          Unit / No. rumah
+        <label className="block space-y-1">
+          <span className="field-label">Unit / No. rumah</span>
           <input className={field} value={form.unit} onChange={set("unit")} maxLength={60} />
         </label>
-        <label className="block text-sm">
-          Nama penerima
+        <label className="block space-y-1">
+          <span className="field-label">Nama penerima</span>
           <input className={field} value={form.receiver_name} onChange={set("receiver_name")} required maxLength={100} />
         </label>
-        <label className="block text-sm">
-          No. HP penerima
+        <label className="block space-y-1">
+          <span className="field-label">No. HP penerima</span>
           <input className={field} value={form.receiver_phone} onChange={set("receiver_phone")} inputMode="tel" required />
         </label>
       </div>
-      <label className="block text-sm">
-        Catatan untuk kurir
+      <label className="block space-y-1">
+        <span className="field-label">Catatan untuk kurir</span>
         <input className={field} value={form.courier_note} onChange={set("courier_note")} maxLength={300} />
       </label>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && (
+        <p role="alert" className="alert-box">
+          {error}
+        </p>
+      )}
       <div className="flex gap-2">
-        <button type="submit" disabled={pending} className="rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-60">
+        <button type="submit" disabled={pending} className={cn(btnPrimary, "flex-1")}>
           {pending ? "Menyimpan…" : "Simpan"}
         </button>
-        <button type="button" onClick={() => onDone()} className="rounded-md border px-4 py-2">
+        <button type="button" onClick={() => onDone()} className={cn(btnSecondary, "flex-1")}>
           Batal
         </button>
       </div>
@@ -134,13 +141,18 @@ export function AddressPage() {
   const [form, setForm] = useState<{ editing: Address | null } | null>(null);
   const branch = branches?.find((b) => b.id === branchId);
 
-  if (!branch) return <p className="p-4 text-sm text-muted-foreground">Memuat…</p>;
+  if (!branch) return <PageSkeleton />;
   const selected = addresses?.find((a) => a.id === addressId) ?? null;
 
   return (
-    <main className="mx-auto max-w-2xl space-y-4 p-4">
-      <h1 className="text-xl font-semibold">Alamat pengantaran</h1>
-      {isLoading && <p className="text-sm text-muted-foreground">Memuat…</p>}
+    <main className="app-main">
+      <h1 className="text-2xl font-bold">Alamat pengantaran</h1>
+      {isLoading && (
+        <div className="space-y-3" aria-busy="true" aria-label="Memuat">
+          <div className="skeleton h-24 rounded-lg" />
+          <div className="skeleton h-24 rounded-lg" />
+        </div>
+      )}
       {form ? (
         <AddressForm
           branch={branch}
@@ -152,50 +164,65 @@ export function AddressPage() {
         />
       ) : (
         <>
-          <ul className="space-y-2">
-            {addresses?.map((a) => (
-              <li key={a.id} className="flex items-start gap-3 rounded-lg border p-3">
-                <input
-                  type="radio"
-                  name="address"
-                  checked={selected?.id === a.id}
-                  onChange={() => setAddressId(a.id)}
-                  className="mt-1"
-                  aria-label={`Pilih ${a.label}`}
-                />
-                <div className="flex-1 text-sm">
-                  <p className="font-medium">{a.label}</p>
-                  <p>{a.street}</p>
-                  <p className="text-muted-foreground">
-                    {a.receiver_name} · {a.receiver_phone}
-                  </p>
+          <ul className="space-y-3">
+            {addresses?.map((a, i) => (
+              <li
+                key={a.id}
+                className={cn("card animate-rise", selected?.id === a.id && "border-primary bg-primary-surface")}
+                style={rise(i)}
+              >
+                <div className="flex items-start gap-1">
+                  <label className="-ml-2 -mt-2 flex h-11 w-11 shrink-0 items-center justify-center">
+                    <input
+                      type="radio"
+                      name="address"
+                      checked={selected?.id === a.id}
+                      onChange={() => setAddressId(a.id)}
+                      className="h-5 w-5 accent-primary"
+                      aria-label={`Pilih ${a.label}`}
+                    />
+                  </label>
+                  <div className="min-w-0 flex-1 text-sm">
+                    <p className="font-bold">{a.label}</p>
+                    <p>{a.street}</p>
+                    <p className="text-muted-foreground">
+                      {a.receiver_name} · {a.receiver_phone}
+                    </p>
+                  </div>
                 </div>
-                <button onClick={() => setForm({ editing: a })} className="text-sm text-primary">
-                  Ubah
-                </button>
-                <button
-                  onClick={() =>
-                    remove.mutate(a.id, {
-                      onSuccess: () => selected?.id === a.id && setAddressId(null),
-                      onError: (e) => toast("error", errorMessage(e)),
-                    })
-                  }
-                  className="text-sm text-destructive"
-                >
-                  Hapus
-                </button>
+                <div className="card-footer flex justify-end gap-2">
+                  <button onClick={() => setForm({ editing: a })} className="inline-flex min-h-11 items-center px-3 text-sm font-medium text-accent">
+                    Ubah
+                  </button>
+                  <button
+                    onClick={() =>
+                      remove.mutate(a.id, {
+                        onSuccess: () => selected?.id === a.id && setAddressId(null),
+                        onError: (e) => toast("error", errorMessage(e)),
+                      })
+                    }
+                    className="inline-flex min-h-11 items-center px-3 text-sm font-medium text-destructive"
+                  >
+                    Hapus
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
-          <button onClick={() => setForm({ editing: null })} className="w-full rounded-md border px-3 py-2">
+          {addresses && addresses.length === 0 && (
+            <EmptyState icon={<IconPin />} title="Belum ada alamat.">
+              <p className="text-sm">Tambah alamat untuk melanjutkan.</p>
+            </EmptyState>
+          )}
+          <button onClick={() => setForm({ editing: null })} className={cn(btnSecondary, "w-full border-dashed")}>
             + Tambah alamat
           </button>
           {selected ? (
-            <Link to={`/b/${branchId}/checkout`} className="block rounded-md bg-primary px-3 py-2 text-center text-primary-foreground">
+            <Link to={`/b/${branchId}/checkout`} className="btn-hero w-full">
               Lanjut ke pembayaran
             </Link>
           ) : (
-            <button disabled className="w-full rounded-md bg-primary px-3 py-2 text-primary-foreground opacity-50">
+            <button disabled className="btn-hero w-full">
               Pilih alamat dulu
             </button>
           )}

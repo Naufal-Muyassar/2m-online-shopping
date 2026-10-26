@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { CUSTOMER_STATUS_LABELS, CUSTOMER_TIMELINE, formatIDR, type OrderStatus } from "@2m/shared";
 import { useOrder } from "../../lib/queries";
 import { cn } from "../../lib/utils";
+import { ErrorCard, PageSkeleton } from "../../components/States";
+import { StatusPill } from "../../components/StatusPill";
 import { TrackingCard } from "./TrackingCard";
 
 const LABEL = CUSTOMER_STATUS_LABELS;
@@ -19,8 +21,14 @@ export function OrderStatusPage() {
   const [zoom, setZoom] = useState(false);
   const refetchedOnImageError = useRef(false);
 
-  if (isLoading) return <p className="p-4 text-sm text-muted-foreground">Memuat…</p>;
-  if (isError || !data) return <p className="p-4 text-sm text-destructive">Pesanan tidak ditemukan.</p>;
+  if (isLoading) return <PageSkeleton />;
+  if (isError || !data) {
+    return (
+      <main className="app-main">
+        <ErrorCard message="Pesanan tidak ditemukan." onRetry={() => void refetch()} />
+      </main>
+    );
+  }
 
   const { order, items, pricing, address, payment, timeline, courier, failure, proof } = data;
   const reachedAt = new Map<OrderStatus, string>();
@@ -41,16 +49,18 @@ export function OrderStatusPage() {
   };
 
   return (
-    <main className="mx-auto max-w-2xl space-y-4 p-4">
-      <div>
-        <p className="text-sm text-muted-foreground">Pesanan · {order.branch_name}</p>
-        <h1 className="text-xl font-semibold">{order.code}</h1>
-        <p className="text-sm">{LABEL[order.status]}</p>
-        {failure && <p className="text-sm text-destructive">{failure}</p>}
-        {courier && <p className="text-sm text-muted-foreground">Kurir: {courier.first_name}</p>}
+    <main className="app-main">
+      <div className="space-y-1">
+        <p className="eyebrow">Pesanan · {order.branch_name}</p>
+        <h1 className="text-2xl font-bold">{order.code}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill status={order.status} />
+          {courier && <span className="text-sm text-muted-foreground">Kurir: {courier.first_name}</span>}
+        </div>
+        {failure && <p className="alert-box mt-2">{failure}</p>}
       </div>
 
-      <ol className="space-y-3 rounded-lg border p-4" aria-label="Status pesanan">
+      <ol className="card animate-rise space-y-3" aria-label="Status pesanan">
         {steps.map((s) => {
           const at = reachedAt.get(s);
           const done = isDone(s);
@@ -60,10 +70,11 @@ export function OrderStatusPage() {
               <span
                 className={cn(
                   "mt-1 h-3 w-3 shrink-0 rounded-full border",
-                  done ? (exit === s ? "border-destructive bg-destructive" : "border-primary bg-primary") : "bg-background",
+                  done ? (exit === s ? "border-destructive bg-destructive" : "border-primary bg-primary") : "border-border bg-surface",
+                  current && "ring-4 ring-primary-surface",
                 )}
               />
-              <div className={cn("text-sm", !done && "text-muted-foreground", current && "font-semibold")}>
+              <div className={cn("text-sm", !done && "text-muted-foreground", current && "font-bold")}>
                 {LABEL[s]}
                 {done && at && <span className="ml-2 text-xs font-normal text-muted-foreground">{fmtTime(at)}</span>}
               </div>
@@ -73,10 +84,10 @@ export function OrderStatusPage() {
       </ol>
 
       {order.status === "PENDING_PAYMENT" && (
-        <div className="space-y-2 rounded-lg bg-secondary p-3 text-sm">
+        <div className="notice flex flex-col items-start gap-3">
           <p>Pesanan menunggu pembayaran.</p>
           {data.invoice_url && (
-            <a href={data.invoice_url} className="inline-block rounded-md bg-primary px-3 py-2 text-primary-foreground">
+            <a href={data.invoice_url} className="btn-hero">
               Bayar sekarang
             </a>
           )}
@@ -86,8 +97,8 @@ export function OrderStatusPage() {
       {data.tracking_available && <TrackingCard orderId={order.id} />}
 
       {proof && (
-        <section className="space-y-2 rounded-lg border p-4 text-sm">
-          <h2 className="font-semibold">Bukti pengantaran</h2>
+        <section className="card animate-rise space-y-2 text-sm">
+          <h2 className="text-base font-bold">Bukti pengantaran</h2>
           <button type="button" onClick={() => setZoom(true)} className="block w-full" aria-label="Perbesar foto">
             <img
               src={proof.photo_url}
@@ -104,14 +115,14 @@ export function OrderStatusPage() {
           role="dialog"
           aria-label="Bukti pengantaran"
           onClick={() => setZoom(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="sheet-backdrop items-center p-4"
         >
-          <img src={proof.photo_url} alt="Bukti pengantaran" onError={onImageError} className="max-h-full max-w-full" />
+          <img src={proof.photo_url} alt="Bukti pengantaran" onError={onImageError} className="max-h-full max-w-full rounded-lg shadow-lg" />
         </div>
       )}
 
-      <section className="rounded-lg border p-4 text-sm">
-        <h2 className="mb-2 font-semibold">Barang</h2>
+      <section className="card animate-rise text-sm">
+        <h2 className="mb-2 text-base font-bold">Barang</h2>
         <table className="w-full">
           <thead className="text-left text-xs text-muted-foreground">
             <tr>
@@ -136,7 +147,7 @@ export function OrderStatusPage() {
         </table>
       </section>
 
-      <section className="space-y-1 rounded-lg border p-4 text-sm">
+      <section className="card animate-rise space-y-1 text-sm">
         <div className="flex justify-between">
           <span>Subtotal</span>
           <span>{formatIDR(pricing.subtotal)}</span>
@@ -157,14 +168,14 @@ export function OrderStatusPage() {
             <span>{formatIDR(pricing.payment_fee)}</span>
           </div>
         )}
-        <div className="flex justify-between font-semibold">
+        <div className="card-footer flex justify-between text-lg font-bold">
           <span>Total</span>
           <span>{formatIDR(pricing.grand_total)}</span>
         </div>
       </section>
 
-      <section className="space-y-1 rounded-lg border p-4 text-sm">
-        <h2 className="font-semibold">Alamat pengiriman</h2>
+      <section className="card animate-rise space-y-1 text-sm">
+        <h2 className="text-base font-bold">Alamat pengiriman</h2>
         <p>
           {address.receiver_name} · {address.receiver_phone}
         </p>
@@ -173,20 +184,20 @@ export function OrderStatusPage() {
           {address.rt_rw && `, RT/RW ${address.rt_rw}`}
           {address.unit && `, ${address.unit}`}
         </p>
-        {address.courier_note && <p className="text-muted-foreground">Catatan: {address.courier_note}</p>}
+        {address.courier_note && <p className="note-rail text-muted-foreground">Catatan: {address.courier_note}</p>}
       </section>
 
-      <section className="space-y-1 rounded-lg border p-4 text-sm">
-        <h2 className="font-semibold">Pembayaran</h2>
+      <section className="card animate-rise space-y-1 text-sm">
+        <h2 className="text-base font-bold">Pembayaran</h2>
         <p>{payment.method ?? "-"}</p>
         {payment.paid_at && <p className="text-muted-foreground">Dibayar {fmtTime(payment.paid_at)}</p>}
       </section>
 
       <div className="flex justify-between text-sm">
-        <Link to="/orders" className="text-primary">
+        <Link to="/orders" className="inline-flex min-h-11 items-center font-medium text-accent">
           Pesanan saya
         </Link>
-        <Link to="/" className="text-primary">
+        <Link to="/" className="inline-flex min-h-11 items-center font-medium text-accent">
           Belanja lagi
         </Link>
       </div>

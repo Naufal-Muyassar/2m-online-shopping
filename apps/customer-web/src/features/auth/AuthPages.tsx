@@ -3,7 +3,8 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
 import { errorMessage } from "../../lib/api";
 
-const input = "mt-1 w-full rounded-md border px-3 py-2";
+const input = "field";
+const primaryBtn = "inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-5 font-medium text-primary-foreground hover:bg-primary-pressed disabled:opacity-60";
 
 export function LoginPage() {
   const { user, login } = useAuth();
@@ -31,29 +32,39 @@ export function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-secondary p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-background p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Masuk</h1>
-        <label className="block text-sm">
-          No. HP / Email
-          <input className={input} value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" required />
-        </label>
-        <label className="block text-sm">
-          Password
-          <input type="password" className={input} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
-        </label>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <button type="submit" disabled={pending} className="w-full rounded-md bg-primary px-3 py-2 text-primary-foreground disabled:opacity-60">
-          {pending ? "Masuk…" : "Masuk"}
-        </button>
-        <p className="text-center text-sm">
-          Belum punya akun?{" "}
-          <Link to="/register" state={{ from }} className="text-primary underline">
-            Daftar
-          </Link>
-        </p>
-      </form>
-    </main>
+    <div className="app-shell-plain">
+      <main className="flex flex-1 flex-col justify-center gap-6 p-4">
+        <div className="flex flex-col items-center gap-2">
+          <span className="avatar h-14 w-14 text-lg shadow-glow">2M</span>
+          <p className="text-lg font-bold">2M Sembako</p>
+        </div>
+        <form onSubmit={onSubmit} className="card animate-rise space-y-4">
+          <h1 className="text-2xl font-bold">Masuk</h1>
+          <label className="block space-y-1">
+            <span className="field-label">No. HP / Email</span>
+            <input className={input} value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" required />
+          </label>
+          <label className="block space-y-1">
+            <span className="field-label">Password</span>
+            <input type="password" className={input} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+          </label>
+          {error && (
+            <p role="alert" className="alert-box">
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={pending} className={primaryBtn}>
+            {pending ? "Masuk…" : "Masuk"}
+          </button>
+          <p className="text-center text-sm">
+            Belum punya akun?{" "}
+            <Link to="/register" state={{ from }} className="font-medium text-accent underline">
+              Daftar
+            </Link>
+          </p>
+        </form>
+      </main>
+    </div>
   );
 }
 
@@ -84,36 +95,46 @@ export function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-secondary p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-background p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">Daftar</h1>
-        <label className="block text-sm">
-          Nama
-          <input className={input} value={form.name} onChange={set("name")} autoComplete="name" required />
-        </label>
-        <label className="block text-sm">
-          No. HP
-          <input className={input} value={form.phone} onChange={set("phone")} inputMode="tel" autoComplete="tel" required />
-        </label>
-        <label className="block text-sm">
-          Email (opsional)
-          <input type="email" className={input} value={form.email} onChange={set("email")} autoComplete="email" />
-        </label>
-        <label className="block text-sm">
-          Password (min. 8 karakter)
-          <input type="password" className={input} value={form.password} onChange={set("password")} minLength={8} autoComplete="new-password" required />
-        </label>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <button type="submit" disabled={pending} className="w-full rounded-md bg-primary px-3 py-2 text-primary-foreground disabled:opacity-60">
-          {pending ? "Mendaftar…" : "Daftar"}
-        </button>
-        <p className="text-center text-sm">
-          Sudah punya akun?{" "}
-          <Link to="/login" state={{ from }} className="text-primary underline">
-            Masuk
-          </Link>
-        </p>
-      </form>
-    </main>
+    <div className="app-shell-plain">
+      <main className="flex flex-1 flex-col justify-center gap-6 p-4">
+        <div className="flex flex-col items-center gap-2">
+          <span className="avatar h-14 w-14 text-lg shadow-glow">2M</span>
+          <p className="text-lg font-bold">2M Sembako</p>
+        </div>
+        <form onSubmit={onSubmit} className="card animate-rise space-y-4">
+          <h1 className="text-2xl font-bold">Daftar</h1>
+          <label className="block space-y-1">
+            <span className="field-label">Nama</span>
+            <input className={input} value={form.name} onChange={set("name")} autoComplete="name" required />
+          </label>
+          <label className="block space-y-1">
+            <span className="field-label">No. HP</span>
+            <input className={input} value={form.phone} onChange={set("phone")} inputMode="tel" autoComplete="tel" required />
+          </label>
+          <label className="block space-y-1">
+            <span className="field-label">Email (opsional)</span>
+            <input type="email" className={input} value={form.email} onChange={set("email")} autoComplete="email" />
+          </label>
+          <label className="block space-y-1">
+            <span className="field-label">Password (min. 8 karakter)</span>
+            <input type="password" className={input} value={form.password} onChange={set("password")} minLength={8} autoComplete="new-password" required />
+          </label>
+          {error && (
+            <p role="alert" className="alert-box">
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={pending} className={primaryBtn}>
+            {pending ? "Mendaftar…" : "Daftar"}
+          </button>
+          <p className="text-center text-sm">
+            Sudah punya akun?{" "}
+            <Link to="/login" state={{ from }} className="font-medium text-accent underline">
+              Masuk
+            </Link>
+          </p>
+        </form>
+      </main>
+    </div>
   );
 }

@@ -49,15 +49,15 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
   };
 
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-border p-4">
+    <section className="card flex animate-rise flex-col gap-4">
       <h2 className="text-xl font-bold">{failed ? "Gagal kirim" : "Selesai antar"}</h2>
 
       {failed && (
         <>
-          <label className="flex flex-col gap-1 font-medium">
+          <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
             Alasan
             <select
-              className="h-14 rounded-lg border border-input bg-background px-3 text-lg"
+              className="field h-14 text-lg"
               value={reason}
               onChange={(e) => setReason(e.target.value as FailedReason)}
               disabled={running}
@@ -70,10 +70,10 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1 font-medium">
+          <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
             Catatan
             <textarea
-              className="min-h-24 rounded-lg border border-input bg-background p-3 text-lg"
+              className="field min-h-24 text-lg"
               maxLength={500}
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -83,26 +83,26 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
         </>
       )}
 
-      <label className="flex flex-col gap-2 font-medium">
+      <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
         Foto bukti
         <input
           type="file"
           accept="image/*"
           capture="environment"
           disabled={running}
-          className="text-base"
+          className="text-base text-foreground file:mr-3 file:min-h-11 file:rounded-md file:border-0 file:bg-primary-surface file:px-4 file:font-bold file:text-primary-pressed"
           onChange={(e) => {
             setFile(e.target.files?.[0] ?? null);
             reset();
           }}
         />
       </label>
-      {preview && <img src={preview} alt="Pratinjau foto bukti" className="max-h-64 w-full rounded-lg object-contain" />}
+      {preview && <img src={preview} alt="Pratinjau foto bukti" className="max-h-64 w-full rounded-md border border-border object-contain" />}
 
       {step >= 0 && (
         <ol className="flex flex-col gap-1 text-base" aria-label="Progres">
           {STEPS.map((label, i) => (
-            <li key={label} className={i < step ? "text-foreground" : i === step ? "font-semibold" : "text-muted-foreground"}>
+            <li key={label} className={i < step ? "text-success" : i === step ? "font-semibold" : "text-muted-foreground"}>
               {i < step ? "✓" : i === step && running ? "…" : "•"} {label}
               {i === 2 && step === 2 && running ? ` (${uploadPct}%)` : ""}
             </li>
@@ -111,12 +111,12 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
       )}
 
       {error && (
-        <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-foreground">
+        <p role="alert" className="alert-box">
           {error}
         </p>
       )}
 
-      <Button variant={failed ? "destructive" : "primary"} loading={running} disabled={!canSubmit} onClick={submit}>
+      <Button variant={failed ? "destructive" : "hero"} loading={running} disabled={!canSubmit} onClick={submit}>
         {error ? <FaRedoAlt aria-hidden="true" className="mr-2 inline" /> : failed ? <FaExclamationTriangle aria-hidden="true" className="mr-2 inline" /> : <FaCheck aria-hidden="true" className="mr-2 inline" />}
         {error ? "Coba lagi" : failed ? "Kirim laporan gagal" : "Kirim bukti & selesai"}
       </Button>

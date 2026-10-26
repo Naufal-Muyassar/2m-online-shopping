@@ -23,35 +23,39 @@ export function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-secondary p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4 rounded-lg border bg-background p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">2M Admin</h1>
-        <label className="block text-sm">
+    <main className="flex min-h-dvh items-center justify-center p-4">
+      <form onSubmit={onSubmit} className="card w-full max-w-sm animate-rise space-y-4 p-6 shadow-md">
+        <h1 className="text-2xl font-bold">Masuk</h1>
+        <label className="field-label block">
           Email / No. HP
           <input
-            className="mt-1 w-full rounded-md border px-3 py-2"
+            className="field mt-1"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             autoComplete="username"
             required
           />
         </label>
-        <label className="block text-sm">
+        <label className="field-label block">
           Password
           <input
             type="password"
-            className="mt-1 w-full rounded-md border px-3 py-2"
+            className="field mt-1"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             required
           />
         </label>
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && (
+          <p className="alert-box" role="alert">
+            {error}
+          </p>
+        )}
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded-md bg-primary px-3 py-2 text-primary-foreground disabled:opacity-60"
+          className="min-h-11 w-full rounded-md bg-primary px-3 py-2 font-bold text-primary-foreground hover:bg-primary-pressed disabled:opacity-60"
         >
           {pending ? "Masuk…" : "Masuk"}
         </button>

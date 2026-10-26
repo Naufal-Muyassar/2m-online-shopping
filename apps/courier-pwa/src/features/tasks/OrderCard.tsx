@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import type { CSSProperties } from "react";
 import type { CourierOrder } from "@2m/shared";
 import { FaChevronRight } from "react-icons/fa";
 
@@ -9,24 +10,35 @@ export const STATUS_LABELS: Record<string, string> = {
   FAILED: "Gagal kirim",
 };
 
-export function OrderCard({ order }: { order: CourierOrder }) {
+export const STATUS_PILLS: Record<string, string> = {
+  PICKING: "pill-warning",
+  ON_DELIVERY: "pill-primary",
+  DELIVERED: "pill-success",
+  FAILED: "pill-danger",
+};
+
+export function OrderCard({ order, index = 0 }: { order: CourierOrder; index?: number }) {
   const returning = order.status === "FAILED" && order.return_pending;
   return (
-    <Link to={`/orders/${order.id}`} className="block rounded-xl border border-border p-4 active:bg-muted">
+    <Link
+      to={`/orders/${order.id}`}
+      className="card card-link animate-rise"
+      style={{ animationDelay: `${Math.min(index, 6) * 70}ms` } as CSSProperties}
+    >
       <div className="flex items-center justify-between gap-2">
         <span className="text-lg font-bold">{order.code}</span>
-        <span className="flex items-center gap-2 rounded-full bg-secondary px-3 py-1 text-sm font-medium">
-          {STATUS_LABELS[order.status] ?? order.status}
-          <FaChevronRight aria-hidden="true" className="text-xs" />
+        <span className={`pill pill-dot ${STATUS_PILLS[order.status] ?? ""}`}>{STATUS_LABELS[order.status] ?? order.status}</span>
+      </div>
+      <p className="mt-2 text-base font-medium">{order.address.receiver_name}</p>
+      <p className="line-clamp-2 text-sm text-muted-foreground [overflow-wrap:anywhere]">{order.address.street}</p>
+      {returning && (
+        <p className="alert-box mt-3 font-medium">Kembalikan barang ke cabang – menunggu konfirmasi admin</p>
+      )}
+      <div className="card-footer flex items-center justify-end text-primary">
+        <span className="flex size-10 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground">
+          <FaChevronRight aria-hidden="true" />
         </span>
       </div>
-      <p className="mt-1 text-base">{order.address.receiver_name}</p>
-      <p className="text-sm text-muted-foreground">{order.address.street}</p>
-      {returning && (
-        <p className="mt-2 rounded-lg bg-destructive/10 p-2 text-sm font-medium text-foreground">
-          Kembalikan barang ke cabang – menunggu konfirmasi admin
-        </p>
-      )}
     </Link>
   );
 }

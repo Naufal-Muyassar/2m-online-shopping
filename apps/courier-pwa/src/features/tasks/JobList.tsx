@@ -3,33 +3,37 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { formatIDR, type CourierJob } from "@2m/shared";
 import { Button } from "@/components/ui/button";
+import { EmptyState, ErrorCard, LoadingBlock } from "@/components/ui/feedback";
+import { FaBoxOpen, FaMoon } from "react-icons/fa";
 import { useToast } from "@/components/ui/toast";
 import { errorMessage } from "@/lib/api";
 import { timeAgo } from "@/lib/utils";
 import { getFreshFix } from "@/platform/geo";
 import { useClaimJob, useJobs } from "./hooks";
 
-function JobCard({ job, busy, claiming, onClaim }: { job: CourierJob; busy: boolean; claiming: boolean; onClaim: () => void }) {
+function JobCard({ job, busy, claiming, onClaim, index }: { job: CourierJob; busy: boolean; claiming: boolean; onClaim: () => void; index: number }) {
   return (
-    <article className="rounded-xl border border-border p-4">
+    <article className="card animate-rise" style={{ animationDelay: `${Math.min(index, 6) * 70}ms` }}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-lg font-bold">{job.code}</span>
-        <span className="text-sm text-muted-foreground">{timeAgo(job.accepted_at)}</span>
+        <span className="pill">{timeAgo(job.accepted_at)}</span>
       </div>
       <p className="mt-1 text-base">{job.area_hint}</p>
-      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-base">
-        <dt className="text-muted-foreground">Jarak</dt>
+      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-base">
+        <dt className="text-sm text-muted-foreground">Jarak</dt>
         <dd className="text-right font-semibold">{job.route_distance_km === null ? "–" : `${job.route_distance_km} km`}</dd>
-        <dt className="text-muted-foreground">Jumlah item</dt>
+        <dt className="text-sm text-muted-foreground">Jumlah item</dt>
         <dd className="text-right font-semibold">{job.item_count}</dd>
-        <dt className="text-muted-foreground">Berat</dt>
+        <dt className="text-sm text-muted-foreground">Berat</dt>
         <dd className="text-right font-semibold">{job.total_weight_kg} kg</dd>
-        <dt className="text-muted-foreground">Upah</dt>
-        <dd className="text-right font-semibold">{job.courier_wage === null ? "–" : formatIDR(job.courier_wage)}</dd>
+        <dt className="text-sm text-muted-foreground">Upah</dt>
+        <dd className="text-right font-bold text-success">{job.courier_wage === null ? "–" : formatIDR(job.courier_wage)}</dd>
       </dl>
-      <Button className="mt-3" loading={claiming} disabled={busy && !claiming} onClick={onClaim}>
-        Ambil order
-      </Button>
+      <div className="card-footer">
+        <Button variant="hero" loading={claiming} disabled={busy && !claiming} onClick={onClaim}>
+          Ambil order
+        </Button>
+      </div>
     </article>
   );
 }
@@ -66,25 +70,20 @@ export function JobList() {
     }
   };
 
-  if (jobs.isLoading) return <p className="text-muted-foreground">Memuat…</p>;
-  if (jobs.isError) {
-    return (
-      <p role="alert" className="text-destructive">
-        {errorMessage(jobs.error)}
-      </p>
-    );
-  }
+  if (jobs.isLoading) return <LoadingBlock />;
+  if (jobs.isError) return <ErrorCard message={errorMessage(jobs.error)} onRetry={() => void jobs.refetch()} />;
   if (!jobs.data?.can_claim) {
-    return <p className="rounded-xl bg-muted p-4 text-muted-foreground">Status Anda berubah. Muat ulang halaman.</p>;
+    return <EmptyState icon={<FaMoon />} title="Status Anda berubah" hint="Muat ulang halaman." />;
   }
   if (jobs.data.jobs.length === 0) {
-    return <p className="rounded-xl bg-muted p-4 text-muted-foreground">Belum ada order</p>;
+    return <EmptyState icon={<FaBoxOpen />} title="Belum ada order" hint="Order baru akan muncul di sini." />;
   }
   return (
     <div className="flex flex-col gap-3">
-      {jobs.data.jobs.map((job) => (
+      {jobs.data.jobs.map((job, i) => (
         <JobCard
           key={job.id}
+          index={i}
           job={job}
           busy={claim.isPending}
           claiming={claim.isPending && claim.variables?.jobId === job.id}

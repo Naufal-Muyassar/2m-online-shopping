@@ -33,21 +33,21 @@ export function TrackingCard({ orderId }: { orderId: string }) {
   const age = courier ? ageSec(courier.updated_at, now) : 0;
 
   return (
-    <section className="space-y-2 rounded-lg border p-4 text-sm">
-      <h2 className="font-semibold">Lacak kurir</h2>
+    <section className="card animate-rise space-y-2 text-sm">
+      <h2 className="text-base font-bold">Lacak kurir</h2>
       <MapView markers={markers} ariaLabel="Peta lokasi kurir" />
       {!courier || active.eta_minutes === null ? (
         <p className="text-muted-foreground">Menunggu lokasi kurir</p>
       ) : (
         <>
-          <p className="font-medium">
+          <p className="font-bold">
             Kurir ±{active.eta_minutes} menit lagi (perkiraan)
             {active.distance_remaining_km !== null && (
               <span className="font-normal text-muted-foreground"> · {active.distance_remaining_km} km</span>
             )}
           </p>
           {active.stale ? (
-            <p className="text-destructive">Lokasi kurir belum diperbarui sejak {Math.max(1, Math.floor(age / 60))} menit</p>
+            <p className="alert-box">Lokasi kurir belum diperbarui sejak {Math.max(1, Math.floor(age / 60))} menit</p>
           ) : (
             <p className="text-xs text-muted-foreground">Diperbarui {age} detik lalu</p>
           )}

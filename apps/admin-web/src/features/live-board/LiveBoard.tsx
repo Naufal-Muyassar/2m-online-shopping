@@ -28,14 +28,31 @@ function useRefreshBoard() {
 
 function Dialog({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-sm space-y-4 rounded-lg bg-background p-5 shadow-lg">
-        <h2 className="text-lg font-semibold">{title}</h2>
+    <div
+      className="fixed inset-0 z-40 flex animate-fade-in items-center justify-center bg-foreground/50 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="card w-full max-w-sm animate-rise space-y-4 p-5 shadow-lg">
+        <h2 className="text-lg font-bold">{title}</h2>
         {children}
       </div>
     </div>
   );
 }
+
+const SECONDARY_BTN = "min-h-11 rounded-md border bg-surface px-4 py-2 font-medium hover:bg-muted disabled:opacity-60";
+const PRIMARY_BTN =
+  "min-h-11 rounded-md bg-primary px-4 py-2 font-bold text-primary-foreground hover:bg-primary-pressed disabled:opacity-60";
+
+const ORDER_PILL: Record<string, string> = {
+  ACCEPTED: "pill-info",
+  PICKING: "pill-warning",
+  ON_DELIVERY: "pill-primary",
+  DELIVERED: "pill-success",
+  FAILED: "pill-danger",
+  CANCELLED: "pill-danger",
+};
 
 function AssignDialog({ order, onClose }: { order: AdminOrder; onClose: () => void }) {
   const { branchId } = useBranch();
@@ -63,10 +80,10 @@ function AssignDialog({ order, onClose }: { order: AdminOrder; onClose: () => vo
 
   return (
     <Dialog title={`Tugaskan ${order.code}`}>
-      <label className="block text-sm">
+      <label className="field-label block">
         Kurir (IDLE)
         <select
-          className="mt-1 w-full rounded-md border px-3 py-2"
+          className="field mt-1"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           disabled={couriers.isLoading}
@@ -79,18 +96,22 @@ function AssignDialog({ order, onClose }: { order: AdminOrder; onClose: () => vo
           ))}
         </select>
       </label>
-      {couriers.isError && <p className="text-sm text-destructive">{errorMessage(couriers.error)}</p>}
-      {couriers.isSuccess && idle.length === 0 && <p className="text-sm text-muted-foreground">Tidak ada kurir IDLE.</p>}
-      {assign.isError && <p className="text-sm text-destructive">{errorMessage(assign.error)}</p>}
+      {couriers.isError && (
+        <p className="alert-box" role="alert">
+          {errorMessage(couriers.error)}
+        </p>
+      )}
+      {couriers.isSuccess && idle.length === 0 && <p className="notice">Tidak ada kurir IDLE.</p>}
+      {assign.isError && (
+        <p className="alert-box" role="alert">
+          {errorMessage(assign.error)}
+        </p>
+      )}
       <div className="flex justify-end gap-2">
-        <button className="rounded-md border px-3 py-1.5" onClick={onClose} disabled={assign.isPending}>
+        <button className={SECONDARY_BTN} onClick={onClose} disabled={assign.isPending}>
           Batal
         </button>
-        <button
-          className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground disabled:opacity-60"
-          onClick={() => assign.mutate()}
-          disabled={assign.isPending || !target}
-        >
+        <button className={PRIMARY_BTN} onClick={() => assign.mutate()} disabled={assign.isPending || !target}>
           {assign.isPending ? "Memproses…" : "Tugaskan"}
         </button>
       </div>
@@ -119,23 +140,27 @@ function ReleaseDialog({ order, onClose }: { order: AdminOrder; onClose: () => v
       <p className="text-sm text-muted-foreground">
         Order kembali ke "Menunggu kurir"{order.assigned_courier ? ` dan ${order.assigned_courier.name} menjadi IDLE` : ""}.
       </p>
-      <label className="block text-sm">
+      <label className="field-label block">
         Alasan
         <textarea
-          className="mt-1 w-full rounded-md border px-3 py-2"
+          className="field mt-1"
           maxLength={200}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           disabled={release.isPending}
         />
       </label>
-      {release.isError && <p className="text-sm text-destructive">{errorMessage(release.error)}</p>}
+      {release.isError && (
+        <p className="alert-box" role="alert">
+          {errorMessage(release.error)}
+        </p>
+      )}
       <div className="flex justify-end gap-2">
-        <button className="rounded-md border px-3 py-1.5" onClick={onClose} disabled={release.isPending}>
+        <button className={SECONDARY_BTN} onClick={onClose} disabled={release.isPending}>
           Batal
         </button>
         <button
-          className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground disabled:opacity-60"
+          className="min-h-11 rounded-md bg-destructive px-4 py-2 font-bold text-destructive-foreground hover:opacity-90 disabled:opacity-60"
           onClick={() => release.mutate()}
           disabled={release.isPending || reason.trim() === ""}
         >
@@ -165,23 +190,25 @@ function OrderCard({ order, column }: { order: AdminOrder; column: BoardColumn }
     onError: (err) => toast("error", errorMessage(err)),
   });
 
-  const buttonClass = "mt-2 w-full rounded px-2 py-1 disabled:opacity-60";
+  const buttonClass = "mt-3 w-full min-h-11 rounded-md px-3 py-2 font-bold disabled:opacity-60";
 
   return (
-    <li className={cn("rounded-md border bg-background p-3 text-sm shadow-sm", late && "border-destructive bg-red-50")}>
-      <div className="flex justify-between font-medium">
+    <li className={cn("card p-3 text-sm shadow-md", late && "border-destructive bg-destructive-surface")}>
+      <div className="flex justify-between gap-2 font-bold">
         <span>{order.code}</span>
         <span>{formatIDR(order.grand_total)}</span>
       </div>
-      <div className="mt-1 text-xs text-muted-foreground">
+      <div className={cn("mt-1 text-xs", late ? "font-medium text-destructive" : "text-muted-foreground")}>
         {age} mnt di status ini{late ? " · melewati SLA" : ""}
       </div>
       {(column === "PICKING" || column === "ON_DELIVERY") && order.assigned_courier && (
-        <div className="mt-1 text-xs">Kurir: {order.assigned_courier.name}</div>
+        <div className="mt-2">
+          <span className={cn("pill pill-dot", ORDER_PILL[column])}>Kurir: {order.assigned_courier.name}</span>
+        </div>
       )}
       {isBranchAdmin && column === "PAID" && (
         <button
-          className={cn(buttonClass, "bg-primary text-primary-foreground")}
+          className={cn(buttonClass, "bg-primary text-primary-foreground hover:bg-primary-pressed")}
           disabled={accept.isPending}
           onClick={() => accept.mutate()}
         >
@@ -189,16 +216,23 @@ function OrderCard({ order, column }: { order: AdminOrder; column: BoardColumn }
         </button>
       )}
       {isBranchAdmin && column === "ACCEPTED" && (
-        <button className={cn(buttonClass, "border border-primary text-primary")} onClick={() => setDialog("assign")}>
+        <button className={cn(buttonClass, "border bg-surface hover:bg-muted")} onClick={() => setDialog("assign")}>
           Tugaskan manual
         </button>
       )}
       {isBranchAdmin && column === "PICKING" && (
-        <button className={cn(buttonClass, "border border-primary text-primary")} onClick={() => setDialog("release")}>
+        <button
+          className={cn(buttonClass, "bg-destructive-surface text-destructive hover:bg-destructive hover:text-destructive-foreground")}
+          onClick={() => setDialog("release")}
+        >
           Lepas kurir
         </button>
       )}
-      {accept.isError && <p className="mt-1 text-xs text-destructive">{errorMessage(accept.error)}</p>}
+      {accept.isError && (
+        <p className="alert-box mt-2" role="alert">
+          {errorMessage(accept.error)}
+        </p>
+      )}
       {dialog === "assign" && <AssignDialog order={order} onClose={() => setDialog(null)} />}
       {dialog === "release" && <ReleaseDialog order={order} onClose={() => setDialog(null)} />}
     </li>
@@ -225,18 +259,18 @@ function PendingPayment({ orders }: { orders: AdminOrder[] }) {
   });
 
   return (
-    <section className="rounded-lg border bg-secondary p-3">
-      <h3 className="mb-2 text-sm font-semibold">Menunggu pembayaran ({orders.length})</h3>
+    <section className="card p-3">
+      <h3 className="eyebrow mb-3">Menunggu pembayaran ({orders.length})</h3>
       <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {orders.map((o) => (
-          <li key={o.id} className="rounded-md border bg-background p-3 text-sm">
-            <div className="flex justify-between font-medium">
+          <li key={o.id} className="rounded-md border bg-surface p-3 text-sm shadow-sm">
+            <div className="flex justify-between font-bold">
               <span>{o.code}</span>
               <span>{formatIDR(o.grand_total)}</span>
             </div>
             {demoMode && (
               <button
-                className="mt-2 w-full rounded border border-primary px-2 py-1 text-primary disabled:opacity-60"
+                className="mt-3 min-h-11 w-full rounded-md bg-destructive px-3 py-2 font-bold text-destructive-foreground hover:opacity-90 disabled:opacity-60"
                 disabled={forcePaid.isPending && forcePaid.variables === o.id}
                 onClick={() => forcePaid.mutate(o.id)}
               >
@@ -262,8 +296,22 @@ export function LiveBoard() {
   });
 
   if (!branchId) return <p className="p-4 text-sm text-muted-foreground">Pilih cabang…</p>;
-  if (isLoading) return <p className="p-4 text-sm">Memuat…</p>;
-  if (isError) return <p className="p-4 text-sm text-destructive">{errorMessage(error)}</p>;
+  if (isLoading)
+    return (
+      <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4" role="status" aria-busy="true" aria-label="Memuat">
+        {BOARD_COLUMNS.map((col) => (
+          <div key={col} className="skeleton h-48" />
+        ))}
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="p-4">
+        <p className="alert-box" role="alert">
+          {errorMessage(error)}
+        </p>
+      </div>
+    );
 
   const orders = data?.orders ?? [];
   const done = orders.filter((o) => TERMINAL_STATUSES.includes(o.status));
@@ -276,28 +324,35 @@ export function LiveBoard() {
         {BOARD_COLUMNS.map((col) => {
           const items = orders.filter((o) => o.status === col);
           return (
-            <section key={col} className="rounded-lg bg-secondary p-2">
-              <h3 className="mb-2 text-sm font-semibold">
-                {COLUMN_LABELS[col]} ({items.length})
+            <section key={col} className="animate-rise rounded-lg bg-muted/50 p-3">
+              <h3 className="mb-3 flex items-center justify-between text-sm font-bold">
+                <span className={cn("pill pill-dot", ORDER_PILL[col] ?? "pill-info")}>{COLUMN_LABELS[col]}</span>
+                <span className="text-muted-foreground">{items.length}</span>
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {items.map((o) => (
                   <OrderCard key={o.id} order={o} column={col} />
                 ))}
               </ul>
+              {items.length === 0 && (
+                <div className="empty-state p-4 text-sm">
+                  <p>Kosong</p>
+                </div>
+              )}
             </section>
           );
         })}
       </div>
-      <details className="rounded-lg bg-secondary p-3">
-        <summary className="cursor-pointer text-sm font-semibold">Selesai ({done.length})</summary>
-        <ul className="mt-2 space-y-1 text-sm">
+      <details className="card p-3">
+        <summary className="cursor-pointer text-sm font-bold">Selesai ({done.length})</summary>
+        <ul className="mt-3 space-y-2 text-sm">
           {done.map((o) => (
-            <li key={o.id} className="flex justify-between">
-              <span>
-                {o.code} · {o.status}
+            <li key={o.id} className="flex items-center justify-between gap-2 border-b pb-2 last:border-b-0">
+              <span className="inline-flex flex-wrap items-center gap-2">
+                {o.code}
+                <span className={cn("pill", ORDER_PILL[o.status])}>{o.status}</span>
               </span>
-              <span>{formatIDR(o.grand_total)}</span>
+              <span className="font-medium">{formatIDR(o.grand_total)}</span>
             </li>
           ))}
         </ul>

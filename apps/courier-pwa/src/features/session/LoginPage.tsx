@@ -27,48 +27,56 @@ export function LoginPage() {
     }
   };
 
-  const inputClass = "h-14 w-full rounded-lg border border-input bg-background px-4 text-lg";
+  const inputClass = "field h-14 text-lg";
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 p-6">
-      <h1 className="text-3xl font-bold">2M Kurir</h1>
-      {user && <p className="text-sm text-muted-foreground">Sedang masuk sebagai {user.name}.</p>}
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-base font-medium">
-          Nomor HP
-          <input
-            className={inputClass}
-            inputMode="tel"
-            autoComplete="username"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-base font-medium">
-          Kata sandi
-          <input
-            className={inputClass}
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        {error && (
-          <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-foreground">
-            {error}
-          </p>
-        )}
-        <Button type="submit" loading={submitting}>
-          <FaSignInAlt aria-hidden="true" className="mr-2 inline" />
-          Masuk
-        </Button>
-      </form>
-      <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-        Pasang aplikasi di iPhone: ketuk <strong>Bagikan → Tambah ke Layar Utama</strong>.
-      </p>
-    </main>
+    <div className="app-shell-plain">
+      <main className="flex flex-1 flex-col justify-center gap-6 p-6">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span className="flex size-16 items-center justify-center rounded-lg bg-hero text-xl font-bold text-primary-foreground shadow-glow">
+            2M
+          </span>
+          <h1 className="text-3xl font-bold">2M Kurir</h1>
+          {user && <p className="text-sm text-muted-foreground">Sedang masuk sebagai {user.name}.</p>}
+        </div>
+        <form onSubmit={onSubmit} className="card flex animate-rise flex-col gap-4">
+          <h2 className="text-xl font-bold">Masuk</h2>
+          <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
+            Nomor HP
+            <input
+              className={inputClass}
+              inputMode="tel"
+              autoComplete="username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              required
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
+            Kata sandi
+            <input
+              className={inputClass}
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+          {error && (
+            <p role="alert" className="alert-box">
+              {error}
+            </p>
+          )}
+          <Button type="submit" variant="hero" loading={submitting}>
+            <FaSignInAlt aria-hidden="true" className="mr-2 inline" />
+            Masuk
+          </Button>
+        </form>
+        <p className="notice">
+          Pasang aplikasi di iPhone: ketuk <strong>Bagikan → Tambah ke Layar Utama</strong>.
+        </p>
+      </main>
+    </div>
   );
 }

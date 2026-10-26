@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
-import { CUSTOMER_STATUS_LABELS, formatIDR } from "@2m/shared";
+import { formatIDR } from "@2m/shared";
 import { useOrderHistory } from "../../lib/queries";
+import { IconReceipt } from "../../components/Icons";
+import { btnSecondary, EmptyState, ErrorCard, PageSkeleton, rise } from "../../components/States";
+import { StatusPill } from "../../components/StatusPill";
+import { cn } from "../../lib/utils";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -8,14 +12,11 @@ const fmtDate = (iso: string) =>
 export function OrdersPage() {
   const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useOrderHistory();
 
-  if (isLoading) return <p className="p-4 text-sm text-muted-foreground">Memuat…</p>;
+  if (isLoading) return <PageSkeleton />;
   if (isError || !data) {
     return (
-      <main className="mx-auto max-w-2xl space-y-2 p-4 text-sm">
-        <p className="text-destructive">Gagal memuat pesanan.</p>
-        <button onClick={() => void refetch()} className="rounded-md border px-3 py-1.5 hover:bg-secondary">
-          Coba lagi
-        </button>
+      <main className="app-main">
+        <ErrorCard message="Gagal memuat pesanan." onRetry={() => void refetch()} />
       </main>
     );
   }
@@ -23,37 +24,32 @@ export function OrdersPage() {
   const orders = data.pages.flatMap((p) => p.orders);
 
   return (
-    <main className="mx-auto max-w-2xl space-y-3 p-4">
-      <h1 className="text-xl font-semibold">Pesanan saya</h1>
+    <main className="app-main">
+      <h1 className="text-2xl font-bold">Pesanan saya</h1>
       {orders.length === 0 && (
-        <p className="rounded-lg border p-4 text-sm text-muted-foreground">
-          Belum ada pesanan.{" "}
-          <Link to="/" className="text-primary">
+        <EmptyState icon={<IconReceipt />} title="Belum ada pesanan.">
+          <Link to="/" className={cn(btnSecondary, "mt-2")}>
             Mulai belanja
           </Link>
-        </p>
+        </EmptyState>
       )}
-      {orders.map((o) => (
-        <Link key={o.id} to={`/orders/${o.id}`} className="block space-y-1 rounded-lg border p-4 text-sm hover:bg-secondary">
-          <div className="flex justify-between">
-            <span className="font-semibold">{o.code}</span>
-            <span>{CUSTOMER_STATUS_LABELS[o.status]}</span>
+      {orders.map((o, i) => (
+        <Link key={o.id} to={`/orders/${o.id}`} className="card card-link animate-rise space-y-2 text-sm" style={rise(i)}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-bold">{o.code}</span>
+            <StatusPill status={o.status} />
           </div>
           <div className="text-xs text-muted-foreground">
             {fmtDate(o.created_at)} · {o.branch_name}
           </div>
-          <div className="flex justify-between">
+          <div className="card-footer flex justify-between">
             <span>{o.item_count} barang</span>
-            <span className="font-semibold">{formatIDR(o.grand_total)}</span>
+            <span className="font-bold">{formatIDR(o.grand_total)}</span>
           </div>
         </Link>
       ))}
       {hasNextPage && (
-        <button
-          onClick={() => void fetchNextPage()}
-          disabled={isFetchingNextPage}
-          className="w-full rounded-md border px-3 py-2 text-sm hover:bg-secondary disabled:opacity-50"
-        >
+        <button onClick={() => void fetchNextPage()} disabled={isFetchingNextPage} className={cn(btnSecondary, "w-full text-sm")}>
           {isFetchingNextPage ? "Memuat…" : "Muat lagi"}
         </button>
       )}

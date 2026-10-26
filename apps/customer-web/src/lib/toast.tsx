@@ -24,15 +24,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={push}>
       {children}
-      <div className="fixed bottom-4 left-1/2 z-[1000] flex -translate-x-1/2 flex-col gap-2" role="status" aria-live="polite">
+      <div
+        className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--nav-height)+2rem)] z-[1000] mx-auto flex max-w-[28rem] flex-col gap-2"
+        role="status"
+        aria-live="polite"
+      >
         {toasts.map((t) => (
-          <div
-            key={t.id}
-            className={cn(
-              "rounded-md px-4 py-2 text-sm text-white shadow",
-              t.kind === "success" ? "bg-primary" : "bg-destructive",
-            )}
-          >
+          <div key={t.id} className={cn("toast", t.kind === "success" ? "toast-success" : "toast-error")}>
             {t.text}
           </div>
         ))}

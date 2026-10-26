@@ -24,7 +24,7 @@ interface Props {
 }
 
 // `markers` must keep the same identity until a coordinate changes (memoise it): each new array refits the view.
-export function MapView({ markers, ariaLabel = "Peta", className = "h-64 w-full rounded-lg border" }: Props) {
+export function MapView({ markers, ariaLabel = "Peta", className = "isolate h-64 w-full overflow-hidden rounded-lg border border-border shadow-md" }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layers = useRef(new Map<string, L.CircleMarker>());

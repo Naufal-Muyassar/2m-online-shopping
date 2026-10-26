@@ -8,7 +8,8 @@ import { getFreshFix } from "@/platform/geo";
 import { ProofFlow } from "@/features/proof/ProofFlow";
 import { useSecondsSinceLastPing } from "@/tracking";
 import { useOrder, useOrderStatus, usePickItem, useReleaseOrder } from "./hooks";
-import { STATUS_LABELS } from "./OrderCard";
+import { STATUS_LABELS, STATUS_PILLS } from "./OrderCard";
+import { LoadingBlock } from "@/components/ui/feedback";
 import { FaArrowLeft, FaCheck, FaExclamationTriangle, FaMapMarkerAlt, FaPhone, FaTruck } from "react-icons/fa";
 
 type Panel = "none" | "deliver" | "fail";
@@ -25,8 +26,12 @@ function Stepper({ status }: { status: string }) {
       {STEPS.map((s, i) => (
         <li
           key={s.status}
-          className={`flex-1 rounded-lg px-3 py-2 text-center text-sm font-semibold ${
-            i === current ? "bg-primary text-primary-foreground" : i < current ? "bg-secondary" : "bg-muted text-muted-foreground"
+          className={`flex-1 rounded-full px-3 py-2 text-center text-sm font-bold transition-colors ${
+            i === current
+              ? "bg-primary text-primary-foreground shadow-glow"
+              : i < current
+                ? "bg-success-surface text-success"
+                : "bg-muted text-muted-foreground"
           }`}
         >
           {i + 1}. {s.label}
@@ -45,29 +50,31 @@ function PickingChecklist({ order }: { order: CourierOrder }) {
     pick.mutate({ itemId, pickedQty }, { onError: (err) => notify("error", errorMessage(err)) });
 
   return (
-    <section className="rounded-xl border border-border p-4">
-      <div className="flex items-center justify-between">
+    <section className="card animate-rise">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="font-bold">Barang</h2>
-        <span className="text-sm font-medium">
+        <span className={`pill ${ready === order.items.length ? "pill-success" : "pill-warning"}`}>
           {ready} dari {order.items.length} item siap
         </span>
       </div>
-      <ul className="mt-2 flex flex-col gap-2">
+      <ul className="mt-3 flex flex-col gap-2">
         {order.items.map((it) => {
           const done = it.picked_qty >= it.qty;
           return (
-            <li key={it.id} className={`rounded-lg border p-2 ${done ? "border-primary bg-primary/5" : "border-border"}`}>
+            <li key={it.id} className={`rounded-md border p-2 transition-colors ${done ? "border-success bg-success-surface" : "border-border bg-surface"}`}>
               <button
                 type="button"
-                className="flex min-h-12 w-full items-center justify-between gap-2 text-left"
+                className="flex min-h-12 w-full items-center justify-between gap-2 text-left active:scale-[0.99]"
                 disabled={pick.isPending}
                 onClick={() => set(it.id, it.qty)}
               >
                 <span className="flex items-center gap-2">
-                  <span aria-hidden>{done ? "✓" : "○"}</span>
+                  <span aria-hidden className={done ? "font-bold text-success" : "text-muted-foreground"}>
+                    {done ? "✓" : "○"}
+                  </span>
                   <span>{it.name}</span>
                 </span>
-                <span className="font-semibold">
+                <span className="font-bold">
                   {it.picked_qty}/{it.qty}
                 </span>
               </button>
@@ -75,7 +82,7 @@ function PickingChecklist({ order }: { order: CourierOrder }) {
                 <button
                   type="button"
                   aria-label={`Kurangi ${it.name}`}
-                  className="min-h-12 min-w-12 rounded-lg border border-border text-xl"
+                  className="icon-btn size-12 border border-border bg-surface text-2xl disabled:opacity-60"
                   disabled={pick.isPending || it.picked_qty <= 0}
                   onClick={() => set(it.id, it.picked_qty - 1)}
                 >
@@ -84,7 +91,7 @@ function PickingChecklist({ order }: { order: CourierOrder }) {
                 <button
                   type="button"
                   aria-label={`Tambah ${it.name}`}
-                  className="min-h-12 min-w-12 rounded-lg border border-border text-xl"
+                  className="icon-btn size-12 bg-primary-surface text-2xl text-primary-pressed disabled:opacity-60"
                   disabled={pick.isPending || it.picked_qty >= it.qty}
                   onClick={() => set(it.id, it.picked_qty + 1)}
                 >
@@ -114,14 +121,15 @@ function ReleaseDialog({ orderId, onClose, onReleased }: { orderId: string; onCl
     });
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Lepas order" className="fixed inset-0 z-50 flex items-end bg-black/50 p-4">
-      <div className="mx-auto flex w-full max-w-md flex-col gap-3 rounded-xl bg-background p-4">
+    <div role="dialog" aria-modal="true" aria-label="Lepas order" className="sheet-backdrop z-50">
+      <div className="sheet-panel">
+        <span aria-hidden="true" className="sheet-grabber" />
         <h2 className="text-xl font-bold">Lepas order?</h2>
         <p className="text-muted-foreground">Order kembali ke daftar job dan bisa diambil kurir lain.</p>
-        <label className="flex flex-col gap-1 font-medium">
+        <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
           Alasan
           <textarea
-            className="min-h-24 rounded-lg border border-input bg-background p-3 text-lg"
+            className="field min-h-24 text-lg"
             maxLength={200}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -129,7 +137,7 @@ function ReleaseDialog({ orderId, onClose, onReleased }: { orderId: string; onCl
           />
         </label>
         {release.isError && (
-          <p role="alert" className="text-destructive">
+          <p role="alert" className="alert-box">
             {errorMessage(release.error)}
           </p>
         )}
@@ -147,9 +155,12 @@ function ReleaseDialog({ orderId, onClose, onReleased }: { orderId: string; onCl
 function LocationNotice() {
   const sec = useSecondsSinceLastPing();
   return (
-    <div className="rounded-lg bg-muted p-3 text-sm">
-      <p>Jaga layar tetap menyala agar lokasi terkirim</p>
-      {sec !== null && <p className="font-medium">Lokasi terakhir terkirim {sec} detik lalu</p>}
+    <div role="status" className="notice flex items-start gap-3">
+      <FaMapMarkerAlt aria-hidden="true" className="mt-1 shrink-0" />
+      <div>
+        <p>Jaga layar tetap menyala agar lokasi terkirim</p>
+        {sec !== null && <p className="font-bold">Lokasi terakhir terkirim {sec} detik lalu</p>}
+      </div>
     </div>
   );
 }
@@ -192,14 +203,20 @@ export function OrderDetailPage() {
     }
   };
 
-  if (query.isLoading) return <main className="p-4 text-muted-foreground">Memuat…</main>;
+  if (query.isLoading) {
+    return (
+      <main className="app-main">
+        <LoadingBlock rows={3} />
+      </main>
+    );
+  }
   if (query.isError || !order) {
     return (
-      <main className="mx-auto max-w-md p-4">
-        <p role="alert" className="text-foreground">
+      <main className="app-main">
+        <p role="alert" className="alert-box">
           {errorMessage(query.error)}
         </p>
-        <Link to="/" className="mt-4 inline-block underline">
+        <Link to="/" className="inline-flex min-h-11 items-center font-semibold text-accent underline">
           <FaArrowLeft aria-hidden="true" className="mr-2 inline" />
           Kembali
         </Link>
@@ -213,114 +230,112 @@ export function OrderDetailPage() {
   const allPicked = order.items.every((i) => i.picked_qty >= i.qty);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-4">
-      <Link to="/" className="min-h-12 text-base underline">
-        <FaArrowLeft aria-hidden="true" className="mr-2 inline" />
-        Kembali
-      </Link>
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{order.code}</h1>
-        <span className="rounded-full bg-secondary px-3 py-1 text-sm font-medium">
-          {STATUS_LABELS[order.status] ?? order.status}
-        </span>
+    <>
+      <header className="app-header">
+        <Link to="/" aria-label="Kembali" className="icon-btn shrink-0">
+          <FaArrowLeft aria-hidden="true" />
+        </Link>
+        <h1 className="min-w-0 flex-1 truncate text-xl font-bold">{order.code}</h1>
+        <span className={`pill pill-dot ${STATUS_PILLS[order.status] ?? ""}`}>{STATUS_LABELS[order.status] ?? order.status}</span>
       </header>
 
-      {(order.status === "PICKING" || order.status === "ON_DELIVERY") && <Stepper status={order.status} />}
+      <main className="app-main pb-8">
+        {(order.status === "PICKING" || order.status === "ON_DELIVERY") && <Stepper status={order.status} />}
 
-      {returning && (
-        <p className="rounded-lg bg-destructive/10 p-3 font-medium text-foreground">
-          Kembalikan barang ke cabang – menunggu konfirmasi admin
-        </p>
-      )}
+        {returning && <p className="alert-box font-medium">Kembalikan barang ke cabang – menunggu konfirmasi admin</p>}
 
-      {order.status === "PICKING" && <PickingChecklist order={order} />}
+        {order.status === "PICKING" && <PickingChecklist order={order} />}
 
-      <section className="rounded-xl border border-border p-4">
-        <h2 className="font-bold">Penerima</h2>
-        <p className="text-lg">{a.receiver_name}</p>
-          <a href={`tel:${a.receiver_phone}`} className="mt-1 flex min-h-12 items-center text-lg font-semibold text-primary underline transition-colors hover:text-destructive">
-          <FaPhone aria-hidden="true" className="mr-2" />
-          {a.receiver_phone}
-        </a>
-        <p className="mt-2">
-          {a.street}
-          {a.rt_rw ? `, RT/RW ${a.rt_rw}` : ""}
-          {a.unit ? `, ${a.unit}` : ""}
-        </p>
-        {a.courier_note && <p className="mt-2 rounded-lg bg-muted p-2 text-sm">Catatan: {a.courier_note}</p>}
-        <a
-          href={maps}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 flex min-h-14 items-center justify-center rounded-lg border border-border text-lg font-semibold"
-        >
-          <FaMapMarkerAlt aria-hidden="true" className="mr-2" />
-          Buka di Google Maps
-        </a>
-      </section>
-
-      {order.status === "ON_DELIVERY" && <LocationNotice />}
-
-      {order.status !== "PICKING" && (
-        <section className="rounded-xl border border-border p-4">
-          <h2 className="font-bold">Barang</h2>
-          <ul className="mt-1 divide-y divide-border">
-            {order.items.map((it) => (
-              <li key={it.id} className="flex justify-between py-2">
-                <span>{it.name}</span>
-                <span className="font-semibold">×{it.qty}</span>
-              </li>
-            ))}
-          </ul>
+        <section className="card animate-rise" style={{ animationDelay: "70ms" }}>
+          <h2 className="eyebrow">Penerima</h2>
+          <p className="mt-1 text-lg font-bold">{a.receiver_name}</p>
+          <a
+            href={`tel:${a.receiver_phone}`}
+            className="mt-1 flex min-h-11 items-center text-lg font-semibold text-accent underline transition-colors hover:text-primary-pressed"
+          >
+            <FaPhone aria-hidden="true" className="mr-2" />
+            {a.receiver_phone}
+          </a>
+          <p className="mt-2 [overflow-wrap:anywhere]">
+            {a.street}
+            {a.rt_rw ? `, RT/RW ${a.rt_rw}` : ""}
+            {a.unit ? `, ${a.unit}` : ""}
+          </p>
+          {a.courier_note && <p className="note-rail mt-3 text-sm">Catatan: {a.courier_note}</p>}
+          <a
+            href={maps}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 flex min-h-14 items-center justify-center rounded-md bg-accent text-lg font-bold text-accent-foreground transition active:scale-[0.97]"
+          >
+            <FaMapMarkerAlt aria-hidden="true" className="mr-2" />
+            Buka di Google Maps
+          </a>
         </section>
-      )}
 
-      {order.status === "PICKING" && (
-        <>
-          <Button loading={statusMutation.isPending} onClick={() => void start()}>
-            <FaTruck aria-hidden="true" className="mr-2 inline" />
-            Mulai antar
-          </Button>
-          {!allPicked && <p className="text-center text-sm text-muted-foreground">Siapkan semua barang dulu untuk berangkat.</p>}
-          {startError && (
-            <p role="alert" className="text-foreground">
-              {startError}
-            </p>
-          )}
-          <Button variant="secondary" disabled={statusMutation.isPending} onClick={() => setReleasing(true)}>
-            Lepas order
-          </Button>
-          {releasing && (
-            <ReleaseDialog orderId={order.id} onClose={() => setReleasing(false)} onReleased={() => navigate("/")} />
-          )}
-        </>
-      )}
+        {order.status === "ON_DELIVERY" && <LocationNotice />}
 
-      {order.status === "ON_DELIVERY" && panel === "none" && (
-        <>
-          <Button onClick={() => setPanel("deliver")}>
-            <FaCheck aria-hidden="true" className="mr-2 inline" />
-            Selesai
-          </Button>
-          <Button variant="destructive" onClick={() => setPanel("fail")}>
-            <FaExclamationTriangle aria-hidden="true" className="mr-2 inline" />
-            Gagal kirim
-          </Button>
-        </>
-      )}
+        {order.status !== "PICKING" && (
+          <section className="card animate-rise" style={{ animationDelay: "140ms" }}>
+            <h2 className="eyebrow">Barang</h2>
+            <ul className="mt-1 divide-y divide-border">
+              {order.items.map((it) => (
+                <li key={it.id} className="flex justify-between gap-3 py-2">
+                  <span>{it.name}</span>
+                  <span className="font-bold">×{it.qty}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-      {order.status === "ON_DELIVERY" && panel !== "none" && (
-        <ProofFlow
-          orderId={order.id}
-          mode={panel === "deliver" ? "DELIVERED" : "FAILED"}
-          onCancel={() => setPanel("none")}
-          onDone={() => {
-            const delivered = panel === "deliver";
-            setPanel("none");
-            if (delivered) navigate("/");
-          }}
-        />
-      )}
-    </main>
+        {order.status === "PICKING" && (
+          <>
+            <Button variant="hero" loading={statusMutation.isPending} onClick={() => void start()}>
+              <FaTruck aria-hidden="true" className="mr-2 inline" />
+              Mulai antar
+            </Button>
+            {!allPicked && <p className="text-center text-sm text-muted-foreground">Siapkan semua barang dulu untuk berangkat.</p>}
+            {startError && (
+              <p role="alert" className="alert-box">
+                {startError}
+              </p>
+            )}
+            <Button variant="secondary" disabled={statusMutation.isPending} onClick={() => setReleasing(true)}>
+              Lepas order
+            </Button>
+            {releasing && (
+              <ReleaseDialog orderId={order.id} onClose={() => setReleasing(false)} onReleased={() => navigate("/")} />
+            )}
+          </>
+        )}
+
+        {order.status === "ON_DELIVERY" && panel === "none" && (
+          <>
+            <Button variant="hero" onClick={() => setPanel("deliver")}>
+              <FaCheck aria-hidden="true" className="mr-2 inline" />
+              Selesai
+            </Button>
+            <Button variant="destructive" onClick={() => setPanel("fail")}>
+              <FaExclamationTriangle aria-hidden="true" className="mr-2 inline" />
+              Gagal kirim
+            </Button>
+          </>
+        )}
+
+        {order.status === "ON_DELIVERY" && panel !== "none" && (
+          <ProofFlow
+            orderId={order.id}
+            mode={panel === "deliver" ? "DELIVERED" : "FAILED"}
+            onCancel={() => setPanel("none")}
+            onDone={() => {
+              const delivered = panel === "deliver";
+              setPanel("none");
+              if (delivered) navigate("/");
+            }}
+          />
+        )}
+      </main>
+    </>
   );
 }

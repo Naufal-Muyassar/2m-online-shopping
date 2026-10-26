@@ -5,6 +5,8 @@ import { DemoBanner } from "../../components/DemoBanner";
 import { useCheckout } from "../../lib/checkout";
 import { useAddresses, useCart, useCreateOrder, useQuote } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
+import { cn } from "../../lib/utils";
+import { rise } from "../../components/States";
 
 const METHOD_LABEL: Record<string, string> = {
   QRIS: "QRIS",
@@ -17,7 +19,7 @@ const METHOD_LABEL: Record<string, string> = {
 
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
-    <div className={`flex justify-between ${strong ? "text-base font-semibold" : ""}`}>
+    <div className={`flex justify-between gap-3 ${strong ? "text-lg font-bold" : ""}`}>
       <span>{label}</span>
       <span>{value}</span>
     </div>
@@ -52,14 +54,14 @@ export function CheckoutPage() {
 
   const b = quote.data;
   return (
-    <main className="mx-auto max-w-2xl space-y-4 p-4">
-      <h1 className="text-xl font-semibold">Checkout</h1>
+    <main className="app-main">
+      <h1 className="text-2xl font-bold">Checkout</h1>
       <DemoBanner />
       {address && (
-        <section className="rounded-lg border p-3 text-sm">
-          <div className="flex justify-between">
-            <p className="font-medium">{address.label}</p>
-            <Link to={`/b/${branchId}/address`} className="text-primary">
+        <section className="card animate-rise text-sm">
+          <div className="flex items-center justify-between">
+            <p className="font-bold">{address.label}</p>
+            <Link to={`/b/${branchId}/address`} className="inline-flex min-h-11 items-center px-2 font-medium text-accent">
               Ubah
             </Link>
           </div>
@@ -70,19 +72,32 @@ export function CheckoutPage() {
         </section>
       )}
 
-      <section className="space-y-2 rounded-lg border p-3 text-sm">
-        <p className="font-medium">Metode pembayaran</p>
+      <section className="card animate-rise space-y-2 text-sm" style={rise(1)}>
+        <p className="font-bold">Metode pembayaran</p>
         {PAYMENT_METHODS.map((m) => (
-          <label key={m} className="flex items-center gap-2">
-            <input type="radio" name="pm" checked={paymentMethod === m} onChange={() => setPaymentMethod(m)} />
+          <label
+            key={m}
+            className={cn(
+              "flex min-h-11 items-center gap-3 rounded-md border px-3",
+              paymentMethod === m ? "border-primary bg-primary-surface font-bold text-primary-pressed" : "border-border bg-surface",
+            )}
+          >
+            <input type="radio" name="pm" checked={paymentMethod === m} onChange={() => setPaymentMethod(m)} className="h-5 w-5 accent-primary" />
             {METHOD_LABEL[m]}
           </label>
         ))}
       </section>
 
-      <section className="space-y-1 rounded-lg border p-3 text-sm" aria-live="polite">
-        {quote.isLoading && <p className="text-muted-foreground">Menghitung harga…</p>}
-        {quote.isError && <p className="text-destructive">{errorMessage(quote.error)}</p>}
+      <section className="card animate-rise space-y-1 text-sm" style={rise(2)} aria-live="polite">
+        {quote.isLoading && (
+          <div className="space-y-2" aria-busy="true">
+            <span className="sr-only">Menghitung harga…</span>
+            <div className="skeleton h-4 w-2/3" />
+            <div className="skeleton h-4 w-1/2" />
+            <div className="skeleton h-6 w-full" />
+          </div>
+        )}
+        {quote.isError && <p className="alert-box">{errorMessage(quote.error)}</p>}
         {b && (
           <>
             <Row label={`Subtotal (${b.total_weight_kg} kg)`} value={formatIDR(b.subtotal)} />
@@ -93,17 +108,14 @@ export function CheckoutPage() {
             </div>
             {b.voucher_discount > 0 && <Row label="Diskon voucher" value={`−${formatIDR(b.voucher_discount)}`} />}
             {b.payment_fee > 0 && <Row label="Biaya pembayaran" value={formatIDR(b.payment_fee)} />}
-            <hr className="my-2" />
-            <Row label="Total" value={formatIDR(b.grand_total)} strong />
+            <div className="card-footer">
+              <Row label="Total" value={formatIDR(b.grand_total)} strong />
+            </div>
           </>
         )}
       </section>
 
-      <button
-        onClick={place}
-        disabled={!b || createOrder.isPending}
-        className="w-full rounded-md bg-primary px-3 py-2 text-primary-foreground disabled:opacity-50"
-      >
+      <button onClick={place} disabled={!b || createOrder.isPending} className="btn-hero w-full">
         {createOrder.isPending ? "Memproses…" : "Bayar"}
       </button>
       <p className="text-center text-xs text-muted-foreground">Anda akan diarahkan ke halaman pembayaran.</p>
