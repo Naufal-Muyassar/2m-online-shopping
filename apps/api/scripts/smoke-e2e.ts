@@ -125,13 +125,13 @@ const order = await step("create order", async () => {
 
 await step("mock pay", async () => {
   const invoiceId = order.invoice_url.split("/").pop()!;
-  const r = await call<{ outcome: string; invoice: MockInvoice }>("POST", `/dev/mock-payments/${invoiceId}/pay`);
+  const r = await call<{ outcome: string; invoice: MockInvoice }>("POST", `/dev/mock-payments/${invoiceId}/pay`, { token: customer.access_token });
   expect(r.outcome, "PAID", "settle outcome");
   return { value: r, detail: `invoice ${r.invoice.status}` };
 });
 
 await step("order is PAID", async () => {
-  const { order: o } = await call<{ order: CustomerOrderDetail }>("GET", `/orders/${order.id}`, { token: customer.access_token });
+  const { order: o } = await call<CustomerOrderDetail>("GET", `/orders/${order.id}`, { token: customer.access_token });
   expect(o.status, "PAID", "status");
   return { value: o, detail: o.status };
 });

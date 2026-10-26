@@ -6,6 +6,7 @@ import { CatalogPage } from "../features/catalog/CatalogPage";
 import { CartPage } from "../features/cart/CartPage";
 import { CheckoutPage } from "../features/checkout/CheckoutPage";
 import { OrderStatusPage } from "../features/orders/OrderStatusPage";
+import { OrdersPage } from "../features/orders/OrdersPage";
 import { PaymentReturnPage } from "../features/orders/PaymentReturnPage";
 import { MockPayPage } from "../features/orders/MockPayPage";
 import { Layout, RequireAuth } from "./Layout";
@@ -18,11 +19,12 @@ export function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<BranchPicker />} />
         <Route path="/b/:branchId" element={<CatalogPage />} />
-        <Route path="/mock-pay/:invoiceId" element={<MockPayPage />} />
         <Route element={<RequireAuth />}>
+          <Route path="/mock-pay/:invoiceId" element={<MockPayPage />} />
           <Route path="/b/:branchId/cart" element={<CartPage />} />
           <Route path="/b/:branchId/address" element={<AddressPage />} />
           <Route path="/b/:branchId/checkout" element={<CheckoutPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:orderId" element={<OrderStatusPage />} />
           <Route path="/orders/:orderId/return" element={<PaymentReturnPage />} />
         </Route>

@@ -138,20 +138,107 @@ export type OrderSummary = z.infer<typeof orderSummarySchema>;
 export const createdOrderSchema = orderSummarySchema.extend({ invoice_url: z.string().url() });
 export type CreatedOrder = z.infer<typeof createdOrderSchema>;
 
-export const customerOrderDetailSchema = orderSummarySchema.extend({
+// GET /orders?cursor=&limit= (customer, own orders, newest first)
+export const orderListQuerySchema = z.object({
+  cursor: z.string().min(1).max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type OrderListQuery = z.infer<typeof orderListQuerySchema>;
+
+export const orderListItemSchema = z.object({
+  id: uuid,
+  code: z.string(),
+  status: z.enum(ORDER_STATUSES),
+  created_at: z.string(),
+  grand_total: z.number().int(),
+  item_count: z.number().int(),
+  branch_name: z.string(),
+});
+export type OrderListItem = z.infer<typeof orderListItemSchema>;
+
+export const orderListResponseSchema = z.object({
+  orders: z.array(orderListItemSchema),
+  next_cursor: z.string().nullable(),
+});
+export type OrderListResponse = z.infer<typeof orderListResponseSchema>;
+
+export const FAILURE_LABELS: Record<string, string> = {
+  CUSTOMER_UNREACHABLE: "Kurir tidak dapat menghubungi penerima",
+  ADDRESS_NOT_FOUND: "Alamat tidak ditemukan",
+  REFUSED: "Pesanan ditolak penerima",
+};
+export const FAILURE_LABEL_DEFAULT = "Pengantaran tidak berhasil";
+
+// GET /orders/:id response. Built field by field through this schema (a whitelist), never from raw DB rows.
+export const customerOrderDetailSchema = z.object({
+  order: z.object({
+    id: uuid,
+    code: z.string(),
+    status: z.enum(ORDER_STATUSES),
+    created_at: z.string(),
+    paid_at: z.string().nullable(),
+    branch_name: z.string(),
+  }),
   // Only set while the order is PENDING_PAYMENT, so the customer can resume payment.
   invoice_url: z.string().nullable(),
   invoice_expires_at: z.string().nullable(),
-  subtotal: z.number().int(),
-  delivery_fee: z.number().int(),
-  payment_fee: z.number().int(),
-  voucher_discount: z.number().int(),
-  payment_method: z.string().nullable(),
-  // Set from PICKING onward; never the phone number.
-  courier_first_name: z.string().nullable(),
   items: z.array(
-    z.object({ name: z.string(), unit_price: z.number().int(), qty: z.number().int(), sku: z.string() }),
+    z.object({
+      name: z.string(),
+      unit: z.string(),
+      qty: z.number().int(),
+      picked_qty: z.number().int(),
+      unit_price: z.number().int(),
+      line_total: z.number().int(),
+    }),
   ),
-  timeline: z.array(z.object({ status: z.enum(ORDER_STATUSES), at: z.string(), reason: z.string().nullable() })),
+  pricing: z.object({
+    subtotal: z.number().int(),
+    delivery_fee: z.number().int(),
+    voucher_discount: z.number().int(),
+    payment_fee: z.number().int(),
+    grand_total: z.number().int(),
+    route_distance_km: z.number().nullable(),
+  }),
+  address: z.object({
+    label: z.string(),
+    street: z.string(),
+    rt_rw: z.string().nullable(),
+    unit: z.string().nullable(),
+    receiver_name: z.string(),
+    receiver_phone: z.string(),
+    courier_note: z.string().nullable(),
+    lat: z.number(),
+    lng: z.number(),
+  }),
+  payment: z.object({ method: z.string().nullable(), paid_at: z.string().nullable() }),
+  timeline: z.array(z.object({ status: z.enum(ORDER_STATUSES), at: z.string() })),
+  // Set from PICKING onward; never the phone number.
+  courier: z.object({ first_name: z.string() }).nullable(),
+  failure: z.string().nullable(),
+  proof: z.object({ photo_url: z.string(), taken_at: z.string() }).nullable(),
+  tracking_available: z.boolean(),
 });
 export type CustomerOrderDetail = z.infer<typeof customerOrderDetailSchema>;
+
+// GET /orders/:id/tracking. Never carries courier id, phone or ping history.
+export const TRACKING_STALE_SEC = 60;
+export const trackingResponseSchema = z.discriminatedUnion("active", [
+  z.object({ active: z.literal(false), status: z.enum(ORDER_STATUSES) }),
+  z.object({
+    active: z.literal(true),
+    courier: z
+      .object({
+        lat: z.number(),
+        lng: z.number(),
+        accuracy: z.number().nullable(),
+        updated_at: z.string(),
+      })
+      .nullable(),
+    destination: z.object({ lat: z.number(), lng: z.number() }),
+    distance_remaining_km: z.number().nullable(),
+    eta_minutes: z.number().int().nullable(),
+    stale: z.boolean(),
+  }),
+]);
+export type TrackingResponse = z.infer<typeof trackingResponseSchema>;

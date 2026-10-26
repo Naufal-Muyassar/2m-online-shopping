@@ -1,6 +1,7 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { formatIDR, PAYMENT_METHODS, type CalculatePriceRequest } from "@2m/shared";
 import { errorMessage } from "../../lib/api";
+import { DemoBanner } from "../../components/DemoBanner";
 import { useCheckout } from "../../lib/checkout";
 import { useAddresses, useCart, useCreateOrder, useQuote } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
@@ -53,6 +54,7 @@ export function CheckoutPage() {
   return (
     <main className="mx-auto max-w-2xl space-y-4 p-4">
       <h1 className="text-xl font-semibold">Checkout</h1>
+      <DemoBanner />
       {address && (
         <section className="rounded-lg border p-3 text-sm">
           <div className="flex justify-between">

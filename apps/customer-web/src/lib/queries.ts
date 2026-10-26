@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   Address,
   AddressInput,
@@ -8,15 +8,25 @@ import type {
   CreateOrderRequest,
   CreatedOrder,
   CustomerOrderDetail,
+  MetaConfigResponse,
+  OrderListResponse,
   PriceBreakdown,
   CalculatePriceRequest,
   ProductsResponse,
+  TrackingResponse,
 } from "@2m/shared";
 import { api } from "./api";
 import { TERMINAL_STATUSES } from "@2m/shared";
 
 export const useBranches = () =>
   useQuery({ queryKey: ["branches"], queryFn: async () => (await api.get<BranchesResponse>("/branches")).data.branches });
+
+export const useMetaConfig = () =>
+  useQuery({
+    queryKey: ["meta-config"],
+    queryFn: async () => (await api.get<MetaConfigResponse>("/meta/config")).data,
+    staleTime: Infinity,
+  });
 
 export const useProducts = (branchId: string, category: string | undefined, q: string, page: number) =>
   useQuery({
@@ -103,7 +113,25 @@ export function useCreateOrder(branchId: string) {
 export const useOrder = (id: string, pollMs = 10_000) =>
   useQuery({
     queryKey: ["order", id],
-    queryFn: async () => (await api.get<{ order: CustomerOrderDetail }>(`/orders/${id}`)).data.order,
+    queryFn: async () => (await api.get<CustomerOrderDetail>(`/orders/${id}`)).data,
     refetchInterval: (query) =>
-      query.state.data && TERMINAL_STATUSES.includes(query.state.data.status) ? false : pollMs,
+      query.state.data && TERMINAL_STATUSES.includes(query.state.data.order.status) ? false : pollMs,
+  });
+
+export const useTracking = (orderId: string, enabled: boolean) =>
+  useQuery({
+    queryKey: ["tracking", orderId],
+    queryFn: async () => (await api.get<TrackingResponse>(`/orders/${orderId}/tracking`)).data,
+    enabled,
+    // Paused while the tab is hidden (refetchIntervalInBackground defaults to false); stops once inactive.
+    refetchInterval: (query) => (query.state.data && !query.state.data.active ? false : 5_000),
+  });
+
+export const useOrderHistory = () =>
+  useInfiniteQuery({
+    queryKey: ["orders"],
+    queryFn: async ({ pageParam }) =>
+      (await api.get<OrderListResponse>("/orders", { params: { cursor: pageParam, limit: 20 } })).data,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
   });

@@ -5,5 +5,5 @@ export interface GeoFix {
 }
 
 export interface LocationProvider {
-  getCurrentPosition(): Promise<GeoFix>;
+  getCurrentPosition(opts?: { maximumAge?: number }): Promise<GeoFix>;
 }

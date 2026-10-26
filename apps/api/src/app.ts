@@ -13,6 +13,7 @@ import { addressRoutes } from "./modules/address/routes";
 import { pricingRoutes } from "./modules/pricing/routes";
 import { webhooksRoutes } from "./modules/payments/routes";
 import { mockPaymentsRoutes } from "./modules/payments/mock.routes";
+import { metaRoutes } from "./modules/meta/routes";
 import { env } from "./config/env";
 
 export function createApp() {
@@ -38,7 +39,8 @@ export function createApp() {
   v1.use("/cart", cartRoutes);
   v1.use("/addresses", addressRoutes);
   v1.use("/calculate-price", pricingRoutes);
-  if (env.PAYMENT_PROVIDER === "mock" && env.NODE_ENV !== "production") {
+  v1.use("/meta", metaRoutes);
+  if (env.PAYMENT_PROVIDER === "mock" && env.DEMO_MODE) {
     v1.use("/dev/mock-payments", mockPaymentsRoutes);
   }
   app.use("/api/v1", v1);

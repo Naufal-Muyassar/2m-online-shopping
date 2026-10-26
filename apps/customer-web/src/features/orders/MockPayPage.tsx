@@ -3,8 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { formatIDR, type MockInvoice } from "@2m/shared";
 import { api, errorMessage } from "../../lib/api";
 import { useToast } from "../../lib/toast";
+import { DemoBanner } from "../../components/DemoBanner";
 
-// Dev/demo stand-in for the hosted payment page (API runs with PAYMENT_PROVIDER=mock).
+// Stand-in for the hosted payment page (API runs with PAYMENT_PROVIDER=mock and DEMO_MODE=true).
 export function MockPayPage() {
   const { invoiceId = "" } = useParams();
   const navigate = useNavigate();
@@ -33,8 +34,9 @@ export function MockPayPage() {
   return (
     <main className="mx-auto max-w-md space-y-4 p-4">
       <h1 className="text-xl font-semibold">Pembayaran simulasi</h1>
+      <DemoBanner />
       <p className="rounded-md bg-secondary p-2 text-xs text-muted-foreground">
-        Halaman ini hanya untuk demo/pengembangan. Tidak ada uang yang dipindahkan.
+        Tidak ada uang yang dipindahkan.
       </p>
       <section className="space-y-1 rounded-lg border p-4 text-sm">
         <div className="flex justify-between">

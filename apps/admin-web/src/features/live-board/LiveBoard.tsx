@@ -6,6 +6,7 @@ import {
   type AdminCouriersResponse,
   type AdminOrder,
   type AdminOrdersResponse,
+  type MetaConfigResponse,
 } from "@2m/shared";
 import { api, errorMessage } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -208,6 +209,11 @@ function PendingPayment({ orders }: { orders: AdminOrder[] }) {
   const { branchId } = useBranch();
   const toast = useToast();
   const queryClient = useQueryClient();
+  const demoMode = useQuery({
+    queryKey: ["meta-config"],
+    queryFn: async () => (await api.get<MetaConfigResponse>("/meta/config")).data,
+    staleTime: Infinity,
+  }).data?.demo_mode === true;
   const forcePaid = useMutation({
     mutationFn: async (id: string) =>
       api.post(`/admin/orders/${id}/force-paid`, { idempotency_key: crypto.randomUUID() }),
@@ -228,13 +234,15 @@ function PendingPayment({ orders }: { orders: AdminOrder[] }) {
               <span>{o.code}</span>
               <span>{formatIDR(o.grand_total)}</span>
             </div>
-            <button
-              className="mt-2 w-full rounded border border-primary px-2 py-1 text-primary disabled:opacity-60"
-              disabled={forcePaid.isPending && forcePaid.variables === o.id}
-              onClick={() => forcePaid.mutate(o.id)}
-            >
-              Tandai PAID (demo)
-            </button>
+            {demoMode && (
+              <button
+                className="mt-2 w-full rounded border border-primary px-2 py-1 text-primary disabled:opacity-60"
+                disabled={forcePaid.isPending && forcePaid.variables === o.id}
+                onClick={() => forcePaid.mutate(o.id)}
+              >
+                Tandai PAID (demo)
+              </button>
+            )}
           </li>
         ))}
       </ul>

@@ -37,7 +37,7 @@ function Shell() {
   const hasOnDelivery = orders.data?.active.some((o) => o.status === "ON_DELIVERY") ?? false;
   const onDelivery = me.data?.status === "DELIVERING" || hasOnDelivery;
 
-  useForegroundPings(me.data?.status, active?.id);
+  useForegroundPings(me.data?.status, active?.id, active?.status === "ON_DELIVERY");
   useWakeLock(hasOnDelivery);
 
   return (

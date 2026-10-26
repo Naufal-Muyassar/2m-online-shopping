@@ -31,6 +31,11 @@ export function Layout() {
           </nav>
         )}
         <div className="ml-auto flex items-center gap-2 text-sm">
+          {user && (
+            <Link to="/orders" className="rounded-md px-3 py-1.5 hover:bg-secondary">
+              Pesanan saya
+            </Link>
+          )}
           {user ? (
             <>
               <span className="text-muted-foreground">{user.name}</span>

@@ -13,7 +13,8 @@
     "db:migrate": "pnpm --filter api db:migrate",
     "db:reset": "pnpm --filter api db:reset",
     "db:reset:demo": "pnpm --filter api db:reset:demo",
-    "demo:smoke": "pnpm --filter api demo:smoke"
+    "demo:smoke": "pnpm --filter api demo:smoke",
+    "demo:sim-pings": "pnpm --filter api demo:sim-pings"
   },
   "devDependencies": {
     "@2m/config": "workspace:*",

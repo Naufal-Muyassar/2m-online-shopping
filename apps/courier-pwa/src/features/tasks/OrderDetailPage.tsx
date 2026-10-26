@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/toast";
 import { errorMessage } from "@/lib/api";
 import { getFreshFix } from "@/platform/geo";
 import { ProofFlow } from "@/features/proof/ProofFlow";
+import { useSecondsSinceLastPing } from "@/tracking";
 import { useOrder, useOrderStatus, usePickItem, useReleaseOrder } from "./hooks";
 import { STATUS_LABELS } from "./OrderCard";
 import { FaArrowLeft, FaCheck, FaExclamationTriangle, FaMapMarkerAlt, FaPhone, FaTruck } from "react-icons/fa";
@@ -143,6 +144,16 @@ function ReleaseDialog({ orderId, onClose, onReleased }: { orderId: string; onCl
   );
 }
 
+function LocationNotice() {
+  const sec = useSecondsSinceLastPing();
+  return (
+    <div className="rounded-lg bg-muted p-3 text-sm">
+      <p>Jaga layar tetap menyala agar lokasi terkirim</p>
+      {sec !== null && <p className="font-medium">Lokasi terakhir terkirim {sec} detik lalu</p>}
+    </div>
+  );
+}
+
 export function OrderDetailPage() {
   const { id = "" } = useParams();
   const { notify } = useToast();
@@ -247,6 +258,8 @@ export function OrderDetailPage() {
           Buka di Google Maps
         </a>
       </section>
+
+      {order.status === "ON_DELIVERY" && <LocationNotice />}
 
       {order.status !== "PICKING" && (
         <section className="rounded-xl border border-border p-4">

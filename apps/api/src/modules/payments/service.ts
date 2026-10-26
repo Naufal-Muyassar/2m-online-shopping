@@ -8,6 +8,7 @@ import * as ordersRepo from "../orders/repo";
 import { linkInvoice, releaseOrder } from "../inventory/service";
 import { transition, type TransitionActor } from "../orders/service";
 import { PaymentProviderError, type Invoice } from "./provider";
+import { MockAdapter } from "./mock.adapter";
 import { getPaymentProvider } from "./registry";
 import * as repo from "./repo";
 
@@ -144,7 +145,11 @@ export async function settleFromInvoice(invoice: Invoice): Promise<SettleOutcome
       orderId: order.id,
       to: "PAID",
       actor: SYSTEM,
-      meta: { reason: "PAYMENT_SUCCESS", payment_fee_actual: invoice.feesPaidAmount ?? undefined },
+      meta: {
+        reason: "PAYMENT_SUCCESS",
+        payment_fee_actual: invoice.feesPaidAmount ?? undefined,
+        demo_payment: getPaymentProvider() instanceof MockAdapter,
+      },
     });
     await ordersRepo.insertOutboxEvent(tx, {
       aggregateId: order.id,

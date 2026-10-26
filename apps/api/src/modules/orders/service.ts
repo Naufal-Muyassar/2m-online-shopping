@@ -22,6 +22,8 @@ export interface TransitionMeta {
   // Required for CREATED → PENDING_PAYMENT: an order only waits for payment once it has a payable invoice.
   invoice?: { id: string; url: string; expires_at: Date };
   payment_fee_actual?: number;
+  // Settled through the mock provider; an admin force-paid is always demo.
+  demo_payment?: boolean;
 }
 
 export interface TransitionInput {
@@ -108,6 +110,7 @@ export async function transition(
       ? { id: meta.invoice.id, url: meta.invoice.url, expiresAt: meta.invoice.expires_at }
       : undefined,
     setPaymentFeeActual: to === "PAID" ? meta.payment_fee_actual : undefined,
+    setDemoPayment: to === "PAID" && (meta.demo_payment === true || actor.role === "super_admin"),
   });
   if (!updated) {
     if (isClaim) throw new AppError(409, "JOB_TAKEN", "Order is no longer available");

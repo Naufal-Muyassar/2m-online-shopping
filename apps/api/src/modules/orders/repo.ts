@@ -80,6 +80,7 @@ export interface OrderUpdate {
   setReturnPending: boolean;
   setInvoice?: { id: string; url: string; expiresAt: Date };
   setPaymentFeeActual?: number;
+  setDemoPayment?: boolean;
 }
 
 // The only statement in the codebase that writes orders.status.
@@ -98,6 +99,7 @@ export async function updateOrderStatus(tx: Tx, u: OrderUpdate): Promise<OrderRo
     params.push(u.setPaymentFeeActual);
     sets.push(`payment_fee_actual = $${params.length}`);
   }
+  if (u.setDemoPayment) sets.push("is_demo_payment = true");
   if (u.setAcceptedAt) sets.push("accepted_at = now()");
   if (u.setDeliveredAt) sets.push("delivered_at = now()");
   if (u.setReturnPending) sets.push("return_pending = true");
