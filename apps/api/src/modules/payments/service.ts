@@ -106,59 +106,61 @@ export async function initiatePayment(orderId: string): Promise<{ order: ordersR
 // The only place that moves an order out of PENDING_PAYMENT because of the gateway. Safe to call any number
 // of times, from webhooks and reconciliation alike: the order row lock plus the status check make it idempotent.
 export async function settleFromInvoice(invoice: Invoice): Promise<SettleOutcome> {
+  return withTransaction((tx) => settleInTx(tx, invoice));
+}
+
+export async function settleInTx(tx: Tx, invoice: Invoice): Promise<SettleOutcome> {
   const code = ORDER_CODE_IN_EXTERNAL_ID.exec(invoice.externalId)?.[1];
   if (!code) return "UNKNOWN_ORDER";
 
-  return withTransaction(async (tx): Promise<SettleOutcome> => {
-    const order = await repo.lockOrderByCode(tx, code);
-    if (!order) return "UNKNOWN_ORDER";
-    if (order.status === "CREATED") return "NOT_READY";
-    if (order.invoice_id !== invoice.id) return "UNKNOWN_ORDER";
-    if (order.status !== "PENDING_PAYMENT") {
-      if ((invoice.status === "PAID" || invoice.status === "SETTLED") && order.status === "CANCELLED") {
-        logger.error({ order_id: order.id, invoice_id: invoice.id }, "payment received for a cancelled order, needs manual refund");
-      }
-      return "NOOP_STATE";
+  const order = await repo.lockOrderByCode(tx, code);
+  if (!order) return "UNKNOWN_ORDER";
+  if (order.status === "CREATED") return "NOT_READY";
+  if (order.invoice_id !== invoice.id) return "UNKNOWN_ORDER";
+  if (order.status !== "PENDING_PAYMENT") {
+    if ((invoice.status === "PAID" || invoice.status === "SETTLED") && order.status === "CANCELLED") {
+      logger.error({ order_id: order.id, invoice_id: invoice.id }, "payment received for a cancelled order, needs manual refund");
     }
-    if (invoice.status === "PENDING") return "PENDING";
+    return "NOOP_STATE";
+  }
+  if (invoice.status === "PENDING") return "PENDING";
 
-    const payload = { order_id: order.id, order_code: order.code, invoice_id: invoice.id, amount: order.grand_total };
-    if (invoice.status === "EXPIRED") {
-      await transition(tx, { orderId: order.id, to: "CANCELLED", actor: SYSTEM, meta: { reason: "PAYMENT_EXPIRED" } });
-      await ordersRepo.insertOutboxEvent(tx, {
-        aggregateId: order.id,
-        branchId: order.branch_id,
-        eventType: "PAYMENT_EXPIRED",
-        payload,
-      });
-      return "EXPIRED_CANCELLED";
-    }
-
-    if (invoice.amount !== order.grand_total || invoice.paidAmount !== order.grand_total) {
-      logger.error(
-        { order_id: order.id, invoice_id: invoice.id, expected: order.grand_total, amount: invoice.amount, paid: invoice.paidAmount },
-        "invoice amount does not match the order total",
-      );
-      return "AMOUNT_MISMATCH";
-    }
-    await transition(tx, {
-      orderId: order.id,
-      to: "PAID",
-      actor: SYSTEM,
-      meta: {
-        reason: "PAYMENT_SUCCESS",
-        payment_fee_actual: invoice.feesPaidAmount ?? undefined,
-        demo_payment: getPaymentProvider() instanceof MockAdapter,
-      },
-    });
+  const payload = { order_id: order.id, order_code: order.code, invoice_id: invoice.id, amount: order.grand_total };
+  if (invoice.status === "EXPIRED") {
+    await transition(tx, { orderId: order.id, to: "CANCELLED", actor: SYSTEM, meta: { reason: "PAYMENT_EXPIRED" } });
     await ordersRepo.insertOutboxEvent(tx, {
       aggregateId: order.id,
       branchId: order.branch_id,
-      eventType: "PAYMENT_SUCCESS",
+      eventType: "PAYMENT_EXPIRED",
       payload,
     });
-    return "PAID";
+    return "EXPIRED_CANCELLED";
+  }
+
+  if (invoice.amount !== order.grand_total || invoice.paidAmount !== order.grand_total) {
+    logger.error(
+      { order_id: order.id, invoice_id: invoice.id, expected: order.grand_total, amount: invoice.amount, paid: invoice.paidAmount },
+      "invoice amount does not match the order total",
+    );
+    return "AMOUNT_MISMATCH";
+  }
+  await transition(tx, {
+    orderId: order.id,
+    to: "PAID",
+    actor: SYSTEM,
+    meta: {
+      reason: "PAYMENT_SUCCESS",
+      payment_fee_actual: invoice.feesPaidAmount ?? undefined,
+      demo_payment: getPaymentProvider() instanceof MockAdapter,
+    },
   });
+  await ordersRepo.insertOutboxEvent(tx, {
+    aggregateId: order.id,
+    branchId: order.branch_id,
+    eventType: "PAYMENT_SUCCESS",
+    payload,
+  });
+  return "PAID";
 }
 
 const SENSITIVE_HEADERS = new Set(["x-callback-token", "authorization", "cookie"]);

@@ -55,8 +55,8 @@ export class MockAdapter implements PaymentProvider {
     return this.toInvoice(res.rows[0]!);
   }
 
-  async getInvoice(invoiceId: string): Promise<Invoice> {
-    const res = await this.db.query<MockInvoiceRow>(`SELECT ${COLUMNS} FROM mock_invoices WHERE invoice_id = $1`, [invoiceId]);
+  async getInvoice(invoiceId: string, db: Pick<Pool, "query"> = this.db): Promise<Invoice> {
+    const res = await db.query<MockInvoiceRow>(`SELECT ${COLUMNS} FROM mock_invoices WHERE invoice_id = $1`, [invoiceId]);
     if (!res.rows[0]) throw new PaymentProviderError("Mock invoice not found", false, 404);
     return this.toInvoice(res.rows[0]);
   }
@@ -76,18 +76,19 @@ export class MockAdapter implements PaymentProvider {
   }
 
   // Only a live PENDING invoice can be paid; anything else leaves the row as it is (paying twice is a no-op).
-  async pay(invoiceId: string): Promise<Invoice> {
-    await this.db.query(
+  // Pass a transaction client as `db` so the invoice change commits together with the order settlement.
+  async pay(invoiceId: string, db: Pick<Pool, "query"> = this.db): Promise<Invoice> {
+    await db.query(
       `UPDATE mock_invoices SET status = 'PAID', paid_at = now()
        WHERE invoice_id = $1 AND status = 'PENDING' AND expires_at > now()`,
       [invoiceId],
     );
-    return this.getInvoice(invoiceId);
+    return this.getInvoice(invoiceId, db);
   }
 
-  async expire(invoiceId: string): Promise<Invoice> {
-    await this.db.query(`UPDATE mock_invoices SET status = 'EXPIRED' WHERE invoice_id = $1 AND status = 'PENDING'`, [invoiceId]);
-    return this.getInvoice(invoiceId);
+  async expire(invoiceId: string, db: Pick<Pool, "query"> = this.db): Promise<Invoice> {
+    await db.query(`UPDATE mock_invoices SET status = 'EXPIRED' WHERE invoice_id = $1 AND status = 'PENDING'`, [invoiceId]);
+    return this.getInvoice(invoiceId, db);
   }
 
   // Dev page data; order_id is resolved through the invoice the order was linked to.

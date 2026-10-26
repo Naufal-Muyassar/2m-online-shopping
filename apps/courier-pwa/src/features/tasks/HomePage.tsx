@@ -8,6 +8,7 @@ import { errorMessage } from "@/lib/api";
 import { useMe, useOrders, useSetCourierStatus } from "./hooks";
 import { OrderCard } from "./OrderCard";
 import { LoggedOutDashboard } from "./LoggedOutDashboard";
+import { JobList } from "./JobList";
 
 const STATUS_PILL: Record<string, { label: string; className: string }> = {
   IDLE: { label: "Siap", className: "pill-success" },
@@ -99,6 +100,15 @@ export function HomePage() {
             <EmptyState icon={<FaCheckCircle />} title="Belum ada pesanan" hint="Pesanan yang Anda ambil akan muncul di sini." />
           )}
         </section>
+
+        {status === "IDLE" && (
+          <section className="flex flex-col gap-3" aria-labelledby="available-jobs-heading">
+            <h2 id="available-jobs-heading" className="text-lg font-bold">
+              Order tersedia
+            </h2>
+            <JobList />
+          </section>
+        )}
 
         <section className="flex flex-col gap-3" aria-labelledby="recent-orders-heading">
           <h2 id="recent-orders-heading" className="text-lg font-bold">
