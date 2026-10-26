@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, type CSSProperties, type ReactNode } from "react";
 import { Link, Navigate, Outlet, useLocation, useMatch } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { useCart } from "../lib/queries";
@@ -29,11 +29,19 @@ interface Tab {
 const headerButton =
   "inline-flex min-h-11 shrink-0 items-center rounded-md border border-border bg-surface px-4 text-sm font-medium hover:bg-muted";
 
+const LAST_BRANCH_KEY = "2m.last_branch";
+
 export function Layout() {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
-  const branchId = useMatch("/b/:branchId/*")?.params.branchId;
+  const urlBranchId = useMatch("/b/:branchId/*")?.params.branchId;
   const wide = useMatch({ path: "/b/:branchId", end: true }) !== null;
+
+  // Pages outside /b/:branchId (orders, order detail) keep the Katalog and Keranjang tabs of the last visited branch.
+  useEffect(() => {
+    if (urlBranchId) localStorage.setItem(LAST_BRANCH_KEY, urlBranchId);
+  }, [urlBranchId]);
+  const branchId = urlBranchId ?? localStorage.getItem(LAST_BRANCH_KEY) ?? undefined;
 
   const tabs: Tab[] = [];
   if (branchId) {
@@ -48,6 +56,8 @@ export function Layout() {
         badge: <CartCount branchId={branchId} />,
       });
     }
+  } else if (user) {
+    tabs.push({ key: "catalog", to: "/", label: "Katalog", icon: <IconStore />, active: pathname === "/" });
   }
   if (user) tabs.push({ key: "orders", to: "/orders", label: "Pesanan saya", icon: <IconReceipt />, active: pathname.startsWith("/orders") });
   const activeIndex = tabs.findIndex((t) => t.active);
