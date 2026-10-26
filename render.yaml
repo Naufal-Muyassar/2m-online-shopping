@@ -5,6 +5,7 @@ services:
     plan: free
     dockerfilePath: ./apps/api/Dockerfile
     dockerContext: .
+    dockerCommand: sh -c "node --import tsx scripts/db.ts migrate && node --import tsx src/server.ts"
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
