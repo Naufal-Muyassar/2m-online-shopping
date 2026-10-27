@@ -14,7 +14,8 @@
     "db:reset": "pnpm --filter api db:reset",
     "db:reset:demo": "pnpm --filter api db:reset:demo",
     "demo:smoke": "pnpm --filter api demo:smoke",
-    "demo:sim-pings": "pnpm --filter api demo:sim-pings"
+    "demo:sim-pings": "pnpm --filter api demo:sim-pings",
+    "demo:set-branch": "pnpm --filter api demo:set-branch"
   },
   "devDependencies": {
     "@2m/config": "workspace:*",

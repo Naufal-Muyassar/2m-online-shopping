@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { productsQuerySchema, type BranchesResponse, type ProductsResponse } from "@2m/shared";
+import { productsQuerySchema, type Branch, type BranchesResponse, type ProductsResponse } from "@2m/shared";
 import { pool } from "../../shared/db";
 import { AppError } from "../../shared/errors";
 import { asyncHandler, validate } from "../../shared/http";
@@ -14,6 +14,17 @@ branchesRoutes.get(
   "/",
   asyncHandler(async (_req, res) => {
     const body: BranchesResponse = { branches: await catalog.listActiveBranches(pool) };
+    res.json(body);
+  }),
+);
+
+branchesRoutes.get(
+  "/:id",
+  validate(z.object({ id: z.string().uuid() }), "params"),
+  asyncHandler(async (req, res) => {
+    const branch = await catalog.getActiveBranch(pool, req.params.id as string);
+    if (!branch) throw new AppError(404, "BRANCH_NOT_FOUND", "Branch not found");
+    const body: Branch = branch;
     res.json(body);
   }),
 );

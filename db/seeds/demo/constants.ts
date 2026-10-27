@@ -1,9 +1,14 @@
-// EDIT BEFORE DEMO: placeholder coordinates and credentials.
+const envNumber = (key: string, fallback: number): number => {
+  const raw = process.env[key];
+  return raw === undefined || raw.trim() === "" ? fallback : Number(raw);
+};
+
+// Set DEMO_BRANCH_* in .env for the demo venue; the defaults are placeholders.
 export const BRANCH = {
-  name: "Cabang Demo",
-  lat: -6.2,
-  lng: 106.8166,
-  serviceRadiusM: 5000,
+  name: process.env.DEMO_BRANCH_NAME?.trim() || "Cabang Demo",
+  lat: envNumber("DEMO_BRANCH_LAT", -6.2),
+  lng: envNumber("DEMO_BRANCH_LNG", 106.8166),
+  serviceRadiusM: envNumber("DEMO_BRANCH_RADIUS_M", 5000),
   erpBranchId: "DEMO-01",
   courierCapacity: 3,
 };
@@ -22,12 +27,12 @@ export const USERS = {
     {
       name: "Budi Pelanggan",
       phone: "081200000021",
-      address: { street: "Jl. Melati No. 12", rtRw: "003/005", dLat: 0.008, dLng: 0.006, receiver: "Budi" },
+      address: { street: "Jl. Melati No. 12", rtRw: "003/005", distanceKm: 0.8, bearingDeg: 45, receiver: "Budi" },
     },
     {
       name: "Siti Pelanggan",
       phone: "081200000022",
-      address: { street: "Jl. Kenanga No. 7", rtRw: "001/002", dLat: -0.01, dLng: 0.012, receiver: "Siti" },
+      address: { street: "Jl. Kenanga No. 7", rtRw: "001/002", distanceKm: 1.6, bearingDeg: 200, receiver: "Siti" },
     },
   ],
 };

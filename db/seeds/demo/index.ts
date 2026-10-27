@@ -1,3 +1,5 @@
+import { destinationPoint } from "../../../packages/shared/src/geo";
+import { geohash } from "../../../apps/api/src/shared/geo";
 import { BRANCH, DEMO_ORDERS, DELIVERY_FEE, DEMO_STOCK_OVERRIDES, PRODUCTS, USERS } from "./constants";
 
 // Every demo product starts with this many units in the stock_snapshots stand-in.
@@ -5,6 +7,18 @@ const DEMO_STOCK_QTY = 200;
 
 export interface Db {
   query(text: string, params?: unknown[]): Promise<{ rows: any[] }>;
+}
+
+type AddressOffset = (typeof USERS.customers)[number]["address"];
+
+// Seeded addresses sit at a fixed offset from the branch, capped at 90% of the radius so they stay inside it.
+export function demoAddressPoint(
+  branch: { lat: number; lng: number; radiusM: number },
+  offset: Pick<AddressOffset, "distanceKm" | "bearingDeg">,
+): { lat: number; lng: number; geohash: string } {
+  const distanceKm = Math.min(offset.distanceKm, (branch.radiusM * 0.9) / 1000);
+  const p = destinationPoint(branch, offset.bearingDeg, distanceKm);
+  return { ...p, geohash: geohash(p.lat, p.lng) };
 }
 
 export async function seedBase(db: Db, passwordHash: string): Promise<void> {
@@ -66,10 +80,11 @@ export async function seedBase(db: Db, passwordHash: string): Promise<void> {
 
   for (const c of USERS.customers) {
     const id = await insertUser("customer", c.name, c.phone, null, null);
+    const point = demoAddressPoint({ lat: BRANCH.lat, lng: BRANCH.lng, radiusM: BRANCH.serviceRadiusM }, c.address);
     await db.query(
-      `INSERT INTO addresses (user_id, label, lat, lng, street, rt_rw, receiver_name, receiver_phone)
-       VALUES ($1,'Rumah',$2,$3,$4,$5,$6,$7)`,
-      [id, BRANCH.lat + c.address.dLat, BRANCH.lng + c.address.dLng, c.address.street, c.address.rtRw, c.address.receiver, c.phone],
+      `INSERT INTO addresses (user_id, label, lat, lng, geohash, street, rt_rw, receiver_name, receiver_phone)
+       VALUES ($1,'Rumah',$2,$3,$4,$5,$6,$7,$8)`,
+      [id, point.lat, point.lng, point.geohash, c.address.street, c.address.rtRw, c.address.receiver, c.phone],
     );
   }
 

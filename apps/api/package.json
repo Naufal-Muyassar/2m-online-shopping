@@ -8,6 +8,7 @@
     "worker": "tsx --env-file-if-exists=../../.env src/worker.ts",
     "demo:smoke": "tsx --env-file-if-exists=../../.env scripts/smoke-e2e.ts",
     "demo:sim-pings": "tsx --env-file-if-exists=../../.env scripts/sim-courier-pings.ts",
+    "demo:set-branch": "tsx --env-file-if-exists=../../.env scripts/set-branch.ts",
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",

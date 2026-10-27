@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import type { Address, AddressInput } from "@2m/shared";
-import { errorMessage } from "../../lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { destinationPoint, formatIDR, haversineKm, type Address, type AddressInput, type CalculatePriceRequest } from "@2m/shared";
+import { errorMessage, OUTSIDE_COVERAGE_MESSAGE } from "../../lib/api";
 import { useCheckout } from "../../lib/checkout";
-import { useAddressMutations, useAddresses, useBranches } from "../../lib/queries";
+import { useAddressMutations, useAddresses, useBranches, useCart, useQuote } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { IconPin } from "../../components/Icons";
@@ -11,6 +12,14 @@ import { btnPrimary, btnSecondary, EmptyState, PageSkeleton, rise } from "../../
 import { MapPicker, type LatLng } from "./MapPicker";
 
 const field = "field";
+
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+const DEMO_POINTS = [
+  { label: "Dekat ±0,8 km", km: 0.8 },
+  { label: "Sedang ±2 km", km: 2 },
+  { label: "Jauh ±4 km", km: 4 },
+] as const;
+const DEMO_BEARING_DEG = 45;
 
 interface FormState {
   label: string;
@@ -50,8 +59,48 @@ function AddressForm({
   );
   const [pin, setPin] = useState<LatLng | null>(editing ? { lat: editing.lat, lng: editing.lng } : null);
   const [error, setError] = useState<string | null>(null);
+  const [demoAddressId, setDemoAddressId] = useState<string | null>(null);
+  const [demoBusy, setDemoBusy] = useState(false);
+  const qc = useQueryClient();
+  const { paymentMethod } = useCheckout();
+  const { data: cart } = useCart(branch.id, DEMO_MODE);
   const pending = create.isPending || update.isPending;
   const set = (k: keyof FormState) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
+  const outside = pin !== null && haversineKm(branch, pin) * 1000 > branch.service_radius_m;
+
+  const quoteReq =
+    demoAddressId && cart && cart.items.length > 0
+      ? { branch_id: branch.id, address_id: demoAddressId, payment_method: paymentMethod as CalculatePriceRequest["payment_method"] }
+      : null;
+  const quote = useQuote(quoteReq);
+
+  // A demo chip saves one reusable "Titik demo" address so the server can price the pin.
+  async function pickDemoPoint(km: number) {
+    const point = destinationPoint(branch, DEMO_BEARING_DEG, km);
+    setPin(point);
+    setError(null);
+    setDemoBusy(true);
+    const input: AddressInput = {
+      branch_id: branch.id,
+      label: "Titik demo",
+      lat: point.lat,
+      lng: point.lng,
+      street: "Titik demo (simulasi)",
+      receiver_name: "Demo",
+      receiver_phone: "081200000000",
+    };
+    try {
+      const saved = demoAddressId
+        ? await update.mutateAsync({ id: demoAddressId, input })
+        : await create.mutateAsync(input);
+      setDemoAddressId(saved.id);
+      await qc.invalidateQueries({ queryKey: ["quote"] });
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setDemoBusy(false);
+    }
+  }
 
   function locateMe() {
     navigator.geolocation?.getCurrentPosition(
@@ -67,17 +116,57 @@ function AddressForm({
       setError("Tandai lokasi pengantaran di peta.");
       return;
     }
+    if (outside) return;
     setError(null);
     const input: AddressInput = { ...form, branch_id: branch.id, lat: pin.lat, lng: pin.lng };
     const opts = { onSuccess: (saved: Address) => onDone(saved), onError: (err: unknown) => setError(errorMessage(err)) };
-    if (editing) update.mutate({ id: editing.id, input }, opts);
+    const targetId = editing?.id ?? demoAddressId;
+    if (targetId) update.mutate({ id: targetId, input }, opts);
     else create.mutate(input, opts);
   }
 
+  const b = quote.data;
   return (
     <form onSubmit={onSubmit} className="card animate-rise space-y-3">
       <h2 className="text-lg font-bold">{editing ? "Ubah alamat" : "Alamat baru"}</h2>
+      {DEMO_MODE && !editing && (
+        <div className="space-y-2" aria-live="polite">
+          <div className="flex flex-wrap gap-2">
+            {DEMO_POINTS.map((d) => {
+              const out = haversineKm(branch, destinationPoint(branch, DEMO_BEARING_DEG, d.km)) * 1000 > branch.service_radius_m;
+              return (
+                <button
+                  key={d.km}
+                  type="button"
+                  disabled={out || demoBusy}
+                  onClick={() => void pickDemoPoint(d.km)}
+                  className={cn(btnSecondary, "px-3 text-sm", out && "opacity-50")}
+                >
+                  {d.label}
+                  {out && <span className="block text-xs">di luar radius</span>}
+                </button>
+              );
+            })}
+          </div>
+          {demoBusy || quote.isFetching ? (
+            <p className="text-xs text-muted-foreground">Menghitung harga…</p>
+          ) : quote.isError ? (
+            <p className="alert-box">{errorMessage(quote.error)}</p>
+          ) : b ? (
+            <p className="text-xs text-muted-foreground">
+              Ongkir (±{b.route_distance_km} km): <strong>{formatIDR(b.final_shipping_cost)}</strong>
+            </p>
+          ) : demoAddressId ? (
+            <p className="text-xs text-muted-foreground">Isi keranjang untuk melihat ongkir.</p>
+          ) : null}
+        </div>
+      )}
       <MapPicker branch={{ lat: branch.lat, lng: branch.lng, radiusM: branch.service_radius_m }} value={pin} onChange={setPin} />
+      {outside && (
+        <p role="alert" className="alert-box">
+          {OUTSIDE_COVERAGE_MESSAGE}
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <span>{pin ? `Pin: ${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)}` : "Ketuk peta untuk menaruh pin"}</span>
         <button type="button" onClick={locateMe} className={cn(btnSecondary, "px-4 text-sm")}>

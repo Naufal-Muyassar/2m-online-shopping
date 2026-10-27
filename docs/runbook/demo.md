@@ -29,6 +29,14 @@ API http://localhost:3000 · Customer http://localhost:5171 · Kurir (PWA) http:
 8. Kurir centang semua barang, tekan "Jalan" (GPS dikirim). Customer melihat "Dalam perjalanan" dan nama depan kurir.
 9. Kurir "Sudah sampai": foto bukti, kirim → "Selesai". Kurir kembali ke daftar job.
 10. Customer melihat "Selesai"; admin melihat order di daftar "Selesai". Opsional: "Kedaluwarsakan" pada order baru → "Dibatalkan".
+
+## Mengatur lokasi cabang demo
+- Seed membaca `DEMO_BRANCH_NAME`, `DEMO_BRANCH_LAT`, `DEMO_BRANCH_LNG`, `DEMO_BRANCH_RADIUS_M` dari `.env` (lihat `.env.example`); jalankan `pnpm db:reset:demo` setelah mengubahnya.
+- Tanpa reset (order tidak dihapus): `pnpm demo:set-branch -- --lat <n> --lng <n> [--name "<teks>"] [--radius <meter 500-10000>] [--branch <id>]`.
+- Perintah ini memindahkan cabang, alamat customer demo (±0,8 km arah 45° dan ±1,6 km arah 200°), dan posisi kurir; mencetak tautan Google Maps untuk verifikasi.
+- Contoh: `pnpm demo:set-branch -- --lat -6.9175 --lng 107.6191 --name "Cabang Bandung" --radius 5000`
+- Ditolak jika `NODE_ENV=production` kecuali `--force`.
+- Chip "Dekat/Sedang/Jauh" di halaman alamat aktif jika `VITE_DEMO_MODE=true`; chip di luar radius dinonaktifkan.
 
 ## Reset
 `pnpm db:reset:demo` (menghapus semua data lalu seed ulang; ditolak jika `NODE_ENV=production`).

@@ -25,6 +25,14 @@ export async function listActiveBranches(db: Db): Promise<Branch[]> {
   return res.rows;
 }
 
+export async function getActiveBranch(db: Db, branchId: string): Promise<Branch | null> {
+  const res = await db.query<Branch>(
+    "SELECT id, name, lat, lng, service_radius_m FROM branches WHERE id = $1 AND is_active",
+    [branchId],
+  );
+  return res.rows[0] ?? null;
+}
+
 export async function branchIsActive(db: Db, branchId: string): Promise<boolean> {
   const res = await db.query("SELECT 1 FROM branches WHERE id = $1 AND is_active", [branchId]);
   return res.rowCount === 1;

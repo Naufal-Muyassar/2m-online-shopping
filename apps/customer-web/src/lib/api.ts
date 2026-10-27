@@ -24,6 +24,8 @@ export const api = createApiClient({
 
 type Details = Record<string, unknown> | undefined;
 
+export const OUTSIDE_COVERAGE_MESSAGE = "Lokasi pin di luar jangkauan pengantaran cabang ini.";
+
 const MESSAGES: Record<string, (d: Details, fallback: string) => string> = {
   MAX_QTY_EXCEEDED: (d) => `Maksimal ${String(d?.max)} per produk${d?.product ? ` (${String(d.product)})` : ""}.`,
   MAX_WEIGHT_EXCEEDED: (d) => `Total berat pesanan melebihi batas ${String(d?.max)} kg.`,
@@ -38,7 +40,7 @@ const MESSAGES: Record<string, (d: Details, fallback: string) => string> = {
   PRODUCT_UNAVAILABLE: () => "Sebagian produk di keranjang tidak lagi dijual di cabang ini.",
   CART_EMPTY: () => "Keranjang masih kosong.",
   MIN_ORDER_NOT_MET: (d) => `Minimal belanja Rp${Number(d?.min_order ?? 0).toLocaleString("id-ID")}.`,
-  OUTSIDE_COVERAGE: () => "Lokasi pin di luar jangkauan pengantaran cabang ini.",
+  OUTSIDE_COVERAGE: () => OUTSIDE_COVERAGE_MESSAGE,
   VOUCHER_UNSUPPORTED: () => "Voucher belum tersedia.",
   INVALID_CREDENTIALS: () => "No. HP/email atau password salah.",
   ACCOUNT_EXISTS: () => "No. HP atau email sudah terdaftar.",
