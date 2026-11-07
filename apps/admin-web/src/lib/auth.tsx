@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { AuthUser, LoginResponse, MeResponse, RefreshResponse } from "@2m/shared";
+import type { AuthUser, LoginResponse, MeResponse } from "@2m/shared";
 import { api, setAccessToken, setSessionLostHandler } from "./api";
 
 interface AuthState {
@@ -33,8 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const refreshed = await api.post<RefreshResponse>("/auth/refresh");
-        setAccessToken(refreshed.data.access_token);
+        setAccessToken(await api.refreshSession());
         const me = await api.get<MeResponse>("/auth/me");
         if (!cancelled && ADMIN_ROLES.includes(me.data.user.role)) setUser(me.data.user);
       } catch {
