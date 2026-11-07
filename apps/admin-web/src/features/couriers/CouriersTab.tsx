@@ -5,6 +5,7 @@ import { useAuth } from "../../lib/auth";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { useBranch } from "../branch-config/BranchProvider";
+import { openChat } from "../chat/hooks";
 
 const POLL_MS = 10_000;
 
@@ -31,7 +32,7 @@ function pingAge(iso: string | null): string {
   return `${Math.floor(sec / 3600)} jam`;
 }
 
-export function CouriersTab() {
+export function CouriersTab({ onOpenChat }: { onOpenChat: (threadId: string) => void }) {
   const { user } = useAuth();
   const { branchId } = useBranch();
   const toast = useToast();
@@ -53,6 +54,12 @@ export function CouriersTab() {
       void queryClient.invalidateQueries({ queryKey: ["admin-couriers", branchId] });
       void queryClient.invalidateQueries({ queryKey: ["admin-orders", branchId] });
     },
+    onError: (err) => toast("error", errorMessage(err)),
+  });
+
+  const startChat = useMutation({
+    mutationFn: (courierId: string) => openChat({ channel: "courier_admin", courier_id: courierId }),
+    onSuccess: (thread) => onOpenChat(thread.id),
     onError: (err) => toast("error", errorMessage(err)),
   });
 
@@ -78,7 +85,8 @@ export function CouriersTab() {
   const showCluster = couriers.some((c) => c.motor_cluster != null);
 
   return (
-    <div className="p-4">
+    <div className="space-y-4 p-4">
+      <h1 className="text-2xl font-bold">Kurir</h1>
       <div className="card animate-rise overflow-x-auto p-0 shadow-md">
         <table className="w-full text-left text-sm">
           <thead className="border-b bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
@@ -124,6 +132,13 @@ export function CouriersTab() {
                         Konfirmasi barang kembali
                       </button>
                     )}
+                    <button
+                      className="min-h-11 rounded-full border bg-surface px-4 font-medium hover:bg-muted disabled:opacity-60"
+                      disabled={startChat.isPending && startChat.variables === c.user_id}
+                      onClick={() => startChat.mutate(c.user_id)}
+                    >
+                      Chat
+                    </button>
                   </td>
                 </tr>
               );

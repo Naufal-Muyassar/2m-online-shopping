@@ -6,6 +6,7 @@ import {
   type AdminCouriersResponse,
   type AdminOrder,
   type AdminOrdersResponse,
+  type ChatOpenRequest,
   type MetaConfigResponse,
 } from "@2m/shared";
 import { api, errorMessage } from "../../lib/api";
@@ -13,6 +14,8 @@ import { useAuth } from "../../lib/auth";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { useBranch } from "../branch-config/BranchProvider";
+import { ChatPane } from "../chat/ChatPane";
+import { useOpenedThread } from "../chat/hooks";
 import { BOARD_COLUMNS, BOARD_POLL_MS, COLUMN_LABELS, SLA_MINUTES, ageMinutes, type BoardColumn } from "./constants";
 
 export const BOARD_KEY = "admin-orders";
@@ -46,12 +49,22 @@ const PRIMARY_BTN =
   "min-h-11 rounded-md bg-primary px-4 py-2 font-bold text-primary-foreground hover:bg-primary-pressed disabled:opacity-60";
 
 const ORDER_PILL: Record<string, string> = {
+  PENDING_PAYMENT: "pill-warning",
+  PAID: "pill-info",
   ACCEPTED: "pill-info",
   PICKING: "pill-warning",
   ON_DELIVERY: "pill-primary",
   DELIVERED: "pill-success",
   FAILED: "pill-danger",
   CANCELLED: "pill-danger",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  ...COLUMN_LABELS,
+  PENDING_PAYMENT: "Menunggu bayar",
+  DELIVERED: "Terkirim",
+  FAILED: "Gagal kirim",
+  CANCELLED: "Dibatalkan",
 };
 
 function AssignDialog({ order, onClose }: { order: AdminOrder; onClose: () => void }) {
@@ -171,13 +184,17 @@ function ReleaseDialog({ order, onClose }: { order: AdminOrder; onClose: () => v
   );
 }
 
-function OrderCard({ order, column }: { order: AdminOrder; column: BoardColumn }) {
+function slaState(order: AdminOrder) {
+  const age = ageMinutes(order.last_transition_at ?? order.created_at, Date.now());
+  const column = BOARD_COLUMNS.find((c) => c === order.status);
+  return { age, late: column !== undefined && age > SLA_MINUTES[column] };
+}
+
+function OrderActions({ order }: { order: AdminOrder }) {
   const { user } = useAuth();
   const toast = useToast();
   const refresh = useRefreshBoard();
   const [dialog, setDialog] = useState<"assign" | "release" | null>(null);
-  const age = ageMinutes(order.last_transition_at ?? order.created_at, Date.now());
-  const late = age > SLA_MINUTES[column];
   const isBranchAdmin = user?.role === "branch_admin";
 
   const accept = useMutation({
@@ -190,23 +207,11 @@ function OrderCard({ order, column }: { order: AdminOrder; column: BoardColumn }
     onError: (err) => toast("error", errorMessage(err)),
   });
 
-  const buttonClass = "mt-3 w-full min-h-11 rounded-md px-3 py-2 font-bold disabled:opacity-60";
+  const buttonClass = "w-full min-h-11 rounded-md px-3 py-2 font-bold disabled:opacity-60";
 
   return (
-    <li className={cn("card p-3 text-sm shadow-md", late && "border-destructive bg-destructive-surface")}>
-      <div className="flex justify-between gap-2 font-bold">
-        <span>{order.code}</span>
-        <span>{formatIDR(order.grand_total)}</span>
-      </div>
-      <div className={cn("mt-1 text-xs", late ? "font-medium text-destructive" : "text-muted-foreground")}>
-        {age} mnt di status ini{late ? " · melewati SLA" : ""}
-      </div>
-      {(column === "PICKING" || column === "ON_DELIVERY") && order.assigned_courier && (
-        <div className="mt-2">
-          <span className={cn("pill pill-dot", ORDER_PILL[column])}>Kurir: {order.assigned_courier.name}</span>
-        </div>
-      )}
-      {isBranchAdmin && column === "PAID" && (
+    <>
+      {isBranchAdmin && order.status === "PAID" && (
         <button
           className={cn(buttonClass, "bg-primary text-primary-foreground hover:bg-primary-pressed")}
           disabled={accept.isPending}
@@ -215,12 +220,12 @@ function OrderCard({ order, column }: { order: AdminOrder; column: BoardColumn }
           {accept.isPending ? "Memproses…" : "Terima"}
         </button>
       )}
-      {isBranchAdmin && column === "ACCEPTED" && (
+      {isBranchAdmin && order.status === "ACCEPTED" && (
         <button className={cn(buttonClass, "border bg-surface hover:bg-muted")} onClick={() => setDialog("assign")}>
           Tugaskan manual
         </button>
       )}
-      {isBranchAdmin && column === "PICKING" && (
+      {isBranchAdmin && order.status === "PICKING" && (
         <button
           className={cn(buttonClass, "bg-destructive-surface text-destructive hover:bg-destructive hover:text-destructive-foreground")}
           onClick={() => setDialog("release")}
@@ -229,28 +234,28 @@ function OrderCard({ order, column }: { order: AdminOrder; column: BoardColumn }
         </button>
       )}
       {accept.isError && (
-        <p className="alert-box mt-2" role="alert">
+        <p className="alert-box" role="alert">
           {errorMessage(accept.error)}
         </p>
       )}
       {dialog === "assign" && <AssignDialog order={order} onClose={() => setDialog(null)} />}
       {dialog === "release" && <ReleaseDialog order={order} onClose={() => setDialog(null)} />}
-    </li>
+    </>
   );
 }
 
-function PendingPayment({ orders }: { orders: AdminOrder[] }) {
+function ForcePaidButton({ order }: { order: AdminOrder }) {
   const { branchId } = useBranch();
   const toast = useToast();
   const queryClient = useQueryClient();
-  const demoMode = useQuery({
-    queryKey: ["meta-config"],
-    queryFn: async () => (await api.get<MetaConfigResponse>("/meta/config")).data,
-    staleTime: Infinity,
-  }).data?.demo_mode === true;
+  const demoMode =
+    useQuery({
+      queryKey: ["meta-config"],
+      queryFn: async () => (await api.get<MetaConfigResponse>("/meta/config")).data,
+      staleTime: Infinity,
+    }).data?.demo_mode === true;
   const forcePaid = useMutation({
-    mutationFn: async (id: string) =>
-      api.post(`/admin/orders/${id}/force-paid`, { idempotency_key: crypto.randomUUID() }),
+    mutationFn: async () => api.post(`/admin/orders/${order.id}/force-paid`, { idempotency_key: crypto.randomUUID() }),
     onSuccess: () => {
       toast("success", "Order ditandai PAID");
       void queryClient.invalidateQueries({ queryKey: [BOARD_KEY, branchId] });
@@ -258,35 +263,198 @@ function PendingPayment({ orders }: { orders: AdminOrder[] }) {
     onError: (err) => toast("error", errorMessage(err)),
   });
 
+  if (!demoMode) return null;
   return (
-    <section className="card p-3">
-      <h3 className="eyebrow mb-3">Menunggu pembayaran ({orders.length})</h3>
-      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        {orders.map((o) => (
-          <li key={o.id} className="rounded-md border bg-surface p-3 text-sm shadow-sm">
-            <div className="flex justify-between font-bold">
-              <span>{o.code}</span>
-              <span>{formatIDR(o.grand_total)}</span>
-            </div>
-            {demoMode && (
-              <button
-                className="mt-3 min-h-11 w-full rounded-md bg-destructive px-3 py-2 font-bold text-destructive-foreground hover:opacity-90 disabled:opacity-60"
-                disabled={forcePaid.isPending && forcePaid.variables === o.id}
-                onClick={() => forcePaid.mutate(o.id)}
-              >
-                Tandai PAID (demo)
-              </button>
+    <button
+      className="min-h-11 w-full rounded-md bg-destructive px-3 py-2 font-bold text-destructive-foreground hover:opacity-90 disabled:opacity-60"
+      disabled={forcePaid.isPending}
+      onClick={() => forcePaid.mutate()}
+    >
+      Tandai PAID (demo)
+    </button>
+  );
+}
+
+function RouteBlock({ order, selected, from }: { order: AdminOrder; selected: boolean; from: string }) {
+  const stop = (label: string, value: string, hint?: string) => (
+    <div className="min-w-0">
+      <p className={cn("text-xs", selected ? "opacity-80" : "text-muted-foreground")}>{label}</p>
+      <p className="truncate font-bold">{value}</p>
+      {hint && <p className={cn("truncate text-xs", selected ? "opacity-80" : "text-muted-foreground")}>{hint}</p>}
+    </div>
+  );
+  return (
+    <div className={cn("mt-3 flex gap-3 rounded-lg p-3", selected ? "bg-hero text-primary-foreground" : "border")}>
+      <div className="flex flex-col items-center py-1.5" aria-hidden="true">
+        <span className={cn("size-2.5 rounded-full", selected ? "bg-surface" : "border-2 border-input")} />
+        <span className={cn("my-1 w-px flex-1 border-l border-dashed", selected ? "border-surface/60" : "border-input")} />
+        <span className={cn("size-2.5 rounded-full", selected ? "bg-surface" : "bg-foreground")} />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        {stop("Dikirim dari", from)}
+        {stop("Tujuan", order.receiver_name, order.area_hint)}
+      </div>
+    </div>
+  );
+}
+
+function TrackCard({ order, selected, from, onSelect }: { order: AdminOrder; selected: boolean; from: string; onSelect: () => void }) {
+  const { age, late } = slaState(order);
+  return (
+    <li>
+      <button
+        onClick={onSelect}
+        aria-pressed={selected}
+        className={cn(
+          "w-full rounded-lg border bg-surface p-3 text-left text-sm hover:shadow",
+          selected && "border-primary shadow",
+          late && "border-destructive bg-destructive-surface",
+        )}
+      >
+        <span className="flex items-center justify-between gap-2 font-bold">
+          <span className="truncate">{order.code}</span>
+          <span className={cn("pill pill-dot shrink-0", ORDER_PILL[order.status])}>{STATUS_LABELS[order.status] ?? order.status}</span>
+        </span>
+        <span className="mt-3 flex items-center gap-2">
+          <span className="avatar size-9 text-sm" aria-hidden="true">
+            {order.assigned_courier?.name.charAt(0) ?? "?"}
+          </span>
+          <span className="min-w-0 leading-tight">
+            <span className="block truncate font-medium">{order.assigned_courier?.name ?? "Belum ada kurir"}</span>
+            <span className={cn("block text-xs", late ? "font-medium text-destructive" : "text-muted-foreground")}>
+              {age} mnt di status ini{late ? " · melewati SLA" : ""}
+            </span>
+          </span>
+        </span>
+        <RouteBlock order={order} selected={selected} from={from} />
+      </button>
+    </li>
+  );
+}
+
+function OrderChat({ input, empty }: { input: ChatOpenRequest | null; empty: string }) {
+  if (!input) {
+    return (
+      <div className="empty-state m-auto w-full">
+        <p>{empty}</p>
+      </div>
+    );
+  }
+  return <OpenedChat key={input.order_id ?? input.courier_id} input={input} />;
+}
+
+function OpenedChat({ input }: { input: ChatOpenRequest }) {
+  const thread = useOpenedThread(input);
+  if (thread.isError) {
+    return (
+      <p className="alert-box" role="alert">
+        {errorMessage(thread.error)}
+      </p>
+    );
+  }
+  if (!thread.data) return <div className="skeleton h-24" role="status" aria-busy="true" aria-label="Memuat" />;
+  return <ChatPane threadId={thread.data.id} />;
+}
+
+type PanelTab = "detail" | "courier" | "customer";
+
+const PANEL_TABS: { id: PanelTab; label: string }[] = [
+  { id: "detail", label: "Detail" },
+  { id: "courier", label: "Chat kurir" },
+  { id: "customer", label: "Chat pelanggan" },
+];
+
+function DetailRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex justify-between gap-3 py-2 text-sm">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-right font-medium">{children}</dd>
+    </div>
+  );
+}
+
+function OrderPanel({ order, from }: { order: AdminOrder; from: string }) {
+  const { user } = useAuth();
+  const [tab, setTab] = useState<PanelTab>("detail");
+  const { age } = slaState(order);
+  const courier = order.assigned_courier;
+
+  return (
+    <section className="card flex min-h-[28rem] flex-col gap-3 shadow-md lg:min-h-0" aria-label={`Order ${order.code}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-xl font-bold">{order.code}</h2>
+        <span className={cn("pill pill-dot", ORDER_PILL[order.status])}>{STATUS_LABELS[order.status] ?? order.status}</span>
+      </div>
+      <div className="flex gap-1 rounded-full bg-muted p-1" role="tablist" aria-label="Panel order">
+        {PANEL_TABS.map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={cn(
+              "min-h-11 flex-1 rounded-full px-3 text-sm",
+              tab === t.id ? "bg-primary font-bold text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
-          </li>
+          >
+            {t.label}
+          </button>
         ))}
-      </ul>
+      </div>
+
+      {tab === "detail" && (
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+          <dl className="divide-y">
+            <DetailRow label="Dikirim dari">{from}</DetailRow>
+            <DetailRow label="Penerima">{order.receiver_name}</DetailRow>
+            <DetailRow label="Area">{order.area_hint}</DetailRow>
+            <DetailRow label="Kurir">{courier?.name ?? "Belum ada kurir"}</DetailRow>
+            <DetailRow label="Di status ini">{age} mnt</DetailRow>
+          </dl>
+          <div>
+            <h3 className="mb-1 font-bold">Barang</h3>
+            <ul className="divide-y text-sm">
+              {order.items.map((item) => (
+                <li key={item.name} className="flex justify-between gap-3 py-2">
+                  <span>{item.name}</span>
+                  <span className="font-bold">×{item.qty}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 flex justify-between border-t pt-2 font-bold">
+              <span>Total</span>
+              <span>{formatIDR(order.grand_total)}</span>
+            </p>
+          </div>
+          <div className="mt-auto space-y-2">
+            <OrderActions order={order} />
+            {user?.role === "super_admin" && order.status === "PENDING_PAYMENT" && <ForcePaidButton order={order} />}
+          </div>
+        </div>
+      )}
+      {tab === "courier" && (
+        <OrderChat
+          input={courier ? { channel: "courier_admin", courier_id: courier.user_id } : null}
+          empty="Belum ada kurir di order ini."
+        />
+      )}
+      {tab === "customer" && <OrderChat input={{ channel: "customer_admin", order_id: order.id }} empty="" />}
     </section>
   );
 }
 
-export function LiveBoard() {
+type ListTab = BoardColumn | "PENDING_PAYMENT" | "DONE";
+
+function matches(order: AdminOrder, query: string) {
+  const q = query.trim().toLowerCase();
+  return !q || order.code.toLowerCase().includes(q) || order.receiver_name.toLowerCase().includes(q);
+}
+
+export function LiveBoard({ search }: { search: string }) {
   const { user } = useAuth();
-  const { branchId } = useBranch();
+  const { branchId, branchName } = useBranch();
+  const [tab, setTab] = useState<ListTab>("PAID");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data, isLoading, isError, error } = useQuery({
     queryKey: [BOARD_KEY, branchId],
     enabled: !!branchId,
@@ -298,10 +466,9 @@ export function LiveBoard() {
   if (!branchId) return <p className="p-4 text-sm text-muted-foreground">Pilih cabang…</p>;
   if (isLoading)
     return (
-      <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4" role="status" aria-busy="true" aria-label="Memuat">
-        {BOARD_COLUMNS.map((col) => (
-          <div key={col} className="skeleton h-48" />
-        ))}
+      <div className="grid gap-4 p-4 lg:grid-cols-[24rem_minmax(0,1fr)]" role="status" aria-busy="true" aria-label="Memuat">
+        <div className="skeleton h-96" />
+        <div className="skeleton h-96" />
       </div>
     );
   if (isError)
@@ -313,50 +480,59 @@ export function LiveBoard() {
       </div>
     );
 
-  const orders = data?.orders ?? [];
-  const done = orders.filter((o) => TERMINAL_STATUSES.includes(o.status));
-  const pending = orders.filter((o) => o.status === "PENDING_PAYMENT");
+  const orders = (data?.orders ?? []).filter((o) => matches(o, search));
+  const inTab = (t: ListTab) =>
+    orders.filter((o) => (t === "DONE" ? TERMINAL_STATUSES.includes(o.status) : o.status === t));
+  const showPending = user?.role === "super_admin" && inTab("PENDING_PAYMENT").length > 0;
+  const tabs: { id: ListTab; label: string }[] = [
+    ...(showPending ? [{ id: "PENDING_PAYMENT" as const, label: "Menunggu bayar" }] : []),
+    ...BOARD_COLUMNS.map((c) => ({ id: c, label: COLUMN_LABELS[c] })),
+    { id: "DONE", label: "Selesai" },
+  ];
+  const items = inTab(tab);
+  const selected = items.find((o) => o.id === selectedId) ?? items[0] ?? null;
+  const from = branchName ?? "Cabang";
 
   return (
-    <div className="space-y-4 p-4">
-      {user?.role === "super_admin" && pending.length > 0 && <PendingPayment orders={pending} />}
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {BOARD_COLUMNS.map((col) => {
-          const items = orders.filter((o) => o.status === col);
-          return (
-            <section key={col} className="animate-rise rounded-lg bg-muted/50 p-3">
-              <h3 className="mb-3 flex items-center justify-between text-sm font-bold">
-                <span className={cn("pill pill-dot", ORDER_PILL[col] ?? "pill-info")}>{COLUMN_LABELS[col]}</span>
-                <span className="text-muted-foreground">{items.length}</span>
-              </h3>
-              <ul className="space-y-3">
-                {items.map((o) => (
-                  <OrderCard key={o.id} order={o} column={col} />
-                ))}
-              </ul>
-              {items.length === 0 && (
-                <div className="empty-state p-4 text-sm">
-                  <p>Kosong</p>
-                </div>
+    <div className="grid gap-4 p-4 lg:h-[calc(100dvh-5rem)] lg:grid-cols-[24rem_minmax(0,1fr)]">
+      <section className="card flex min-h-0 flex-col gap-3 shadow-md">
+        <h1 className="text-2xl font-bold">Tracking order</h1>
+        <div className="-mx-4 flex gap-1 overflow-x-auto px-4" role="tablist" aria-label="Status order">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm",
+                tab === t.id ? "bg-primary font-bold text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
               )}
-            </section>
-          );
-        })}
-      </div>
-      <details className="card p-3">
-        <summary className="cursor-pointer text-sm font-bold">Selesai ({done.length})</summary>
-        <ul className="mt-3 space-y-2 text-sm">
-          {done.map((o) => (
-            <li key={o.id} className="flex items-center justify-between gap-2 border-b pb-2 last:border-b-0">
-              <span className="inline-flex flex-wrap items-center gap-2">
-                {o.code}
-                <span className={cn("pill", ORDER_PILL[o.status])}>{o.status}</span>
-              </span>
-              <span className="font-medium">{formatIDR(o.grand_total)}</span>
-            </li>
+            >
+              {t.label}
+              <span className={tab === t.id ? "opacity-80" : ""}>{inTab(t.id).length}</span>
+            </button>
+          ))}
+        </div>
+        <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+          {items.map((o) => (
+            <TrackCard key={o.id} order={o} selected={o.id === selected?.id} from={from} onSelect={() => setSelectedId(o.id)} />
           ))}
         </ul>
-      </details>
+        {items.length === 0 && (
+          <div className="empty-state p-4 text-sm">
+            <p>{search.trim() ? "Tidak ada order yang cocok." : "Kosong"}</p>
+          </div>
+        )}
+      </section>
+
+      {selected ? (
+        <OrderPanel key={selected.id} order={selected} from={from} />
+      ) : (
+        <section className="card flex min-h-64 items-center justify-center shadow-md">
+          <p className="text-sm text-muted-foreground">Pilih order untuk melihat detail dan chat.</p>
+        </section>
+      )}
     </div>
   );
 }

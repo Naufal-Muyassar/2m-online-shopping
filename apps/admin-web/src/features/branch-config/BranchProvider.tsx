@@ -6,6 +6,7 @@ import { useAuth } from "../../lib/auth";
 
 interface BranchState {
   branchId: string | null;
+  branchName: string | null;
   branches: BranchesResponse["branches"];
   setBranchId: (id: string) => void;
 }
@@ -26,7 +27,6 @@ export function BranchProvider({ children }: { children: ReactNode }) {
 
   const { data } = useQuery({
     queryKey: ["branches"],
-    enabled: isSuper,
     queryFn: async () => (await api.get<BranchesResponse>("/branches")).data,
   });
   const branches = data?.branches ?? [];
@@ -36,5 +36,8 @@ export function BranchProvider({ children }: { children: ReactNode }) {
   }, [isSuper, selected, branches]);
 
   const branchId = isSuper ? selected : (user?.branch_id ?? null);
-  return <BranchContext.Provider value={{ branchId, branches, setBranchId: setSelected }}>{children}</BranchContext.Provider>;
+  const branchName = branches.find((b) => b.id === branchId)?.name ?? null;
+  return (
+    <BranchContext.Provider value={{ branchId, branchName, branches, setBranchId: setSelected }}>{children}</BranchContext.Provider>
+  );
 }
