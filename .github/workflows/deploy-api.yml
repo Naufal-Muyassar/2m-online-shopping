@@ -1,20 +1,14 @@
 name: deploy-api
 
+# Manual only: the API is hosted on Render (render.yaml), so this VPS path does not run on push.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "apps/api/**"
-      - "packages/**"
-      - "db/**"
-      - "infra/**"
-      - "pnpm-lock.yaml"
-      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch:
 
 concurrency: deploy-api
 
 env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/2m-api
+  # GHCR image names must be lowercase, and the owner name is not.
+  IMAGE: ghcr.io/naufal-muyassar/2m-api
 
 jobs:
   test:
