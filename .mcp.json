@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "code-review-graph": {
+      "command": "uvx",
+      "args": [
+        "--python",
+        "3.12",
+        "code-review-graph",
+        "serve"
+      ],
+      "type": "stdio"
+    }
+  }
+}
