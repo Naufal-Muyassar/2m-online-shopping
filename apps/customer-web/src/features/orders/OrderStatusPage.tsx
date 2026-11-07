@@ -1,9 +1,12 @@
 import { useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { CUSTOMER_STATUS_LABELS, CUSTOMER_TIMELINE, formatIDR, type OrderStatus } from "@2m/shared";
-import { useOrder } from "../../lib/queries";
+import { errorMessage } from "../../lib/api";
+import { useChatThreads, useOpenChat, useOrder } from "../../lib/queries";
+import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
-import { ErrorCard, PageSkeleton } from "../../components/States";
+import { IconChat } from "../../components/Icons";
+import { btnSecondary, ErrorCard, PageSkeleton } from "../../components/States";
 import { StatusPill } from "../../components/StatusPill";
 import { TrackingCard } from "./TrackingCard";
 
@@ -14,6 +17,31 @@ const STEP_OF: Partial<Record<OrderStatus, OrderStatus>> = { READY: "PICKING", A
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+function CourierChatButton({ orderId, courierName }: { orderId: string; courierName: string }) {
+  const navigate = useNavigate();
+  const toast = useToast();
+  const open = useOpenChat();
+  const unread = useChatThreads("customer_courier").data?.find((t) => t.order_id === orderId)?.unread_count ?? 0;
+
+  return (
+    <button
+      type="button"
+      disabled={open.isPending}
+      onClick={() =>
+        open.mutate(
+          { channel: "customer_courier", order_id: orderId },
+          { onSuccess: (t) => navigate(`/chat/${t.id}`), onError: (e) => toast("error", errorMessage(e)) },
+        )
+      }
+      className={cn(btnSecondary, "relative mt-2 w-full gap-2 rounded-full")}
+    >
+      <IconChat className="text-lg text-primary" />
+      Chat {courierName}
+      {unread > 0 && <span className="count-badge static">{unread}</span>}
+    </button>
+  );
+}
 
 export function OrderStatusPage() {
   const { orderId = "" } = useParams();
@@ -57,6 +85,7 @@ export function OrderStatusPage() {
           <StatusPill status={order.status} />
           {courier && <span className="text-sm text-muted-foreground">Kurir: {courier.first_name}</span>}
         </div>
+        {courier && <CourierChatButton orderId={order.id} courierName={courier.first_name} />}
         {failure && <p className="alert-box mt-2">{failure}</p>}
       </div>
 

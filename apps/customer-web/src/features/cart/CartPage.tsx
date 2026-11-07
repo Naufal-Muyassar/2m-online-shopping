@@ -4,7 +4,8 @@ import { errorMessage } from "../../lib/api";
 import { useCart, useCartMutations } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
-import { IconCart } from "../../components/Icons";
+import { IconCart, IconPackage } from "../../components/Icons";
+import { QtyStepper } from "../../components/QtyStepper";
 import { btnSecondary, EmptyState, ErrorCard, PageSkeleton, rise } from "../../components/States";
 
 export function CartPage() {
@@ -40,42 +41,38 @@ export function CartPage() {
         <>
           <ul className="space-y-3">
             {cart.items.map((i, idx) => (
-              <li key={i.product_id} className="card animate-rise space-y-3" style={rise(idx)}>
-                <div>
-                  <p className="font-bold">{i.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatIDR(i.price)} / {i.unit} · {i.weight_kg} kg
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    aria-label="Kurangi"
-                    disabled={busy || i.qty <= 1}
-                    onClick={() => setQty.mutate({ productId: i.product_id, qty: i.qty - 1 }, { onError: fail })}
-                    className="icon-btn text-2xl disabled:opacity-50"
-                  >
-                    −
-                  </button>
-                  <span className="w-8 text-center font-bold">{i.qty}</span>
-                  <button
-                    aria-label="Tambah"
-                    disabled={busy || i.qty >= cart.limits.max_qty_per_sku}
-                    onClick={() => setQty.mutate({ productId: i.product_id, qty: i.qty + 1 }, { onError: fail })}
-                    className="icon-btn text-2xl disabled:opacity-50"
-                  >
-                    +
-                  </button>
-                  <p className="ml-auto text-right font-bold">{formatIDR(i.line_total)}</p>
-                </div>
-                <div className="card-footer flex justify-end">
-                  <button
-                    aria-label={`Hapus ${i.name}`}
-                    disabled={busy}
-                    onClick={() => remove.mutate(i.product_id, { onError: fail })}
-                    className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-destructive disabled:opacity-50"
-                  >
-                    Hapus
-                  </button>
+              <li key={i.product_id} className="card flex animate-rise gap-3 p-3" style={rise(idx)}>
+                <span className="flex size-20 shrink-0 items-center justify-center rounded-md bg-primary-surface text-3xl text-primary">
+                  <IconPackage />
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold">{i.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatIDR(i.price)} / {i.unit} · {i.weight_kg} kg
+                      </p>
+                    </div>
+                    <button
+                      aria-label={`Hapus ${i.name}`}
+                      disabled={busy}
+                      onClick={() => remove.mutate(i.product_id, { onError: fail })}
+                      className="inline-flex min-h-11 shrink-0 items-start text-sm font-medium text-destructive disabled:opacity-50"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <QtyStepper
+                      name={i.name}
+                      qty={i.qty}
+                      canDecrease={!busy && i.qty > 1}
+                      canIncrease={!busy && i.qty < cart.limits.max_qty_per_sku}
+                      onDecrease={() => setQty.mutate({ productId: i.product_id, qty: i.qty - 1 }, { onError: fail })}
+                      onIncrease={() => setQty.mutate({ productId: i.product_id, qty: i.qty + 1 }, { onError: fail })}
+                    />
+                    <p className="text-right font-bold">{formatIDR(i.line_total)}</p>
+                  </div>
                 </div>
               </li>
             ))}

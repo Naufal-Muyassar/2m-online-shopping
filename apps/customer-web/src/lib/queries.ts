@@ -5,6 +5,13 @@ import type {
   BranchesResponse,
   Cart,
   CartAddRequest,
+  ChatChannel,
+  ChatMessage,
+  ChatMessagesResponse,
+  ChatOpenRequest,
+  ChatSendRequest,
+  ChatThread,
+  ChatThreadsResponse,
   CreateOrderRequest,
   CreatedOrder,
   CustomerOrderDetail,
@@ -64,6 +71,52 @@ export function useCartMutations(branchId: string) {
       onSuccess,
     }),
   };
+}
+
+const CHAT_ROOM_POLL_MS = 4_000;
+const CHAT_LIST_POLL_MS = 15_000;
+
+export const useChatThreads = (channel: ChatChannel) =>
+  useQuery({
+    queryKey: ["chat-threads", channel],
+    queryFn: async () => (await api.get<ChatThreadsResponse>("/chat/threads", { params: { channel } })).data.threads,
+    refetchInterval: CHAT_LIST_POLL_MS,
+  });
+
+export const useChatMessages = (threadId: string) =>
+  useQuery({
+    queryKey: ["chat-messages", threadId],
+    queryFn: async () => (await api.get<ChatMessagesResponse>(`/chat/threads/${threadId}/messages`)).data,
+    refetchInterval: CHAT_ROOM_POLL_MS,
+  });
+
+export function useOpenChat() {
+  return useMutation({
+    mutationFn: async (input: ChatOpenRequest) => (await api.post<ChatThread>("/chat/threads", input)).data,
+  });
+}
+
+export function useChatSend(threadId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: ChatSendRequest) =>
+      (await api.post<ChatMessage>(`/chat/threads/${threadId}/messages`, input)).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["chat-messages", threadId] });
+      void qc.invalidateQueries({ queryKey: ["chat-threads"] });
+    },
+  });
+}
+
+export function useChatMarkRead(threadId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => api.post(`/chat/threads/${threadId}/read`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["chat-messages", threadId] });
+      void qc.invalidateQueries({ queryKey: ["chat-threads"] });
+    },
+  });
 }
 
 export const useAddresses = () =>

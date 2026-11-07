@@ -32,7 +32,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="app-shell-plain">
+    <div className="app-shell-plain page-wash">
       <main className="flex flex-1 flex-col justify-center gap-6 p-4">
         <div className="flex flex-col items-center gap-2">
           <span className="avatar h-14 w-14 text-lg shadow-glow">2M</span>
@@ -95,7 +95,7 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="app-shell-plain">
+    <div className="app-shell-plain page-wash">
       <main className="flex flex-1 flex-col justify-center gap-6 p-4">
         <div className="flex flex-col items-center gap-2">
           <span className="avatar h-14 w-14 text-lg shadow-glow">2M</span>

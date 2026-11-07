@@ -1,5 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage, RegisterPage } from "../features/auth/AuthPages";
+import { AccountPage } from "../features/auth/AccountPage";
+import { ChatListPage } from "../features/chat/ChatListPage";
+import { ChatRoomPage } from "../features/chat/ChatRoomPage";
 import { AddressPage } from "../features/address/AddressPage";
 import { BranchPicker } from "../features/catalog/BranchPicker";
 import { CatalogPage } from "../features/catalog/CatalogPage";
@@ -27,6 +30,9 @@ export function App() {
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:orderId" element={<OrderStatusPage />} />
           <Route path="/orders/:orderId/return" element={<PaymentReturnPage />} />
+          <Route path="/chat" element={<ChatListPage />} />
+          <Route path="/chat/:threadId" element={<ChatRoomPage />} />
+          <Route path="/account" element={<AccountPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

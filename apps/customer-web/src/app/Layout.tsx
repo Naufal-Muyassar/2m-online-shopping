@@ -1,20 +1,23 @@
-import { useEffect, type CSSProperties, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link, Navigate, Outlet, useLocation, useMatch } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { useCart } from "../lib/queries";
+import { useBranches, useCart, useChatThreads } from "../lib/queries";
 import { cn } from "../lib/utils";
-import { IconCart, IconReceipt, IconStore } from "../components/Icons";
+import { IconCart, IconChat, IconChevron, IconPin, IconReceipt, IconSearch, IconStore, IconUser } from "../components/Icons";
 import { PageSkeleton } from "../components/States";
 
 function CartCount({ branchId }: { branchId: string }) {
   const { data } = useCart(branchId);
   const count = data?.items.reduce((n, i) => n + i.qty, 0) ?? 0;
   if (count <= 0) return null;
-  return (
-    <span className="absolute right-[18%] top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-promo px-1 text-xs font-bold text-primary-foreground">
-      {count}
-    </span>
-  );
+  return <span className="count-badge left-1/2 top-1 ml-2">{count}</span>;
+}
+
+function ChatCount() {
+  const { data } = useChatThreads("customer_admin");
+  const count = data?.reduce((n, t) => n + t.unread_count, 0) ?? 0;
+  if (count <= 0) return null;
+  return <span className="count-badge left-1/2 top-1 ml-2">{count}</span>;
 }
 
 interface Tab {
@@ -26,27 +29,30 @@ interface Tab {
   badge?: ReactNode;
 }
 
-const headerButton =
-  "inline-flex min-h-11 shrink-0 items-center rounded-full border border-border bg-surface px-4 text-sm font-medium hover:bg-muted";
-
 const LAST_BRANCH_KEY = "2m.last_branch";
 
+export const CATALOG_SEARCH_ID = "catalog-search";
+
 export function Layout() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { pathname } = useLocation();
   const urlBranchId = useMatch("/b/:branchId/*")?.params.branchId;
-  const wide = useMatch({ path: "/b/:branchId", end: true }) !== null;
+  const onCatalog = useMatch({ path: "/b/:branchId", end: true }) !== null;
+  const inChatRoom = useMatch("/chat/:threadId") !== null;
 
   // Pages outside /b/:branchId (orders, order detail) keep the Katalog and Keranjang tabs of the last visited branch.
   useEffect(() => {
     if (urlBranchId) localStorage.setItem(LAST_BRANCH_KEY, urlBranchId);
   }, [urlBranchId]);
   const branchId = urlBranchId ?? localStorage.getItem(LAST_BRANCH_KEY) ?? undefined;
+  const branch = useBranches().data?.find((b) => b.id === branchId);
 
-  const tabs: Tab[] = [];
-  if (branchId) {
-    tabs.push({ key: "catalog", to: `/b/${branchId}`, label: "Katalog", icon: <IconStore />, active: pathname === `/b/${branchId}` });
-    if (user) {
+  if (inChatRoom) return <Outlet />;
+
+  const catalogTo = branchId ? `/b/${branchId}` : "/";
+  const tabs: Tab[] = [{ key: "catalog", to: catalogTo, label: "Katalog", icon: <IconStore />, active: pathname === catalogTo }];
+  if (user) {
+    if (branchId) {
       tabs.push({
         key: "cart",
         to: `/b/${branchId}/cart`,
@@ -56,52 +62,53 @@ export function Layout() {
         badge: <CartCount branchId={branchId} />,
       });
     }
-  } else if (user) {
-    tabs.push({ key: "catalog", to: "/", label: "Katalog", icon: <IconStore />, active: pathname === "/" });
+    tabs.push(
+      { key: "orders", to: "/orders", label: "Pesanan", icon: <IconReceipt />, active: pathname.startsWith("/orders") },
+      { key: "chat", to: "/chat", label: "Chat", icon: <IconChat />, active: pathname === "/chat", badge: <ChatCount /> },
+      { key: "account", to: "/account", label: "Akun", icon: <IconUser />, active: pathname === "/account" },
+    );
+  } else {
+    tabs.push({ key: "login", to: "/login", label: "Masuk", icon: <IconUser />, active: false });
   }
-  if (user) tabs.push({ key: "orders", to: "/orders", label: "Pesanan saya", icon: <IconReceipt />, active: pathname.startsWith("/orders") });
-  const activeIndex = tabs.findIndex((t) => t.active);
 
   return (
-    <div className={cn(tabs.length > 0 ? "app-shell" : "app-shell-plain", wide && "md:max-w-4xl")}>
-      <header className="app-header">
-        <Link to="/" aria-label="Beranda" className="flex min-w-0 flex-1 items-center gap-3">
-          <span className="avatar text-sm">{user ? user.name.charAt(0) : "2M"}</span>
-          {user ? (
+    <div className={cn(onCatalog && "page-wash")}>
+      <div className={cn("app-shell", onCatalog && "md:max-w-4xl")}>
+        <header className={cn("app-header", onCatalog && "static bg-transparent backdrop-blur-none")}>
+          <Link to="/" aria-label="Ganti cabang" className="flex min-w-0 flex-1 items-center gap-2">
             <span className="min-w-0 leading-tight">
-              <span className="block text-xs text-muted-foreground">Halo,</span>
-              <span className="block truncate text-lg font-bold capitalize">{user.name}</span>
+              <span className="block text-xs text-muted-foreground">Belanja di</span>
+              <span className="flex items-center gap-1 font-bold">
+                <IconPin className="shrink-0 text-primary" />
+                <span className="truncate">{branch?.name ?? "2M Sembako"}</span>
+                <IconChevron className="shrink-0 rotate-90 text-sm text-muted-foreground" />
+              </span>
             </span>
-          ) : (
-            <span className="truncate text-lg font-bold">2M Sembako</span>
-          )}
-        </Link>
-        {user ? (
-          <button onClick={() => void logout()} className={headerButton}>
-            Keluar
-          </button>
-        ) : (
-          <Link to="/login" className={headerButton}>
-            Masuk
           </Link>
-        )}
-      </header>
-      <Outlet />
-      {tabs.length > 0 && (
-        <nav
-          className="bottom-nav"
-          aria-label="Navigasi utama"
-          style={{ "--nav-index": Math.max(activeIndex, 0), "--nav-count": tabs.length } as CSSProperties}
-        >
-          <span className={cn("bottom-nav-indicator", activeIndex < 0 && "opacity-0")} aria-hidden="true" />
-          {tabs.map((t) => (
-            <Link key={t.key} to={t.to} aria-label={t.label} aria-current={t.active ? "page" : undefined} className="bottom-nav-tab">
-              {t.icon}
-              {t.badge}
-            </Link>
-          ))}
+          {onCatalog && (
+            <button
+              type="button"
+              aria-label="Cari produk"
+              onClick={() => document.getElementById(CATALOG_SEARCH_ID)?.focus()}
+              className="icon-btn shrink-0 bg-surface shadow-sm"
+            >
+              <IconSearch />
+            </button>
+          )}
+        </header>
+        <Outlet />
+        <nav className="tab-bar" aria-label="Navigasi utama">
+          <div className="tab-bar-inner">
+            {tabs.map((t) => (
+              <Link key={t.key} to={t.to} aria-current={t.active ? "page" : undefined} className="tab-bar-item">
+                <span className="tab-bar-icon">{t.icon}</span>
+                {t.label}
+                {t.badge}
+              </Link>
+            ))}
+          </div>
         </nav>
-      )}
+      </div>
     </div>
   );
 }
