@@ -11,8 +11,8 @@ export function haversineM(aLat: number, aLng: number, bLat: number, bLng: numbe
 const BASE32 = "0123456789bcdefghjkmnpqrstuvwxyz";
 
 export function geohash(lat: number, lng: number, precision = 9): string {
-  let latRange: [number, number] = [-90, 90];
-  let lngRange: [number, number] = [-180, 180];
+  const latRange: [number, number] = [-90, 90];
+  const lngRange: [number, number] = [-180, 180];
   let hash = "";
   let bits = 0;
   let bitCount = 0;

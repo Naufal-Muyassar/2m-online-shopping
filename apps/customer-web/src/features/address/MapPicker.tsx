@@ -37,7 +37,6 @@ export function MapPicker({ branch, value, onChange }: Props) {
       pin.current = null;
     };
     // The map is created once per branch; the pin is synced below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branch.lat, branch.lng, branch.radiusM]);
 
   useEffect(() => {

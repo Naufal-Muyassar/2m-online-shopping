@@ -6,6 +6,8 @@ import { BRANCH, DEMO_ORDERS, DELIVERY_FEE, DEMO_STOCK_OVERRIDES, PRODUCTS, USER
 const DEMO_STOCK_QTY = 200;
 
 export interface Db {
+  // Rows mirror whatever each seed statement selects, so they stay untyped here.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query(text: string, params?: unknown[]): Promise<{ rows: any[] }>;
 }
 
