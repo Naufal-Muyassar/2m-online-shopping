@@ -24,10 +24,10 @@ export async function getTracking(userId: string, orderId: string): Promise<Trac
     lng: number;
     circuity_factor: number;
   }>(
-    `SELECT o.status, o.assigned_courier_id, a.lat, a.lng, b.circuity_factor::float8 AS circuity_factor
+    `SELECT o.status, o.assigned_courier_id, a.lat, a.lng, COALESCE(p.circuity_factor, 1.3)::float8 AS circuity_factor
      FROM orders o
      JOIN addresses a ON a.id = o.address_id
-     JOIN branches b ON b.id = o.branch_id
+     LEFT JOIN branch_pricing_config p ON p.branch_id = o.branch_id
      WHERE o.id = $1 AND o.customer_id = $2`,
     [orderId, userId],
   );
