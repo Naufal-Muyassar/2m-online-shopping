@@ -3,6 +3,7 @@ import type { Tx } from "../../shared/db";
 import { audit } from "../../shared/audit";
 import { AppError } from "../../shared/errors";
 import { setCourierStatus } from "../courier/repo";
+import { creditOrder } from "../earnings/repo";
 import * as repo from "./repo";
 
 export interface TransitionActor {
@@ -118,6 +119,7 @@ export async function transition(
   }
   if (claimantId) await setCourierStatus(tx, claimantId, "DELIVERING");
   if (releasedCourierId) await setCourierStatus(tx, releasedCourierId, "IDLE");
+  if (to === "DELIVERED" || to === "FAILED") await creditOrder(tx, orderId);
 
   const reason = to === "FAILED" && hasText(meta.note) ? `${meta.reason}: ${meta.note}` : (meta.reason ?? null);
   await repo.insertTransition(tx, {

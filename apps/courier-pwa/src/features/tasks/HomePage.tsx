@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { FaArrowRight, FaBoxOpen, FaCommentDots, FaHistory, FaMotorcycle, FaWallet } from "react-icons/fa";
+import { BalanceAmount } from "@/features/balance/BalanceAmount";
 import { useChatThreads } from "@/features/chat/hooks";
 import { useSession } from "@/features/session/session";
 import { ErrorCard, LoadingBlock, Skeleton } from "@/components/ui/feedback";
@@ -31,19 +32,18 @@ function greeting(hour: number): string {
   return "Selamat malam";
 }
 
-// Earnings withdrawal is planned; this slot shows no amount until the balance is real.
 function BalanceBar() {
   return (
-    <div className="flex min-h-16 items-center gap-3 rounded-full bg-surface p-2 pr-4 shadow-sm">
+    <Link to="/balance" className="flex min-h-16 items-center gap-3 rounded-full bg-surface p-2 pr-4 shadow-sm transition active:scale-[0.98]">
       <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-foreground text-lg text-surface">
         <FaWallet aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1 leading-tight">
         <p className="font-bold">Saldo keuntungan</p>
-        <p className="truncate text-xs text-muted-foreground">Nanti bisa ditarik di toko</p>
+        <p className="truncate text-xs text-muted-foreground">Tarik tunai di toko</p>
       </div>
-      <span className="pill shrink-0">Segera</span>
-    </div>
+      <BalanceAmount />
+    </Link>
   );
 }
 

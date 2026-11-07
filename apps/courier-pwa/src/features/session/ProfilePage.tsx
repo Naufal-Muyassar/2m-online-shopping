@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaArrowRight, FaCommentDots, FaHistory, FaIdCard, FaPhone, FaSignInAlt, FaSignOutAlt, FaUser, FaWallet } from "react-icons/fa";
+import { BalanceAmount } from "@/features/balance/BalanceAmount";
 import { useSession } from "./session";
 
 const row = "flex min-h-16 w-full items-center gap-3 rounded-full bg-surface p-2 pr-4 text-left shadow-sm";
@@ -18,11 +19,12 @@ function InfoRow({ icon, label, value }: { icon: ReactNode; label: string; value
   );
 }
 
-function LinkRow({ to, icon, label }: { to: string; icon: ReactNode; label: string }) {
+function LinkRow({ to, icon, label, value }: { to: string; icon: ReactNode; label: string; value?: ReactNode }) {
   return (
     <Link to={to} className={`${row} transition active:scale-[0.98]`}>
       <span className={rowIcon}>{icon}</span>
       <span className="flex-1 font-medium">{label}</span>
+      {value}
       <FaArrowRight aria-hidden="true" className="text-muted-foreground" />
     </Link>
   );
@@ -57,13 +59,7 @@ export function ProfilePage() {
       <main className="app-main gap-3">
         <LinkRow to="/history" icon={<FaHistory aria-hidden="true" />} label="Riwayat pengantaran" />
         <LinkRow to="/chat" icon={<FaCommentDots aria-hidden="true" />} label="Chat admin" />
-        <div className={row}>
-          <span className={rowIcon}>
-            <FaWallet aria-hidden="true" />
-          </span>
-          <span className="flex-1 font-medium">Saldo keuntungan</span>
-          <span className="pill">Segera</span>
-        </div>
+        {user && <LinkRow to="/balance" icon={<FaWallet aria-hidden="true" />} label="Saldo keuntungan" value={<BalanceAmount />} />}
         <InfoRow icon={<FaIdCard aria-hidden="true" />} label="ID" value={user?.id ?? "Belum tersedia"} />
         <InfoRow icon={<FaPhone aria-hidden="true" />} label="No. Telp" value={user?.phone ?? "Belum tersedia"} />
         <button type="button" disabled={loading} onClick={() => void handleSessionAction()} className={`${row} disabled:opacity-60 ${user ? "text-destructive" : ""}`}>

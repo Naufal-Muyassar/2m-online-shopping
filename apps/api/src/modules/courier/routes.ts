@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   courierClaimRequestSchema,
   courierItemParamsSchema,
+  courierLedgerQuerySchema,
   courierOrderStatusRequestSchema,
   courierReleaseRequestSchema,
   courierStatusRequestSchema,
@@ -10,6 +11,7 @@ import {
   pingsRequestSchema,
   proofRegisterRequestSchema,
   type CourierClaimRequest,
+  type CourierLedgerQuery,
   type CourierOrderStatusRequest,
   type CourierReleaseRequest,
   type CourierStatusRequest,
@@ -19,6 +21,7 @@ import {
 } from "@2m/shared";
 import { asyncHandler, validate } from "../../shared/http";
 import { authenticate, requireRole } from "../auth/middleware";
+import * as earnings from "../earnings/service";
 import * as service from "./service";
 
 export const courierRoutes = Router();
@@ -29,6 +32,22 @@ courierRoutes.get(
   "/me",
   asyncHandler(async (req, res) => {
     res.json(await service.me(req.auth!.sub));
+  }),
+);
+
+courierRoutes.get(
+  "/balance",
+  asyncHandler(async (req, res) => {
+    res.json(await earnings.courierBalance(req.auth!.sub));
+  }),
+);
+
+courierRoutes.get(
+  "/balance/history",
+  validate(courierLedgerQuerySchema, "query"),
+  asyncHandler(async (req, res) => {
+    const { cursor, limit } = req.query as unknown as CourierLedgerQuery;
+    res.json(await earnings.courierHistory(req.auth!.sub, { cursor, limit }));
   }),
 );
 

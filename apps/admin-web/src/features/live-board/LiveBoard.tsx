@@ -29,7 +29,7 @@ function useRefreshBoard() {
   };
 }
 
-function Dialog({ title, children }: { title: string; children: ReactNode }) {
+export function Dialog({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div
       className="fixed inset-0 z-40 flex animate-fade-in items-center justify-center bg-foreground/50 p-4 backdrop-blur-sm"
@@ -44,8 +44,8 @@ function Dialog({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-const SECONDARY_BTN = "min-h-11 rounded-md border bg-surface px-4 py-2 font-medium hover:bg-muted disabled:opacity-60";
-const PRIMARY_BTN =
+export const SECONDARY_BTN = "min-h-11 rounded-md border bg-surface px-4 py-2 font-medium hover:bg-muted disabled:opacity-60";
+export const PRIMARY_BTN =
   "min-h-11 rounded-md bg-primary px-4 py-2 font-bold text-primary-foreground hover:bg-primary-pressed disabled:opacity-60";
 
 const ORDER_PILL: Record<string, string> = {

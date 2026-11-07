@@ -1,19 +1,21 @@
 import { useState, type ComponentType, type SVGProps } from "react";
-import { IconBoard, IconCash, IconChat, IconClipboard, IconSearch, IconSettings, IconTruck } from "../components/Icons";
+import { IconBoard, IconCash, IconChat, IconClipboard, IconSearch, IconSettings, IconTruck, IconWallet } from "../components/Icons";
 import { useAuth } from "../lib/auth";
 import { cn } from "../lib/utils";
 import { LoginPage } from "../features/auth/LoginPage";
 import { BranchProvider, useBranch } from "../features/branch-config/BranchProvider";
 import { useUnreadChats } from "../features/chat/hooks";
 import { MessagesPage, type InboxChannel } from "../features/chat/MessagesPage";
+import { BalanceTab } from "../features/couriers/BalanceTab";
 import { CouriersTab } from "../features/couriers/CouriersTab";
 import { LiveBoard } from "../features/live-board/LiveBoard";
 
-type TabId = "board" | "couriers" | "messages" | "short-pick" | "cash" | "config";
+type TabId = "board" | "couriers" | "balance" | "messages" | "short-pick" | "cash" | "config";
 
 const TABS: { id: TabId; label: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; soon?: boolean }[] = [
   { id: "board", label: "Tracking", Icon: IconBoard },
   { id: "couriers", label: "Kurir", Icon: IconTruck },
+  { id: "balance", label: "Saldo", Icon: IconWallet },
   { id: "messages", label: "Pesan", Icon: IconChat },
   { id: "short-pick", label: "Short Pick", Icon: IconClipboard, soon: true },
   { id: "cash", label: "Kas COD", Icon: IconCash, soon: true },
@@ -110,6 +112,7 @@ function Shell() {
         <main className="min-w-0 flex-1">
           {tab === "board" && <LiveBoard search={search} />}
           {tab === "couriers" && <CouriersTab onOpenChat={openCourierChat} />}
+          {tab === "balance" && <BalanceTab />}
           {tab === "messages" && (
             <MessagesPage
               channel={inbox}

@@ -7,3 +7,4 @@ export * from "./customer";
 export * from "./payments";
 export * from "./meta";
 export * from "./chat";
+export * from "./earnings";

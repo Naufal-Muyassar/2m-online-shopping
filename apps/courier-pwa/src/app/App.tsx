@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
+import { BalancePage } from "@/features/balance/BalancePage";
 import { LoginPage } from "@/features/session/LoginPage";
 import { ProfilePage } from "@/features/session/ProfilePage";
 import { AdminChatPage, ChatRoomPage } from "@/features/chat/ChatRoom";
@@ -62,6 +63,7 @@ export function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/balance" element={<BalancePage />} />
         <Route path="/chat" element={<AdminChatPage />} />
         <Route path="/chat/:threadId" element={<ChatRoomPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />

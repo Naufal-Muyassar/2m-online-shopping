@@ -58,6 +58,14 @@ export const IconCash = (p: IconProps) => (
   </Svg>
 );
 
+export const IconWallet = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3" />
+    <path d="M4 7.5V17a2 2 0 0 0 2 2h14V8H6.5" />
+    <path d="M16.5 13.5v.01" />
+  </Svg>
+);
+
 export const IconSettings = (p: IconProps) => (
   <Svg {...p}>
     <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />

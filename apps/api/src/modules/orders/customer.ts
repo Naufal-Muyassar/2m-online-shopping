@@ -100,12 +100,16 @@ export async function createOrder(userId: string, req: CreateOrderRequest): Prom
 // Keyset cursor over (created_at, id). The timestamp travels as microsecond-precision text: a JS Date would truncate it.
 const cursorSchema = z.tuple([z.string().datetime({ offset: true }), z.string().uuid()]);
 
-function decodeCursor(cursor: string): [string, string] {
+export function decodeCursor(cursor: string): [string, string] {
   try {
     return cursorSchema.parse(JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")));
   } catch {
     throw new AppError(400, "INVALID_CURSOR", "Invalid cursor");
   }
+}
+
+export function encodeCursor(createdAt: string, id: string): string {
+  return Buffer.from(JSON.stringify([createdAt, id])).toString("base64url");
 }
 
 export async function listCustomerOrders(
@@ -145,10 +149,7 @@ export async function listCustomerOrders(
       item_count: r.item_count,
       branch_name: r.branch_name,
     })),
-    next_cursor:
-      res.rows.length > opts.limit && last
-        ? Buffer.from(JSON.stringify([last.created_cursor, last.id])).toString("base64url")
-        : null,
+    next_cursor: res.rows.length > opts.limit && last ? encodeCursor(last.created_cursor, last.id) : null,
   };
 }
 
