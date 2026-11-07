@@ -14,7 +14,9 @@
     "test": "vitest run --passWithNoTests",
     "db:migrate": "tsx --env-file-if-exists=../../.env scripts/db.ts migrate",
     "db:reset": "tsx --env-file-if-exists=../../.env scripts/db.ts reset",
-    "db:reset:demo": "tsx --env-file-if-exists=../../.env scripts/db.ts reset:demo"
+    "db:reset:demo": "tsx --env-file-if-exists=../../.env scripts/db.ts reset:demo",
+    "dev:local": "tsx watch --env-file=../../infra/docker/local.env src/server.ts",
+    "db:reset:local": "tsx --env-file=../../infra/docker/local.env scripts/db.ts reset:demo"
   },
   "dependencies": {
     "@2m/shared": "workspace:*",

@@ -15,7 +15,12 @@
     "db:reset:demo": "pnpm --filter api db:reset:demo",
     "demo:smoke": "pnpm --filter api demo:smoke",
     "demo:sim-pings": "pnpm --filter api demo:sim-pings",
-    "demo:set-branch": "pnpm --filter api demo:set-branch"
+    "demo:set-branch": "pnpm --filter api demo:set-branch",
+    "local:up": "docker compose -p 2m-local --env-file infra/docker/local.env -f infra/docker/compose.dev.yml up -d",
+    "local:down": "docker compose -p 2m-local --env-file infra/docker/local.env -f infra/docker/compose.dev.yml down",
+    "local:reset": "pnpm --filter api db:reset:local",
+    "local:api": "pnpm --filter api dev:local",
+    "local:web": "pnpm -r --parallel --filter \"./apps/*\" --filter \"!api\" run dev"
   },
   "devDependencies": {
     "@2m/config": "workspace:*",

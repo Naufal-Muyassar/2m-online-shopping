@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: app
       POSTGRES_DB: sembako
     ports:
-      - "5432:5432"
+      - "${LOCAL_PG_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -19,7 +19,7 @@ services:
     # noeviction: a counter must never be silently dropped; Postgres can rebuild it, but not while checkouts run.
     command: ["redis-server", "--maxmemory-policy", "noeviction"]
     ports:
-      - "6379:6379"
+      - "${LOCAL_REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -32,8 +32,8 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${LOCAL_S3_PORT:-9000}:9000"
+      - "${LOCAL_S3_CONSOLE_PORT:-9001}:9001"
     volumes:
       - miniodata:/bitnami/minio/data
 

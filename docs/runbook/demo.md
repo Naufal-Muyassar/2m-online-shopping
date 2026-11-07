@@ -7,6 +7,15 @@
 4. `pnpm dev:all` (API + 3 frontend; port tetap, gagal jika port terpakai). `start.bat` melakukan 1-4 di Windows.
 5. `pnpm demo:smoke` harus mencetak semua langkah PASS sebelum demo.
 
+## Testing lokal terisolasi (sebelum deploy)
+`.env` bisa menunjuk ke database hosted, dan `db:reset` menghapus seluruh schema. Stack ini memakai project Docker `2m-local` dan `infra/docker/local.env`, jadi tidak membaca `.env` dan tidak bentrok dengan Postgres lain di port 5432.
+1. `pnpm local:up` (Postgres 55432, Redis 56379, MinIO 59000).
+2. `pnpm local:reset` (seed demo; tambah `-- --with-orders` untuk 3 order PAID).
+3. `pnpm local:api` dan `pnpm local:web` di dua terminal.
+4. `pnpm local:down` setelah selesai. Datanya tetap tersimpan di volume `2m-local`.
+
+Test API membaca `.env`, jadi arahkan `DATABASE_URL` ke database lokal sebelum menjalankan `pnpm --filter api test`.
+
 ## URL
 API http://localhost:3000 · Customer http://localhost:5171 · Kurir (PWA) http://localhost:5172 · Admin http://localhost:5173 · MinIO http://localhost:9001
 
