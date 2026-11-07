@@ -33,6 +33,7 @@ jobs:
               - 'packages/**'
               - 'pnpm-lock.yaml'
               - 'package.json'
+              - '.github/workflows/app-check.yml'
             api:
               - *shared
               - 'apps/api/**'
@@ -52,6 +53,7 @@ jobs:
     uses: ./.github/workflows/app-check.yml
     with:
       filter: api
+      services: true
 
   courier-pwa:
     needs: changes

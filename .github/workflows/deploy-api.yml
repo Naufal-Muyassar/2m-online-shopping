@@ -21,6 +21,7 @@ jobs:
     uses: ./.github/workflows/app-check.yml
     with:
       filter: api
+      services: true
 
   build:
     needs: test

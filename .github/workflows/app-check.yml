@@ -6,10 +6,39 @@ on:
       filter:
         required: true
         type: string
+      services:
+        description: Start Postgres and Redis, then run migrations before the tests.
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      # An empty image means the service does not start.
+      postgres:
+        image: ${{ inputs.services && 'postgres:16' || '' }}
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: sembako
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d sembako"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: ${{ inputs.services && 'redis:7-alpine' || '' }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -20,4 +49,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter ${{ inputs.filter }}... typecheck
       - run: pnpm lint
+      # Calls tsx directly: the db:migrate script needs --env-file-if-exists, which Node 20 does not have.
+      - if: inputs.services
+        run: pnpm --filter ${{ inputs.filter }} exec tsx scripts/db.ts migrate
+        env:
+          DATABASE_URL: postgres://app:app@localhost:5432/sembako
+          JWT_ACCESS_SECRET: test-only-access-secret-0123456789
+          S3_ENDPOINT: http://localhost:9000
+          S3_BUCKET: proofs
+          S3_ACCESS_KEY: test
+          S3_SECRET_KEY: test
       - run: pnpm --filter ${{ inputs.filter }}... test
