@@ -37,6 +37,9 @@ const tokens = {
   "--skeleton-shine": "38 41% 95%",
   "--radius": "0.75rem",
   "--shadow-tint": "210 31% 15%",
+  "--rail": "214 56% 13%",
+  "--rail-foreground": "38 41% 95%",
+  "--rail-muted": "214 22% 70%",
   "--tap-target": "2.75rem",
   "--nav-height": "3.75rem",
   "--header-height": "4rem",
@@ -45,6 +48,8 @@ const tokens = {
 
 const ease = {
   slow: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+  // Critically damped: settles without overshoot, as a menu or tab should.
+  settle: "cubic-bezier(0.32, 0.72, 0, 1)",
   nav: "cubic-bezier(0.34, 1.45, 0.64, 1)",
 };
 
@@ -63,13 +68,18 @@ function designSystem({ addBase, addComponents }) {
       fontSize: "1rem",
       lineHeight: "1.5",
       overflowX: "hidden",
+      fontOpticalSizing: "auto",
+      WebkitFontSmoothing: "antialiased",
+      MozOsxFontSmoothing: "grayscale",
     },
     "@keyframes rise": { from: { opacity: "0", transform: "translateY(1rem)" }, to: { opacity: "1", transform: "translateY(0)" } },
     "@keyframes fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
     "@keyframes sheet-up": { from: { transform: "translateY(100%)" }, to: { transform: "translateY(0)" } },
     "@keyframes pop": { from: { opacity: "0", transform: "scale(0.92)" }, to: { opacity: "1", transform: "scale(1)" } },
+    // Starts part-visible so a tab change never shows an empty frame.
+    "@keyframes swap-in": { from: { opacity: "0.35", transform: "translate3d(var(--swap-x, 0), 0, 0)" }, to: { opacity: "1", transform: "none" } },
     "@keyframes shimmer": { from: { backgroundPosition: "200% 0" }, to: { backgroundPosition: "-200% 0" } },
-    "h1, h2, h3": { lineHeight: "1.25", letterSpacing: "-0.02em", margin: "0" },
+    "h1, h2, h3": { lineHeight: "1.2", letterSpacing: "-0.022em", margin: "0" },
     "button, input, select, textarea": { font: "inherit" },
     ":focus-visible": { outline: `2px solid ${c("ring")}`, outlineOffset: "2px" },
     "@media (prefers-reduced-motion: reduce)": {
@@ -124,6 +134,73 @@ function designSystem({ addBase, addComponents }) {
       backdropFilter: "blur(12px) saturate(1.4)",
       WebkitBackdropFilter: "blur(12px) saturate(1.4)",
     },
+    // Floating panel over content. The heavier the surface, the stronger the blur and shadow.
+    ".material": {
+      backgroundColor: "hsl(var(--surface) / 0.82)",
+      backdropFilter: "blur(28px) saturate(1.7)",
+      WebkitBackdropFilter: "blur(28px) saturate(1.7)",
+      border: "1px solid hsl(0 0% 100% / 0.6)",
+      boxShadow: "0 24px 56px hsl(var(--shadow-tint) / 0.22)",
+    },
+    ".material-chip": {
+      backgroundColor: "hsl(var(--surface) / 0.86)",
+      backdropFilter: "blur(16px) saturate(1.6)",
+      WebkitBackdropFilter: "blur(16px) saturate(1.6)",
+      border: "1px solid hsl(0 0% 100% / 0.6)",
+      boxShadow: "0 8px 24px hsl(var(--shadow-tint) / 0.16)",
+    },
+    "@media (prefers-reduced-transparency: reduce)": {
+      ".material, .material-chip": { backgroundColor: c("surface"), backdropFilter: "none", WebkitBackdropFilter: "none" },
+    },
+    "@media (prefers-contrast: more)": {
+      ".material, .material-chip": { backgroundColor: c("surface"), backdropFilter: "none", WebkitBackdropFilter: "none", borderColor: c("foreground") },
+    },
+
+    // Click-only tabs. The thumb slides between items and retargets from wherever it is if clicked again mid-move.
+    ".segmented": {
+      position: "relative",
+      display: "grid",
+      gridAutoFlow: "column",
+      gridAutoColumns: "minmax(0, 1fr)",
+      gap: "0.125rem",
+      padding: "0.25rem",
+      borderRadius: "1.125rem",
+      backgroundColor: c("muted"),
+    },
+    ".segmented-thumb": {
+      position: "absolute",
+      top: "0",
+      left: "0",
+      borderRadius: "0.875rem",
+      backgroundColor: c("primary"),
+      boxShadow: "0 6px 14px hsl(var(--primary) / 0.3)",
+      willChange: "transform",
+    },
+    ".segmented-thumb[data-ready='true']": {
+      transition: `transform 340ms ${ease.settle}, width 340ms ${ease.settle}, height 340ms ${ease.settle}`,
+    },
+    ".segmented-item": {
+      position: "relative",
+      zIndex: "1",
+      minWidth: "0",
+      minHeight: "var(--tap-target)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "0.0625rem",
+      padding: "0.25rem 0.125rem",
+      borderRadius: "0.875rem",
+      fontSize: "0.8125rem",
+      fontWeight: "600",
+      color: c("muted-foreground"),
+      transition: "color 180ms ease, transform 100ms ease-out",
+    },
+    ".segmented-item:hover": { color: c("foreground") },
+    ".segmented-item:active": { transform: "scale(0.96)" },
+    ".segmented-item[aria-selected='true']": { color: c("primary-foreground") },
+    ".swap-in": { animation: `swap-in 280ms ${ease.settle} both` },
+
     ".sticky-toolbar": {
       position: "sticky",
       top: "calc(var(--header-height) + 1px)",
@@ -399,10 +476,36 @@ function designSystem({ addBase, addComponents }) {
       color: c("primary-foreground"),
       backgroundImage: `linear-gradient(135deg, ${c("primary")}, ${c("primary-pressed")})`,
       boxShadow: "0 8px 20px hsl(var(--primary) / 0.32)",
-      transition: "transform 150ms ease, opacity 150ms ease",
+      transition: "transform 150ms ease, opacity 150ms ease, box-shadow 150ms ease, filter 150ms ease",
     },
-    ".btn-hero:active": { transform: "scale(0.96)" },
+    // Native file input. States sit on the input because ::file-selector-button rejects :enabled and :disabled after it.
+    ".file-picker": { cursor: "pointer", fontSize: "1rem", color: c("foreground") },
+    ".file-picker::file-selector-button": {
+      minHeight: "var(--tap-target)",
+      marginRight: "0.75rem",
+      padding: "0 1rem",
+      border: "0",
+      borderRadius: "var(--radius)",
+      fontWeight: "700",
+      cursor: "pointer",
+      color: c("primary-pressed"),
+      backgroundColor: c("primary-surface"),
+      transition: "background-color 150ms ease, color 150ms ease, transform 150ms ease",
+    },
+    // A gradient cannot transition, so hover lifts the hero button with brightness and shadow instead.
+    "@media (hover: hover)": {
+      ".btn-hero:hover:not(:disabled)": { filter: "brightness(1.25)", boxShadow: "0 12px 28px hsl(var(--primary) / 0.42)" },
+      ".file-picker:enabled:hover::file-selector-button": { color: c("primary-foreground"), backgroundColor: c("primary") },
+    },
+    ".btn-hero:active:not(:disabled)": { transform: "scale(0.96)", filter: "brightness(0.92)" },
     ".btn-hero:disabled": { opacity: "0.6", boxShadow: "none" },
+    ".file-picker:enabled:active::file-selector-button": {
+      transform: "scale(0.97)",
+      color: c("primary-foreground"),
+      backgroundColor: c("primary-pressed"),
+    },
+    ".file-picker:disabled": { cursor: "not-allowed", opacity: "0.6" },
+    ".file-picker:disabled::file-selector-button": { cursor: "not-allowed" },
     ".icon-btn": {
       display: "inline-flex",
       alignItems: "center",
@@ -500,9 +603,10 @@ export default {
         success: { DEFAULT: hsl("success"), foreground: hsl("success-foreground"), surface: hsl("success-surface") },
         warning: { DEFAULT: hsl("warning"), surface: hsl("warning-surface") },
         info: { DEFAULT: hsl("info"), surface: hsl("info-surface") },
+        rail: { DEFAULT: hsl("rail"), foreground: hsl("rail-foreground"), muted: hsl("rail-muted") },
       },
       fontFamily: {
-        sans: ["system-ui", "-apple-system", '"Segoe UI"', "Roboto", '"Helvetica Neue"', "Arial", "sans-serif"],
+        sans: ['"Plus Jakarta Sans Variable"', "system-ui", "-apple-system", '"Segoe UI"', "Roboto", '"Helvetica Neue"', "Arial", "sans-serif"],
       },
       borderRadius: {
         sm: "0.5rem",

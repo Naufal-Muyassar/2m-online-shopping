@@ -14,6 +14,8 @@ interface AdminOrderRow {
   courier_name: string | null;
   receiver_name: string;
   area_hint: string;
+  lat: number;
+  lng: number;
 }
 
 // Non-terminal orders, terminal ones from the last 24h, and failed orders still waiting for return confirmation.
@@ -22,7 +24,7 @@ export async function listBoardOrders(db: Pool, branchId: string): Promise<Admin
     `SELECT o.id, o.code, o.status, o.grand_total, o.return_pending, o.created_at, o.ready_at,
             (SELECT max(t.server_ts) FROM order_state_transitions t WHERE t.order_id = o.id) AS last_transition_at,
             u.id AS courier_id, u.name AS courier_name,
-            a.receiver_name, left(a.street, 40) AS area_hint
+            a.receiver_name, left(a.street, 40) AS area_hint, a.lat, a.lng
      FROM orders o
      JOIN addresses a ON a.id = o.address_id
      LEFT JOIN users u ON u.id = o.assigned_courier_id
@@ -51,6 +53,7 @@ export async function listBoardOrders(db: Pool, branchId: string): Promise<Admin
     assigned_courier: r.courier_id && r.courier_name ? { user_id: r.courier_id, name: r.courier_name } : null,
     receiver_name: r.receiver_name,
     area_hint: r.area_hint,
+    destination: { lat: r.lat, lng: r.lng },
     items: itemsOf(r.id),
   }));
 }
@@ -64,6 +67,8 @@ interface AdminCourierRow {
   last_ping_at: Date | null;
   motor_cluster: string | null;
   balance: number;
+  current_lat: number | null;
+  current_lng: number | null;
   order_id: string | null;
   order_code: string | null;
   order_status: AdminOrder["status"] | null;
@@ -71,7 +76,7 @@ interface AdminCourierRow {
 
 export async function listBranchCouriers(db: Pool, branchId: string): Promise<AdminCourier[]> {
   const res = await db.query<AdminCourierRow>(
-    `SELECT c.user_id, u.name, p.name AS partner_name, c.status, c.last_status_change, c.last_ping_at, c.motor_cluster,
+    `SELECT c.user_id, u.name, p.name AS partner_name, c.status, c.last_status_change, c.last_ping_at, c.motor_cluster, c.current_lat, c.current_lng,
             COALESCE((SELECT SUM(l.amount) FROM courier_ledger_entries l WHERE l.courier_id = c.user_id), 0)::int AS balance,
             o.id AS order_id, o.code AS order_code, o.status AS order_status
      FROM couriers c
@@ -96,6 +101,7 @@ export async function listBranchCouriers(db: Pool, branchId: string): Promise<Ad
     last_ping_at: r.last_ping_at?.toISOString() ?? null,
     motor_cluster: r.motor_cluster,
     balance: r.balance,
+    position: r.status !== "OFFLINE" && r.current_lat !== null && r.current_lng !== null ? { lat: r.current_lat, lng: r.current_lng } : null,
     current_order: r.order_id && r.order_code && r.order_status ? { id: r.order_id, code: r.order_code, status: r.order_status } : null,
   }));
 }

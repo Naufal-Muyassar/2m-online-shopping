@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { CourierOrder } from "@2m/shared";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,8 @@ import { useToast } from "@/components/ui/toast";
 import { errorMessage } from "@/lib/api";
 import { getFreshFix } from "@/platform/geo";
 import { ProofFlow } from "@/features/proof/ProofFlow";
-import { useSecondsSinceLastPing } from "@/tracking";
+import { useMyPosition, useSecondsSinceLastPing } from "@/tracking";
+import { MapView, type MapMarker } from "@2m/map";
 import { useOrder, useOrderStatus, usePickItem, useReleaseOrder } from "./hooks";
 import { STATUS_LABELS, STATUS_PILLS } from "./OrderCard";
 import { LoadingBlock } from "@/components/ui/feedback";
@@ -178,6 +179,30 @@ function CustomerChatButton({ orderId }: { orderId: string }) {
   );
 }
 
+const ROUTE = ["courier", "destination"];
+
+function DeliveryMap({ order }: { order: CourierOrder }) {
+  const { lat, lng, receiver_name: receiver } = order.address;
+  const me = useMyPosition();
+  const markers = useMemo<MapMarker[]>(() => {
+    const out: MapMarker[] = [{ id: "destination", kind: "destination", lat, lng, label: receiver }];
+    if (me) out.push({ id: "courier", kind: "courier", lat: me.lat, lng: me.lng, label: "Anda", live: true });
+    return out;
+  }, [lat, lng, receiver, me?.lat, me?.lng]);
+
+  return (
+    <section className="animate-rise" aria-label="Peta pengantaran">
+      <MapView
+        markers={markers}
+        route={ROUTE}
+        ariaLabel="Peta lokasi Anda dan tujuan"
+        className="isolate h-64 w-full overflow-hidden rounded-[1.25rem] shadow-md"
+      />
+      {!me && <p className="mt-2 text-sm text-muted-foreground">Menunggu lokasi Anda. Pastikan izin lokasi aktif.</p>}
+    </section>
+  );
+}
+
 function LocationNotice() {
   const sec = useSecondsSinceLastPing();
   return (
@@ -269,6 +294,8 @@ export function OrderDetailPage() {
         {(order.status === "PICKING" || order.status === "ON_DELIVERY") && <Stepper status={order.status} />}
 
         {returning && <p className="alert-box font-medium">Kembalikan barang ke cabang – menunggu konfirmasi admin</p>}
+
+        {(order.status === "PICKING" || order.status === "ON_DELIVERY") && <DeliveryMap order={order} />}
 
         {order.status === "PICKING" && <PickingChecklist order={order} />}
 

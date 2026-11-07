@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   TERMINAL_STATUSES,
@@ -9,16 +9,20 @@ import {
   type ChatOpenRequest,
   type MetaConfigResponse,
 } from "@2m/shared";
+import { Segmented, useSwapX } from "../../components/Segmented";
 import { api, errorMessage } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { useBranch } from "../branch-config/BranchProvider";
-import { ChatPane } from "../chat/ChatPane";
-import { useOpenedThread } from "../chat/hooks";
-import { BOARD_COLUMNS, BOARD_POLL_MS, COLUMN_LABELS, SLA_MINUTES, ageMinutes, type BoardColumn } from "./constants";
+import { OpenedChat } from "../chat/OpenedChat";
+import { useBranchCouriers } from "../couriers/hooks";
+import { BOARD_COLUMNS, BOARD_POLL_MS, COLUMN_LABELS, COLUMN_SHORT_LABELS, SLA_MINUTES, ageMinutes, type BoardColumn } from "./constants";
+import { TrackingMap } from "./TrackingMap";
 
 export const BOARD_KEY = "admin-orders";
+// Couriers ping every 15 s while delivering, so a slower poll would leave the map pin visibly behind.
+const MAP_POLL_MS = 5_000;
 
 function useRefreshBoard() {
   const { branchId } = useBranch();
@@ -278,17 +282,17 @@ function ForcePaidButton({ order }: { order: AdminOrder }) {
 function RouteBlock({ order, selected, from }: { order: AdminOrder; selected: boolean; from: string }) {
   const stop = (label: string, value: string, hint?: string) => (
     <div className="min-w-0">
-      <p className={cn("text-xs", selected ? "opacity-80" : "text-muted-foreground")}>{label}</p>
+      <p className={cn("text-xs", selected ? "text-rail-muted" : "text-muted-foreground")}>{label}</p>
       <p className="truncate font-bold">{value}</p>
-      {hint && <p className={cn("truncate text-xs", selected ? "opacity-80" : "text-muted-foreground")}>{hint}</p>}
+      {hint && <p className={cn("truncate text-xs", selected ? "text-rail-muted" : "text-muted-foreground")}>{hint}</p>}
     </div>
   );
   return (
-    <div className={cn("mt-3 flex gap-3 rounded-lg p-3", selected ? "bg-hero text-primary-foreground" : "border")}>
+    <div className={cn("mt-3 flex gap-3 rounded-2xl p-3", selected ? "bg-white/10" : "bg-muted/60")}>
       <div className="flex flex-col items-center py-1.5" aria-hidden="true">
-        <span className={cn("size-2.5 rounded-full", selected ? "bg-surface" : "border-2 border-input")} />
+        <span className={cn("size-2.5 rounded-full", selected ? "bg-surface" : "border-2 border-primary")} />
         <span className={cn("my-1 w-px flex-1 border-l border-dashed", selected ? "border-surface/60" : "border-input")} />
-        <span className={cn("size-2.5 rounded-full", selected ? "bg-surface" : "bg-foreground")} />
+        <span className="size-2.5 rounded-full bg-promo" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         {stop("Dikirim dari", from)}
@@ -306,23 +310,29 @@ function TrackCard({ order, selected, from, onSelect }: { order: AdminOrder; sel
         onClick={onSelect}
         aria-pressed={selected}
         className={cn(
-          "w-full rounded-lg border bg-surface p-3 text-left text-sm hover:shadow",
-          selected && "border-primary shadow",
-          late && "border-destructive bg-destructive-surface",
+          "w-full rounded-[1.25rem] p-3.5 text-left text-sm transition-[background-color,box-shadow,transform] duration-200 active:scale-[0.985]",
+          selected ? "bg-hero text-primary-foreground" : "bg-surface shadow-sm hover:shadow-md",
+          late && !selected && "bg-destructive-surface ring-1 ring-destructive",
+          late && selected && "ring-2 ring-destructive",
         )}
       >
         <span className="flex items-center justify-between gap-2 font-bold">
-          <span className="truncate">{order.code}</span>
+          <span className="truncate tabular-nums">{order.code}</span>
           <span className={cn("pill pill-dot shrink-0", ORDER_PILL[order.status])}>{STATUS_LABELS[order.status] ?? order.status}</span>
         </span>
         <span className="mt-3 flex items-center gap-2">
-          <span className="avatar size-9 text-sm" aria-hidden="true">
+          <span className={cn("avatar size-9 text-sm", selected && "bg-none bg-white/15")} aria-hidden="true">
             {order.assigned_courier?.name.charAt(0) ?? "?"}
           </span>
           <span className="min-w-0 leading-tight">
-            <span className="block truncate font-medium">{order.assigned_courier?.name ?? "Belum ada kurir"}</span>
-            <span className={cn("block text-xs", late ? "font-medium text-destructive" : "text-muted-foreground")}>
-              {age} mnt di status ini{late ? " · melewati SLA" : ""}
+            <span className="block truncate font-semibold">{order.assigned_courier?.name ?? "Belum ada kurir"}</span>
+            <span
+              className={cn(
+                "block text-xs",
+                late ? (selected ? "font-semibold text-surface" : "font-semibold text-destructive") : selected ? "text-rail-muted" : "text-muted-foreground",
+              )}
+            >
+              {age} mnt di status ini{late ? ", melewati SLA" : ""}
             </span>
           </span>
         </span>
@@ -341,19 +351,6 @@ function OrderChat({ input, empty }: { input: ChatOpenRequest | null; empty: str
     );
   }
   return <OpenedChat key={input.order_id ?? input.courier_id} input={input} />;
-}
-
-function OpenedChat({ input }: { input: ChatOpenRequest }) {
-  const thread = useOpenedThread(input);
-  if (thread.isError) {
-    return (
-      <p className="alert-box" role="alert">
-        {errorMessage(thread.error)}
-      </p>
-    );
-  }
-  if (!thread.data) return <div className="skeleton h-24" role="status" aria-busy="true" aria-label="Memuat" />;
-  return <ChatPane threadId={thread.data.id} />;
 }
 
 type PanelTab = "detail" | "courier" | "customer";
@@ -376,74 +373,76 @@ function DetailRow({ label, children }: { label: string; children: ReactNode }) 
 function OrderPanel({ order, from }: { order: AdminOrder; from: string }) {
   const { user } = useAuth();
   const [tab, setTab] = useState<PanelTab>("detail");
+  const swapX = useSwapX(PANEL_TABS.findIndex((t) => t.id === tab));
   const { age } = slaState(order);
   const courier = order.assigned_courier;
 
   return (
-    <section className="card flex min-h-[28rem] flex-col gap-3 shadow-md lg:min-h-0" aria-label={`Order ${order.code}`}>
+    <section
+      className="material relative z-[600] flex min-h-[28rem] flex-col gap-3 rounded-[1.75rem] p-4 xl:absolute xl:bottom-3 xl:right-3 xl:top-3 xl:min-h-0 xl:w-[24rem]"
+      aria-label={`Order ${order.code}`}
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-xl font-bold">{order.code}</h2>
+        <h2 className="text-xl font-bold tabular-nums">{order.code}</h2>
         <span className={cn("pill pill-dot", ORDER_PILL[order.status])}>{STATUS_LABELS[order.status] ?? order.status}</span>
       </div>
-      <div className="flex gap-1 rounded-full bg-muted p-1" role="tablist" aria-label="Panel order">
-        {PANEL_TABS.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={cn(
-              "min-h-11 flex-1 rounded-full px-3 text-sm",
-              tab === t.id ? "bg-primary font-bold text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <Segmented label="Panel order" value={tab} onChange={setTab} items={PANEL_TABS} />
 
-      {tab === "detail" && (
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-          <dl className="divide-y">
-            <DetailRow label="Dikirim dari">{from}</DetailRow>
-            <DetailRow label="Penerima">{order.receiver_name}</DetailRow>
-            <DetailRow label="Area">{order.area_hint}</DetailRow>
-            <DetailRow label="Kurir">{courier?.name ?? "Belum ada kurir"}</DetailRow>
-            <DetailRow label="Di status ini">{age} mnt</DetailRow>
-          </dl>
-          <div>
-            <h3 className="mb-1 font-bold">Barang</h3>
-            <ul className="divide-y text-sm">
-              {order.items.map((item) => (
-                <li key={item.name} className="flex justify-between gap-3 py-2">
-                  <span>{item.name}</span>
-                  <span className="font-bold">×{item.qty}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 flex justify-between border-t pt-2 font-bold">
-              <span>Total</span>
-              <span>{formatIDR(order.grand_total)}</span>
-            </p>
+      <div key={tab} className="swap-in flex min-h-0 flex-1 flex-col" style={{ "--swap-x": swapX } as CSSProperties}>
+        {tab === "detail" && (
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+            <dl className="divide-y">
+              <DetailRow label="Dikirim dari">{from}</DetailRow>
+              <DetailRow label="Penerima">{order.receiver_name}</DetailRow>
+              <DetailRow label="Area">{order.area_hint}</DetailRow>
+              <DetailRow label="Kurir">{courier?.name ?? "Belum ada kurir"}</DetailRow>
+              <DetailRow label="Di status ini">{age} mnt</DetailRow>
+            </dl>
+            <div>
+              <h3 className="mb-1 font-bold">Barang</h3>
+              <ul className="divide-y text-sm">
+                {order.items.map((item) => (
+                  <li key={item.name} className="flex justify-between gap-3 py-2">
+                    <span>{item.name}</span>
+                    <span className="font-bold tabular-nums">×{item.qty}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 flex justify-between border-t pt-2 text-lg font-bold">
+                <span>Total</span>
+                <span className="tabular-nums">{formatIDR(order.grand_total)}</span>
+              </p>
+            </div>
+            <div className="mt-auto space-y-2">
+              <OrderActions order={order} />
+              {user?.role === "super_admin" && order.status === "PENDING_PAYMENT" && <ForcePaidButton order={order} />}
+            </div>
           </div>
-          <div className="mt-auto space-y-2">
-            <OrderActions order={order} />
-            {user?.role === "super_admin" && order.status === "PENDING_PAYMENT" && <ForcePaidButton order={order} />}
-          </div>
-        </div>
-      )}
-      {tab === "courier" && (
-        <OrderChat
-          input={courier ? { channel: "courier_admin", courier_id: courier.user_id } : null}
-          empty="Belum ada kurir di order ini."
-        />
-      )}
-      {tab === "customer" && <OrderChat input={{ channel: "customer_admin", order_id: order.id }} empty="" />}
+        )}
+        {tab === "courier" && (
+          <OrderChat
+            input={courier ? { channel: "courier_admin", courier_id: courier.user_id } : null}
+            empty="Belum ada kurir di order ini."
+          />
+        )}
+        {tab === "customer" && <OrderChat input={{ channel: "customer_admin", order_id: order.id }} empty="" />}
+      </div>
     </section>
   );
 }
 
 type ListTab = BoardColumn | "PENDING_PAYMENT" | "DONE";
+
+const TAB_ORDER: ListTab[] = ["PENDING_PAYMENT", ...BOARD_COLUMNS, "DONE"];
+
+const EMPTY_TEXT: Record<ListTab, string> = {
+  PENDING_PAYMENT: "Tidak ada order yang menunggu pembayaran.",
+  PAID: "Order baru muncul di sini setelah pelanggan membayar.",
+  ACCEPTED: "Tidak ada order yang menunggu kurir.",
+  PICKING: "Tidak ada order yang sedang disiapkan.",
+  ON_DELIVERY: "Tidak ada order yang sedang diantar.",
+  DONE: "Order yang selesai hari ini muncul di sini.",
+};
 
 function matches(order: AdminOrder, query: string) {
   const q = query.trim().toLowerCase();
@@ -452,9 +451,11 @@ function matches(order: AdminOrder, query: string) {
 
 export function LiveBoard({ search }: { search: string }) {
   const { user } = useAuth();
-  const { branchId, branchName } = useBranch();
+  const { branchId, branchName, branches } = useBranch();
   const [tab, setTab] = useState<ListTab>("PAID");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const couriers = useBranchCouriers(MAP_POLL_MS);
+  const swapX = useSwapX(TAB_ORDER.indexOf(tab));
   const { data, isLoading, isError, error } = useQuery({
     queryKey: [BOARD_KEY, branchId],
     enabled: !!branchId,
@@ -484,55 +485,57 @@ export function LiveBoard({ search }: { search: string }) {
   const inTab = (t: ListTab) =>
     orders.filter((o) => (t === "DONE" ? TERMINAL_STATUSES.includes(o.status) : o.status === t));
   const showPending = user?.role === "super_admin" && inTab("PENDING_PAYMENT").length > 0;
-  const tabs: { id: ListTab; label: string }[] = [
-    ...(showPending ? [{ id: "PENDING_PAYMENT" as const, label: "Menunggu bayar" }] : []),
-    ...BOARD_COLUMNS.map((c) => ({ id: c, label: COLUMN_LABELS[c] })),
-    { id: "DONE", label: "Selesai" },
+  const tabs: { id: ListTab; short: string; title: string }[] = [
+    ...(showPending ? [{ id: "PENDING_PAYMENT" as const, short: "Bayar", title: "Menunggu bayar" }] : []),
+    ...BOARD_COLUMNS.map((c) => ({ id: c, short: COLUMN_SHORT_LABELS[c], title: COLUMN_LABELS[c] })),
+    { id: "DONE", short: "Selesai", title: "Selesai" },
   ];
   const items = inTab(tab);
   const selected = items.find((o) => o.id === selectedId) ?? items[0] ?? null;
   const from = branchName ?? "Cabang";
+  const branch = branches.find((b) => b.id === branchId) ?? null;
 
   return (
     <div className="grid gap-4 p-4 lg:h-[calc(100dvh-5rem)] lg:grid-cols-[24rem_minmax(0,1fr)]">
       <section className="card flex min-h-0 flex-col gap-3 shadow-md">
         <h1 className="text-2xl font-bold">Tracking order</h1>
-        <div className="-mx-4 flex gap-1 overflow-x-auto px-4" role="tablist" aria-label="Status order">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => setTab(t.id)}
-              className={cn(
-                "inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm",
-                tab === t.id ? "bg-primary font-bold text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t.label}
-              <span className={tab === t.id ? "opacity-80" : ""}>{inTab(t.id).length}</span>
-            </button>
-          ))}
-        </div>
-        <ul className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+        <Segmented
+          label="Status order"
+          value={tab}
+          onChange={setTab}
+          items={tabs.map((t) => ({
+            id: t.id,
+            title: `${t.title}: ${inTab(t.id).length}`,
+            label: (
+              <>
+                <span className="text-base font-bold leading-tight tabular-nums">{inTab(t.id).length}</span>
+                <span className="max-w-full truncate text-[0.6875rem] font-semibold leading-tight">{t.short}</span>
+              </>
+            ),
+          }))}
+        />
+        <ul
+          key={tab}
+          className="swap-in -mx-1 flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-1 pb-1"
+          style={{ "--swap-x": swapX } as CSSProperties}
+        >
           {items.map((o) => (
             <TrackCard key={o.id} order={o} selected={o.id === selected?.id} from={from} onSelect={() => setSelectedId(o.id)} />
           ))}
+          {items.length === 0 && (
+            <li className="empty-state my-auto">
+              <p>{search.trim() ? "Tidak ada order yang cocok." : EMPTY_TEXT[tab]}</p>
+            </li>
+          )}
         </ul>
-        {items.length === 0 && (
-          <div className="empty-state p-4 text-sm">
-            <p>{search.trim() ? "Tidak ada order yang cocok." : "Kosong"}</p>
-          </div>
-        )}
       </section>
 
-      {selected ? (
-        <OrderPanel key={selected.id} order={selected} from={from} />
-      ) : (
-        <section className="card flex min-h-64 items-center justify-center shadow-md">
-          <p className="text-sm text-muted-foreground">Pilih order untuk melihat detail dan chat.</p>
-        </section>
-      )}
+      <div className="flex min-h-0 flex-col gap-4 xl:relative">
+        <div className="relative isolate h-72 shrink-0 overflow-hidden rounded-[1.75rem] shadow-md lg:h-auto lg:min-h-64 lg:flex-1 xl:absolute xl:inset-0">
+          <TrackingMap order={selected} couriers={couriers.data?.couriers ?? []} branch={branch} />
+        </div>
+        {selected && <OrderPanel key={selected.id} order={selected} from={from} />}
+      </div>
     </div>
   );
 }

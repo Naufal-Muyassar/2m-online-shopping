@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapView, type MapMarker } from "../../components/map/MapView";
+import { MapView, type MapMarker } from "@2m/map";
 import { useTracking } from "../../lib/queries";
 
 const ageSec = (iso: string, now: number) => Math.max(0, Math.floor((now - Date.parse(iso)) / 1000));
@@ -35,7 +35,11 @@ export function TrackingCard({ orderId }: { orderId: string }) {
   return (
     <section className="card animate-rise space-y-2 text-sm">
       <h2 className="text-base font-bold">Lacak kurir</h2>
-      <MapView markers={markers} ariaLabel="Peta lokasi kurir" />
+      <MapView
+        markers={markers}
+        ariaLabel="Peta lokasi kurir"
+        className="isolate h-64 w-full overflow-hidden rounded-lg border border-border shadow-md"
+      />
       {!courier || active.eta_minutes === null ? (
         <p className="text-muted-foreground">Menunggu lokasi kurir</p>
       ) : (

@@ -8,6 +8,14 @@ export const COLUMN_LABELS: Record<BoardColumn, string> = {
   ON_DELIVERY: "Dalam perjalanan",
 };
 
+// Fits five tabs side by side; the full label stays on the tab's hover and accessible name.
+export const COLUMN_SHORT_LABELS: Record<BoardColumn, string> = {
+  PAID: "Baru",
+  ACCEPTED: "Cari kurir",
+  PICKING: "Disiapkan",
+  ON_DELIVERY: "Diantar",
+};
+
 // Minutes in a column before a card is highlighted.
 export const SLA_MINUTES: Record<BoardColumn, number> = {
   PAID: 5,

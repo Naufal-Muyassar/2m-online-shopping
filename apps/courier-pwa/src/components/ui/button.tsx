@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils";
 type Variant = "primary" | "hero" | "secondary" | "destructive";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "rounded-md bg-primary text-primary-foreground hover:bg-primary-pressed",
+  primary: "rounded-md bg-primary text-primary-foreground enabled:hover:bg-primary-pressed",
   hero: "btn-hero",
-  secondary: "rounded-md border border-border bg-surface text-foreground hover:bg-muted",
-  destructive: "rounded-md bg-destructive text-destructive-foreground hover:brightness-110",
+  secondary: "rounded-md border border-border bg-surface text-foreground enabled:hover:bg-muted",
+  destructive: "rounded-md bg-destructive text-destructive-foreground enabled:hover:brightness-110",
 };
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -21,7 +21,7 @@ export function Button({ variant = "primary", loading, disabled, className, chil
       type="button"
       disabled={disabled || loading}
       className={cn(
-        "inline-flex min-h-14 w-full items-center justify-center px-4 text-lg font-bold transition duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex min-h-14 w-full items-center justify-center px-4 text-lg font-bold transition duration-150 enabled:active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60",
         VARIANTS[variant],
         className,
       )}

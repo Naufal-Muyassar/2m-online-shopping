@@ -90,7 +90,7 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
           accept="image/*"
           capture="environment"
           disabled={running}
-          className="text-base text-foreground file:mr-3 file:min-h-11 file:rounded-md file:border-0 file:bg-primary-surface file:px-4 file:font-bold file:text-primary-pressed"
+          className="file-picker"
           onChange={(e) => {
             setFile(e.target.files?.[0] ?? null);
             reset();

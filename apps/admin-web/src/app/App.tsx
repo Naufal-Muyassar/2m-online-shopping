@@ -1,5 +1,7 @@
-import { useState, type ComponentType, type SVGProps } from "react";
+import { useRef, useState, type ComponentType, type SVGProps } from "react";
 import { IconBoard, IconCash, IconChat, IconClipboard, IconSearch, IconSettings, IconTruck, IconWallet } from "../components/Icons";
+import { ErrorBoundary } from "../components/ErrorBoundary";
+import { useThumb } from "../components/Segmented";
 import { useAuth } from "../lib/auth";
 import { cn } from "../lib/utils";
 import { LoginPage } from "../features/auth/LoginPage";
@@ -29,22 +31,27 @@ function Shell() {
   const [search, setSearch] = useState("");
   const [inbox, setInbox] = useState<InboxChannel>("customer_admin");
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [courierId, setCourierId] = useState<string | null>(null);
+  const nav = useRef<HTMLElement>(null);
+  const thumb = useThumb(nav, "[aria-current='page']", tab);
   const unread = useUnreadChats();
   const unreadTotal = unread.customer_admin + unread.courier_admin;
 
   const openCourierChat = (id: string) => {
     setInbox("courier_admin");
-    setThreadId(id);
+    setCourierId(id);
     setTab("messages");
   };
 
   return (
-    <div className="flex min-h-dvh flex-col pb-20 md:flex-row md:pb-0">
+    <div className="flex min-h-dvh flex-col pb-24 md:flex-row md:pb-0">
       <nav
+        ref={nav}
         aria-label="Navigasi utama"
-        className="fixed inset-x-0 bottom-0 z-20 flex gap-1 overflow-x-auto border-t bg-surface p-2 md:sticky md:top-0 md:h-dvh md:w-24 md:shrink-0 md:flex-col md:border-r md:border-t-0 md:py-4"
+        className="fixed inset-x-3 bottom-3 z-[700] flex gap-1 rounded-[1.75rem] bg-rail p-1.5 shadow-nav md:sticky md:inset-x-auto md:bottom-auto md:top-0 md:h-dvh md:w-24 md:shrink-0 md:flex-col md:rounded-none md:p-2.5 md:py-4"
       >
-        <span className="mx-auto mb-4 hidden size-12 items-center justify-center rounded-lg bg-hero font-bold text-primary-foreground md:flex">
+        <span aria-hidden="true" className="segmented-thumb rounded-[1.25rem] bg-rail-foreground shadow-none" data-ready={thumb.ready} style={thumb.style} />
+        <span className="mx-auto mb-5 hidden size-12 items-center justify-center rounded-2xl bg-rail-foreground text-lg font-extrabold tracking-tight text-rail md:flex">
           2M
         </span>
         {TABS.map(({ id, label, Icon, soon }) => (
@@ -55,9 +62,9 @@ function Shell() {
             aria-current={tab === id ? "page" : undefined}
             onClick={() => setTab(id)}
             className={cn(
-              "relative flex min-h-14 min-w-16 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-1 text-xs transition-colors md:flex-none",
-              tab === id ? "bg-primary font-bold text-primary-foreground" : "text-muted-foreground hover:bg-muted",
-              soon && "cursor-not-allowed opacity-50 hover:bg-transparent",
+              "relative z-[1] min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.25rem] px-1 text-xs font-semibold transition-[color,transform] duration-150 active:scale-[0.96] md:flex-none",
+              soon ? "hidden cursor-not-allowed opacity-40 active:scale-100 md:flex" : "flex",
+              tab === id ? "text-rail" : "text-rail-muted hover:text-rail-foreground",
             )}
           >
             <Icon className="text-xl" />
@@ -89,6 +96,7 @@ function Shell() {
                 value={branchId ?? ""}
                 onChange={(e) => {
                   setThreadId(null);
+                  setCourierId(null);
                   setBranchId(e.target.value);
                 }}
                 aria-label="Cabang"
@@ -110,20 +118,24 @@ function Shell() {
           </div>
         </header>
         <main className="min-w-0 flex-1">
-          {tab === "board" && <LiveBoard search={search} />}
-          {tab === "couriers" && <CouriersTab onOpenChat={openCourierChat} />}
-          {tab === "balance" && <BalanceTab />}
-          {tab === "messages" && (
-            <MessagesPage
-              channel={inbox}
-              threadId={threadId}
-              onChannel={(channel) => {
-                setInbox(channel);
-                setThreadId(null);
-              }}
-              onThread={setThreadId}
-            />
-          )}
+          <ErrorBoundary key={tab}>
+            {tab === "board" && <LiveBoard search={search} />}
+            {tab === "couriers" && <CouriersTab onOpenChat={openCourierChat} />}
+            {tab === "balance" && <BalanceTab />}
+            {tab === "messages" && (
+              <MessagesPage
+                channel={inbox}
+                threadId={threadId}
+                courierId={courierId}
+                onChannel={(channel) => {
+                  setInbox(channel);
+                  setThreadId(null);
+                }}
+                onThread={setThreadId}
+                onCourier={setCourierId}
+              />
+            )}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

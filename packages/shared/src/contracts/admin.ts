@@ -31,6 +31,7 @@ export const adminOrderSchema = z.object({
   assigned_courier: z.object({ user_id: z.string().uuid(), name: z.string() }).nullable(),
   receiver_name: z.string(),
   area_hint: z.string(),
+  destination: z.object({ lat: z.number(), lng: z.number() }),
   items: z.array(z.object({ name: z.string(), qty: z.number().int() })),
 });
 export type AdminOrder = z.infer<typeof adminOrderSchema>;
@@ -47,6 +48,8 @@ export const adminCourierSchema = z.object({
   last_ping_at: z.string().nullable(),
   motor_cluster: z.string().nullable().optional(),
   balance: z.number().int(),
+  // Last known position; null while OFFLINE, so a courier off duty is not on the map.
+  position: z.object({ lat: z.number(), lng: z.number() }).nullable(),
   current_order: z.object({ id: z.string().uuid(), code: z.string(), status: z.enum(ORDER_STATUSES) }).nullable(),
 });
 export type AdminCourier = z.infer<typeof adminCourierSchema>;

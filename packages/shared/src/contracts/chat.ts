@@ -31,6 +31,8 @@ export const chatThreadSchema = z.object({
   branch_id: uuid,
   order_id: uuid.nullable(),
   order_code: z.string().nullable(),
+  // Only on courier_admin threads, where it links the thread to the courier list.
+  courier_id: uuid.nullable(),
   title: z.string(),
   can_send: z.boolean(),
   unread_count: z.number().int().min(0),

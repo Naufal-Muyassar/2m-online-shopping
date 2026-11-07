@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { pool } from "../../src/shared/db";
 import { closeRedis } from "../../src/shared/redis";
 import { createFixture, insertOrder, type Fixture } from "../../src/modules/orders/test-fixtures";
-import { listBoardOrders } from "../../src/modules/admin/repo";
+import { listBoardOrders, listBranchCouriers } from "../../src/modules/admin/repo";
 import * as chat from "../../src/modules/chat/service";
 import type { Viewer } from "../../src/modules/chat/service";
 
@@ -83,6 +83,17 @@ describe("courier and admin", () => {
     expect(customers.threads.map((t) => t.id)).not.toContain(thread.id);
   });
 
+  it("lets an admin start a chat with an offline courier and links the thread to them", async () => {
+    await pool.query("UPDATE couriers SET status = 'OFFLINE' WHERE user_id = $1", [other.courierId]);
+    const otherBranchAdmin: Viewer = { userId: other.users.branch_admin, role: "branch_admin", branchId: other.branchId };
+    const thread = await chat.openThread({ channel: "courier_admin", courier_id: other.courierId }, otherBranchAdmin);
+    expect(thread.courier_id).toBe(other.courierId);
+    await say(thread.id, otherBranchAdmin, "Besok masuk jam 8");
+
+    const inbox = await chat.listThreads({ userId: other.courierId, role: "courier", branchId: null }, null, "courier_admin");
+    expect(inbox.threads.find((t) => t.id === thread.id)?.unread_count).toBe(1);
+  });
+
   it("does not let an admin reach a courier of another branch", async () => {
     await expect(chat.openThread({ channel: "courier_admin", courier_id: fx.courierId }, otherAdmin)).rejects.toMatchObject({
       status: 404,
@@ -137,6 +148,24 @@ describe("customer and courier", () => {
       status: 409,
       code: "NO_COURIER",
     });
+  });
+});
+
+describe("admin map data", () => {
+  it("gives each order its destination", async () => {
+    await insertOrder(pool, fx, "PAID");
+    const orders = await listBoardOrders(pool, fx.branchId);
+    expect(orders[0]?.destination).toEqual({ lat: expect.any(Number), lng: expect.any(Number) });
+  });
+
+  it("shows a courier's position only while they are on duty", async () => {
+    await pool.query("UPDATE couriers SET status = 'IDLE', current_lat = -6.2, current_lng = 106.8 WHERE user_id = $1", [fx.courierId]);
+    const onDuty = await listBranchCouriers(pool, fx.branchId);
+    expect(onDuty.find((c) => c.user_id === fx.courierId)?.position).toEqual({ lat: -6.2, lng: 106.8 });
+
+    await pool.query("UPDATE couriers SET status = 'OFFLINE' WHERE user_id = $1", [fx.courierId]);
+    const offDuty = await listBranchCouriers(pool, fx.branchId);
+    expect(offDuty.find((c) => c.user_id === fx.courierId)?.position).toBeNull();
   });
 });
 

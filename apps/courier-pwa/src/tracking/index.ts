@@ -2,10 +2,12 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import type { CourierStatus } from "@2m/shared";
 import { api } from "@/lib/api";
 import { location } from "@/platform";
+import type { GeoFix } from "@/platform/location";
 
 const PING_MS = 3 * 60 * 1000;
 export const PING_INTERVAL_ON_DELIVERY_MS = 15000;
 const ON_DELIVERY_FIX_MAX_AGE_MS = 5000;
+const MY_POSITION_MS = 10000;
 
 let lastPingOkAt: number | null = null;
 const listeners = new Set<() => void>();
@@ -36,6 +38,28 @@ export function useSecondsSinceLastPing(): number | null {
     return () => clearInterval(t);
   }, []);
   return at === null ? null : Math.max(0, Math.floor((Date.now() - at) / 1000));
+}
+
+// The courier's own position for the map, refreshed while the component is mounted. A denied or failed fix keeps the last one.
+export function useMyPosition(): GeoFix | null {
+  const [fix, setFix] = useState<GeoFix | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const read = () =>
+      location
+        .getCurrentPosition({ maximumAge: MY_POSITION_MS })
+        .then((next) => {
+          if (!cancelled) setFix(next);
+        })
+        .catch(() => undefined);
+    void read();
+    const timer = setInterval(() => void read(), MY_POSITION_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+  return fix;
 }
 
 // Foreground ping while the page is visible and the courier is not OFFLINE: every 3 min, every 15 s while ON_DELIVERY.

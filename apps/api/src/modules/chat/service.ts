@@ -58,6 +58,7 @@ function toThread(t: repo.ThreadRow, role: ChatSenderRole): ChatThread {
     branch_id: t.branch_id,
     order_id: t.order_id,
     order_code: t.order_code,
+    courier_id: t.channel === "courier_admin" ? t.courier_id : null,
     title: titleFor(t, role),
     can_send: canSend(t),
     unread_count: t.unread_count,

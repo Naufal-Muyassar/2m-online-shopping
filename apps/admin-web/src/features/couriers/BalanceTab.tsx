@@ -1,9 +1,8 @@
 import { useRef, useState } from "react";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   formatIDR,
   type AdminCourier,
-  type AdminCouriersResponse,
   type CourierLedgerEntry,
   type CourierLedgerResponse,
   type CourierWithdrawalRequest,
@@ -15,8 +14,8 @@ import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { useBranch } from "../branch-config/BranchProvider";
 import { Dialog, PRIMARY_BTN, SECONDARY_BTN } from "../live-board/LiveBoard";
+import { useBranchCouriers } from "./hooks";
 
-const POLL_MS = 10_000;
 const LEDGER_KEY = "admin-courier-ledger";
 
 const dateTime = (iso: string) =>
@@ -160,13 +159,7 @@ export function BalanceTab() {
   const isBranchAdmin = user?.role === "branch_admin";
   const [open, setOpen] = useState<{ dialog: "withdraw" | "ledger"; courierId: string } | null>(null);
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["admin-couriers", branchId],
-    enabled: !!branchId,
-    refetchInterval: POLL_MS,
-    queryFn: async () =>
-      (await api.get<AdminCouriersResponse>("/admin/couriers", { params: { branch_id: branchId } })).data,
-  });
+  const { data, isLoading, isError, error } = useBranchCouriers();
 
   if (!branchId) return <p className="p-4 text-sm text-muted-foreground">Pilih cabang…</p>;
   if (isLoading)

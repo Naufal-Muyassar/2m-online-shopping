@@ -1,18 +1,24 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AdminCouriersResponse } from "@2m/shared";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, errorMessage } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { useBranch } from "../branch-config/BranchProvider";
-import { openChat } from "../chat/hooks";
-
-const POLL_MS = 10_000;
+import { COURIER_LABELS, useBranchCouriers } from "./hooks";
 
 const COURIER_PILL: Record<string, string> = {
   IDLE: "pill-success",
   DELIVERING: "pill-primary",
   OFFLINE: "",
+};
+
+const ORDER_LABELS: Record<string, string> = {
+  ACCEPTED: "Menunggu kurir",
+  PICKING: "Disiapkan",
+  ON_DELIVERY: "Diantar",
+  DELIVERED: "Terkirim",
+  FAILED: "Gagal kirim",
+  CANCELLED: "Dibatalkan",
 };
 
 const ORDER_PILL: Record<string, string> = {
@@ -32,20 +38,14 @@ function pingAge(iso: string | null): string {
   return `${Math.floor(sec / 3600)} jam`;
 }
 
-export function CouriersTab({ onOpenChat }: { onOpenChat: (threadId: string) => void }) {
+export function CouriersTab({ onOpenChat }: { onOpenChat: (courierId: string) => void }) {
   const { user } = useAuth();
   const { branchId } = useBranch();
   const toast = useToast();
   const queryClient = useQueryClient();
   const isBranchAdmin = user?.role === "branch_admin";
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["admin-couriers", branchId],
-    enabled: !!branchId,
-    refetchInterval: POLL_MS,
-    queryFn: async () =>
-      (await api.get<AdminCouriersResponse>("/admin/couriers", { params: { branch_id: branchId } })).data,
-  });
+  const { data, isLoading, isError, error } = useBranchCouriers();
 
   const confirmReturn = useMutation({
     mutationFn: async (orderId: string) => api.post(`/admin/orders/${orderId}/confirm-return`),
@@ -54,12 +54,6 @@ export function CouriersTab({ onOpenChat }: { onOpenChat: (threadId: string) => 
       void queryClient.invalidateQueries({ queryKey: ["admin-couriers", branchId] });
       void queryClient.invalidateQueries({ queryKey: ["admin-orders", branchId] });
     },
-    onError: (err) => toast("error", errorMessage(err)),
-  });
-
-  const startChat = useMutation({
-    mutationFn: (courierId: string) => openChat({ channel: "courier_admin", courier_id: courierId }),
-    onSuccess: (thread) => onOpenChat(thread.id),
     onError: (err) => toast("error", errorMessage(err)),
   });
 
@@ -105,18 +99,25 @@ export function CouriersTab({ onOpenChat }: { onOpenChat: (threadId: string) => 
               const order = c.current_order;
               return (
                 <tr key={c.user_id} className="border-b last:border-b-0 hover:bg-muted/30">
-                  <td className="px-4 py-3 font-bold">{c.name}</td>
+                  <td className="px-4 py-3">
+                    <span className="flex items-center gap-3 font-bold">
+                      <span className={cn("avatar size-9 text-sm", c.status === "OFFLINE" && "grayscale")} aria-hidden="true">
+                        {c.name.charAt(0)}
+                      </span>
+                      {c.name}
+                    </span>
+                  </td>
                   <td className="px-2">{c.partner_name}</td>
                   {showCluster && <td className="px-2">{c.motor_cluster ?? "-"}</td>}
                   <td className="px-2">
-                    <span className={cn("pill pill-dot", COURIER_PILL[c.status])}>{c.status}</span>
+                    <span className={cn("pill pill-dot", COURIER_PILL[c.status])}>{COURIER_LABELS[c.status]}</span>
                   </td>
                   <td className="px-2">{pingAge(c.last_ping_at)}</td>
                   <td className="px-2">
                     {order ? (
                       <span className="inline-flex flex-wrap items-center gap-2">
                         {order.code}
-                        <span className={cn("pill", ORDER_PILL[order.status])}>{order.status}</span>
+                        <span className={cn("pill", ORDER_PILL[order.status])}>{ORDER_LABELS[order.status] ?? order.status}</span>
                       </span>
                     ) : (
                       "-"
@@ -133,9 +134,8 @@ export function CouriersTab({ onOpenChat }: { onOpenChat: (threadId: string) => 
                       </button>
                     )}
                     <button
-                      className="min-h-11 rounded-full border bg-surface px-4 font-medium hover:bg-muted disabled:opacity-60"
-                      disabled={startChat.isPending && startChat.variables === c.user_id}
-                      onClick={() => startChat.mutate(c.user_id)}
+                      className="min-h-11 rounded-full border bg-surface px-4 font-medium hover:bg-muted"
+                      onClick={() => onOpenChat(c.user_id)}
                     >
                       Chat
                     </button>

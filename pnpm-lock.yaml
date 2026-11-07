@@ -181,9 +181,15 @@ importers:
 
   apps/admin-web:
     dependencies:
+      '@2m/map':
+        specifier: workspace:*
+        version: link:../../packages/map
       '@2m/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@fontsource-variable/plus-jakarta-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.10.0(react-hook-form@7.90.0(@types/react@18.3.31)(react@18.3.1))
@@ -315,9 +321,15 @@ importers:
 
   apps/courier-pwa:
     dependencies:
+      '@2m/map':
+        specifier: workspace:*
+        version: link:../../packages/map
       '@2m/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@fontsource-variable/plus-jakarta-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.10.0(react-hook-form@7.90.0(@types/react@18.3.31)(react@18.3.1))
@@ -394,9 +406,15 @@ importers:
 
   apps/customer-web:
     dependencies:
+      '@2m/map':
+        specifier: workspace:*
+        version: link:../../packages/map
       '@2m/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@fontsource-variable/plus-jakarta-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.10.0(react-hook-form@7.90.0(@types/react@18.3.31)(react@18.3.1))
@@ -476,6 +494,25 @@ importers:
       typescript-eslint:
         specifier: ^8.13.0
         version: 8.72.0(eslint@9.39.5(jiti@1.21.7)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
+
+  packages/map:
+    dependencies:
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
+    devDependencies:
+      '@types/leaflet':
+        specifier: ^1.9.12
+        version: 1.9.22
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      vite:
+        specifier: ^5.4.10
+        version: 5.4.21(@types/node@20.19.43)(terser@5.51.2)
 
   packages/shared:
     dependencies:
@@ -1428,6 +1465,9 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@fontsource-variable/plus-jakarta-sans@5.3.0':
+    resolution: {integrity: sha512-/l/4r0yyWK9JzAlmA0LiYgGgmJe/Gswt4jTJEzr5QhJfwMbvJZDmYWyW0M4X7yCK69BajMVlV/Lx8g7WDc1+sw==}
 
   '@hookform/resolvers@3.10.0':
     resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
@@ -4982,6 +5022,8 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@fontsource-variable/plus-jakarta-sans@5.3.0': {}
 
   '@hookform/resolvers@3.10.0(react-hook-form@7.90.0(@types/react@18.3.31)(react@18.3.1))':
     dependencies:
