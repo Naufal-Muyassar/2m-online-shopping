@@ -14,6 +14,7 @@ import { pricingRoutes } from "./modules/pricing/routes";
 import { webhooksRoutes } from "./modules/payments/routes";
 import { mockPaymentsRoutes } from "./modules/payments/mock.routes";
 import { metaRoutes } from "./modules/meta/routes";
+import { chatRoutes } from "./modules/chat/routes";
 import { env } from "./config/env";
 
 export function createApp() {
@@ -40,6 +41,7 @@ export function createApp() {
   v1.use("/addresses", addressRoutes);
   v1.use("/calculate-price", pricingRoutes);
   v1.use("/meta", metaRoutes);
+  v1.use("/chat", chatRoutes);
   if (env.PAYMENT_PROVIDER === "mock" && env.DEMO_MODE) {
     v1.use("/dev/mock-payments", mockPaymentsRoutes);
   }

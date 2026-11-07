@@ -29,6 +29,9 @@ export const adminOrderSchema = z.object({
   ready_at: z.string().nullable(),
   last_transition_at: z.string().nullable(),
   assigned_courier: z.object({ user_id: z.string().uuid(), name: z.string() }).nullable(),
+  receiver_name: z.string(),
+  area_hint: z.string(),
+  items: z.array(z.object({ name: z.string(), qty: z.number().int() })),
 });
 export type AdminOrder = z.infer<typeof adminOrderSchema>;
 export const adminOrdersResponseSchema = z.object({ orders: z.array(adminOrderSchema) });

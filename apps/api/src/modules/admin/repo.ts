@@ -12,6 +12,8 @@ interface AdminOrderRow {
   last_transition_at: Date | null;
   courier_id: string | null;
   courier_name: string | null;
+  receiver_name: string;
+  area_hint: string;
 }
 
 // Non-terminal orders, terminal ones from the last 24h, and failed orders still waiting for return confirmation.
@@ -19,8 +21,11 @@ export async function listBoardOrders(db: Pool, branchId: string): Promise<Admin
   const res = await db.query<AdminOrderRow>(
     `SELECT o.id, o.code, o.status, o.grand_total, o.return_pending, o.created_at, o.ready_at,
             (SELECT max(t.server_ts) FROM order_state_transitions t WHERE t.order_id = o.id) AS last_transition_at,
-            u.id AS courier_id, u.name AS courier_name
-     FROM orders o LEFT JOIN users u ON u.id = o.assigned_courier_id
+            u.id AS courier_id, u.name AS courier_name,
+            a.receiver_name, left(a.street, 40) AS area_hint
+     FROM orders o
+     JOIN addresses a ON a.id = o.address_id
+     LEFT JOIN users u ON u.id = o.assigned_courier_id
      WHERE o.branch_id = $1
        AND (o.status NOT IN ('DELIVERED','FAILED','CANCELLED')
             OR o.return_pending
@@ -28,6 +33,12 @@ export async function listBoardOrders(db: Pool, branchId: string): Promise<Admin
      ORDER BY o.created_at ASC`,
     [branchId],
   );
+  const items = await db.query<{ order_id: string; name: string; qty: number }>(
+    `SELECT order_id, name, qty FROM order_items WHERE order_id = ANY($1::uuid[]) ORDER BY name`,
+    [res.rows.map((r) => r.id)],
+  );
+  const itemsOf = (orderId: string) =>
+    items.rows.filter((i) => i.order_id === orderId).map((i) => ({ name: i.name, qty: i.qty }));
   return res.rows.map((r) => ({
     id: r.id,
     code: r.code,
@@ -38,6 +49,9 @@ export async function listBoardOrders(db: Pool, branchId: string): Promise<Admin
     ready_at: r.ready_at?.toISOString() ?? null,
     last_transition_at: r.last_transition_at?.toISOString() ?? null,
     assigned_courier: r.courier_id && r.courier_name ? { user_id: r.courier_id, name: r.courier_name } : null,
+    receiver_name: r.receiver_name,
+    area_hint: r.area_hint,
+    items: itemsOf(r.id),
   }));
 }
 
