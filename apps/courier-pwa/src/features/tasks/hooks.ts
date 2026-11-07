@@ -53,10 +53,11 @@ export function useOrder(id: string) {
   });
 }
 
-export function useJobs() {
+export function useJobs(enabled = true) {
   return useQuery({
     queryKey: keys.jobs,
     queryFn: async () => (await api.get<CourierJobsResponse>("/courier/jobs")).data,
+    enabled,
     refetchInterval: POLL_MS,
   });
 }

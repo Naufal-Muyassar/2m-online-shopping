@@ -30,7 +30,7 @@ export function LoginPage() {
   const inputClass = "field h-14 text-lg";
 
   return (
-    <div className="app-shell-plain">
+    <div className="app-shell-plain page-wash">
       <main className="flex flex-1 flex-col justify-center gap-6 p-6">
         <div className="flex flex-col items-center gap-3 text-center">
           <span className="flex size-16 items-center justify-center rounded-lg bg-hero text-xl font-bold text-primary-foreground shadow-glow">

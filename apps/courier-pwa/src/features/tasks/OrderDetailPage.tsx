@@ -10,7 +10,8 @@ import { useSecondsSinceLastPing } from "@/tracking";
 import { useOrder, useOrderStatus, usePickItem, useReleaseOrder } from "./hooks";
 import { STATUS_LABELS, STATUS_PILLS } from "./OrderCard";
 import { LoadingBlock } from "@/components/ui/feedback";
-import { FaArrowLeft, FaCheck, FaExclamationTriangle, FaMapMarkerAlt, FaPhone, FaTruck } from "react-icons/fa";
+import { useChatThreads, useOpenChat } from "@/features/chat/hooks";
+import { FaArrowLeft, FaCheck, FaCommentDots, FaExclamationTriangle, FaMapMarkerAlt, FaPhone, FaTruck } from "react-icons/fa";
 
 type Panel = "none" | "deliver" | "fail";
 
@@ -152,6 +153,31 @@ function ReleaseDialog({ orderId, onClose, onReleased }: { orderId: string; onCl
   );
 }
 
+function CustomerChatButton({ orderId }: { orderId: string }) {
+  const navigate = useNavigate();
+  const { notify } = useToast();
+  const open = useOpenChat();
+  const unread = useChatThreads("customer_courier").data?.find((t) => t.order_id === orderId)?.unread_count ?? 0;
+
+  return (
+    <button
+      type="button"
+      disabled={open.isPending}
+      onClick={() =>
+        open.mutate(
+          { channel: "customer_courier", order_id: orderId },
+          { onSuccess: (t) => navigate(`/chat/${t.id}`), onError: (err) => notify("error", errorMessage(err)) },
+        )
+      }
+      className="mt-3 flex min-h-14 w-full items-center justify-center gap-2 rounded-full border border-border bg-surface text-lg font-bold transition active:scale-[0.97] disabled:opacity-60"
+    >
+      <FaCommentDots aria-hidden="true" className="text-primary" />
+      Chat pelanggan
+      {unread > 0 && <span className="count-badge static">{unread}</span>}
+    </button>
+  );
+}
+
 function LocationNotice() {
   const sec = useSecondsSinceLastPing();
   return (
@@ -266,11 +292,12 @@ export function OrderDetailPage() {
             href={maps}
             target="_blank"
             rel="noreferrer"
-            className="mt-3 flex min-h-14 items-center justify-center rounded-md bg-accent text-lg font-bold text-accent-foreground transition active:scale-[0.97]"
+            className="mt-3 flex min-h-14 items-center justify-center rounded-full bg-accent text-lg font-bold text-accent-foreground transition active:scale-[0.97]"
           >
             <FaMapMarkerAlt aria-hidden="true" className="mr-2" />
             Buka di Google Maps
           </a>
+          <CustomerChatButton orderId={order.id} />
         </section>
 
         {order.status === "ON_DELIVERY" && <LocationNotice />}
