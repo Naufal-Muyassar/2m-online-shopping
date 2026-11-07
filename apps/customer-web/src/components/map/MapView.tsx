@@ -13,8 +13,8 @@ export interface MapMarker {
 }
 
 const STYLE: Record<MapMarker["kind"], L.CircleMarkerOptions> = {
-  courier: { radius: 9, color: "#1d4ed8", fillColor: "#2563eb", fillOpacity: 0.9 },
-  destination: { radius: 9, color: "#dc2626", fillColor: "#dc2626", fillOpacity: 0.8 },
+  courier: { radius: 9, color: "#1E3A5F", fillColor: "#2B5C8A", fillOpacity: 0.9 },
+  destination: { radius: 9, color: "#A63F24", fillColor: "#A63F24", fillOpacity: 0.8 },
 };
 
 interface Props {

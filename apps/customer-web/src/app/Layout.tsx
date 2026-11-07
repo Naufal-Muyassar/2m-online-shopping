@@ -11,7 +11,7 @@ function CartCount({ branchId }: { branchId: string }) {
   const count = data?.items.reduce((n, i) => n + i.qty, 0) ?? 0;
   if (count <= 0) return null;
   return (
-    <span className="absolute right-[18%] top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground">
+    <span className="absolute right-[18%] top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-promo px-1 text-xs font-bold text-primary-foreground">
       {count}
     </span>
   );
@@ -27,7 +27,7 @@ interface Tab {
 }
 
 const headerButton =
-  "inline-flex min-h-11 shrink-0 items-center rounded-md border border-border bg-surface px-4 text-sm font-medium hover:bg-muted";
+  "inline-flex min-h-11 shrink-0 items-center rounded-full border border-border bg-surface px-4 text-sm font-medium hover:bg-muted";
 
 const LAST_BRANCH_KEY = "2m.last_branch";
 

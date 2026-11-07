@@ -27,8 +27,8 @@ export function MapPicker({ branch, value, onChange }: Props) {
     if (!el.current) return;
     const m = L.map(el.current).setView(value ?? branch, 14);
     L.tileLayer(TILE_URL, { attribution: ATTRIBUTION, maxZoom: 19 }).addTo(m);
-    L.circle(branch, { radius: branch.radiusM, color: "#15803d", weight: 1, fillOpacity: 0.05, interactive: false }).addTo(m);
-    L.circleMarker(branch, { radius: 5, color: "#15803d", fillOpacity: 1, interactive: false }).addTo(m);
+    L.circle(branch, { radius: branch.radiusM, color: "#1F6B4F", weight: 1, fillOpacity: 0.05, interactive: false }).addTo(m);
+    L.circleMarker(branch, { radius: 5, color: "#1F6B4F", fillOpacity: 1, interactive: false }).addTo(m);
     m.on("click", (e: L.LeafletMouseEvent) => onChangeRef.current({ lat: e.latlng.lat, lng: e.latlng.lng }));
     map.current = m;
     return () => {
@@ -49,7 +49,7 @@ export function MapPicker({ branch, value, onChange }: Props) {
       return;
     }
     if (pin.current) pin.current.setLatLng(value);
-    else pin.current = L.circleMarker(value, { radius: 9, color: "#dc2626", fillColor: "#dc2626", fillOpacity: 0.8 }).addTo(m);
+    else pin.current = L.circleMarker(value, { radius: 9, color: "#A63F24", fillColor: "#A63F24", fillOpacity: 0.8 }).addTo(m);
   }, [value?.lat, value?.lng]);
 
   return <div ref={el} className="isolate h-72 w-full overflow-hidden rounded-lg border border-border shadow-md" role="application" aria-label="Peta pin alamat" />;

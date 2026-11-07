@@ -3,11 +3,11 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { formatIDR } from "@2m/shared";
 import { useAuth } from "../../lib/auth";
 import { errorMessage } from "../../lib/api";
-import { useCart, useCartMutations, useProducts } from "../../lib/queries";
+import { useBranches, useCart, useCartMutations, useProducts } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
-import { IconSearch } from "../../components/Icons";
-import { btnPrimary, btnSecondary, EmptyState, ErrorCard, rise } from "../../components/States";
+import { IconPackage, IconPlus, IconSearch } from "../../components/Icons";
+import { btnSecondary, EmptyState, ErrorCard, rise } from "../../components/States";
 
 // Exact remaining stock is shown only at or below this level.
 const STOCK_NOTICE_AT = 20;
@@ -33,6 +33,7 @@ export function CatalogPage() {
   const q = useDebounced(search.trim(), 300);
   const { data, isLoading, isError } = useProducts(branchId, category, q, page);
   const { add } = useCartMutations(branchId);
+  const branch = useBranches().data?.find((b) => b.id === branchId);
   const cart = useCart(branchId, !!user).data;
   const qtyInCart = new Map(cart?.items.map((i) => [i.product_id, i.qty]));
   const maxPerSku = cart?.limits.max_qty_per_sku ?? Infinity;
@@ -52,6 +53,12 @@ export function CatalogPage() {
 
   return (
     <main className="app-main">
+      {branch && (
+        <section className="rounded-lg bg-primary px-4 py-3 text-primary-foreground">
+          <h1 className="text-lg font-bold">Belanja di {branch.name}</h1>
+          <p className="text-sm opacity-90">Diantar dalam jangkauan {(branch.service_radius_m / 1000).toFixed(1)} km</p>
+        </section>
+      )}
       <div className="sticky-toolbar space-y-2">
         <div className="relative">
           <IconSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xl text-muted-foreground" />
@@ -60,11 +67,11 @@ export function CatalogPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari produk…"
-            className="field pl-10"
+            className="field rounded-full pl-10"
             aria-label="Cari produk"
           />
         </div>
-        <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4">
+        <div className="-mx-4 flex snap-x scroll-px-4 gap-2 overflow-x-auto px-4">
           {[undefined, ...(data?.categories ?? [])].map((c) => (
             <button
               key={c ?? "all"}
@@ -72,7 +79,7 @@ export function CatalogPage() {
               aria-pressed={category === c}
               className={cn(
                 "inline-flex min-h-11 shrink-0 snap-start items-center whitespace-nowrap rounded-full border px-4 text-sm capitalize",
-                category === c ? "border-primary bg-primary-surface font-bold text-primary-pressed" : "border-border bg-surface hover:bg-muted",
+                category === c ? "border-primary bg-primary font-medium text-primary-foreground" : "border-border bg-surface hover:bg-muted",
               )}
             >
               {c ?? "Semua"}
@@ -97,25 +104,33 @@ export function CatalogPage() {
           const low = p.sellable_qty <= STOCK_NOTICE_AT;
           const atLimit = (qtyInCart.get(p.id) ?? 0) >= Math.min(p.sellable_qty, maxPerSku);
           return (
-            <li key={p.id} className="card flex animate-rise flex-col justify-between p-3" style={rise(i)}>
-              <div className="space-y-1">
-                <p className="text-sm font-bold">{p.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  per {p.unit} · {p.weight_kg} kg
-                </p>
-                <span className={cn("pill", out ? "pill-danger" : low ? "pill-warning" : "pill-success")}>
-                  {out ? "Habis" : low ? `Stok: ${p.sellable_qty}` : "Tersedia"}
-                </span>
+            <li key={p.id} className="card flex animate-rise flex-col p-2" style={rise(i)}>
+              <div className="relative flex h-24 items-center justify-center rounded-md bg-muted text-3xl text-primary">
+                <IconPackage />
+                {(out || atLimit || low) && (
+                  <span className={cn("pill absolute left-1 top-1 px-2 py-0.5", out ? "pill-danger" : atLimit ? "pill-info" : "pill-warning")}>
+                    {out ? "Habis" : atLimit ? "Batas tercapai" : `Stok: ${p.sellable_qty}`}
+                  </span>
+                )}
               </div>
-              <div className="mt-3 space-y-2">
-                <p className="text-base font-bold">{formatIDR(p.price)}</p>
-                <button
-                  disabled={out || atLimit || add.isPending}
-                  onClick={() => addToCart(p.id, p.name)}
-                  className={cn(btnPrimary, "w-full px-3 text-sm")}
-                >
-                  {out ? "Habis" : atLimit ? "Batas tercapai" : "Tambah"}
-                </button>
+              <div className="flex flex-1 flex-col justify-between gap-2 px-1 pb-1 pt-2">
+                <div>
+                  <p className="text-sm">{p.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    per {p.unit} · {p.weight_kg} kg
+                  </p>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="min-w-0 font-bold">{formatIDR(p.price)}</p>
+                  <button
+                    disabled={out || atLimit || add.isPending}
+                    onClick={() => addToCart(p.id, p.name)}
+                    aria-label={`Tambah ${p.name}`}
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-xl text-primary-foreground hover:bg-primary-pressed disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+                  >
+                    <IconPlus />
+                  </button>
+                </div>
               </div>
             </li>
           );
