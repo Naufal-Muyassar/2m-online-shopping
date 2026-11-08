@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api-local",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["local:api"],
+      "port": 3000
+    },
+    {
+      "name": "admin-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "admin-web", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "courier-pwa",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "courier-pwa", "dev"],
+      "port": 5172
+    },
+    {
+      "name": "customer-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "customer-web", "dev"],
+      "port": 5171
+    }
+  ]
+}
