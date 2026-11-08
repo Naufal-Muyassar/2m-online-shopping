@@ -58,7 +58,7 @@ Legenda: ✅ ada, 🟡 sebagian, ❌ belum, ❓ perlu verifikasi. Kolom **Trello
 | FS-U1 | Mockup dibuat sebelum pengembangan | ❌ | ❌ | Tidak ada berkas mockup. Ada `docs/DESIGN_SYSTEM.md` (42 KB) yang bisa jadi dasar penjelasan | WP-46 |
 | FS-U2 | Responsif dengan keputusan desain jelas | 🟡 | ✅ ⬆ | Redesign + `DESIGN_SYSTEM.md` (token warna, kolom 30rem, admin lebar) | WP-46 (dokumentasi) |
 | FS-C1 | Riwayat kode dengan Git/GitHub | ✅ | ✅ | 40 commit | – |
-| FS-C2 | Kontrak API/format data disepakati dengan AE dan DS | ❌ | ❌ | `contracts/ml-api.openapi.json` kosong | WP-02 |
+| FS-C2 | Kontrak API/format data disepakati dengan AE dan DS | ❌ | 🟡 | Draf v0.1 `contracts/ml-api.openapi.json` + `data-science/data_dictionary.md`, menunggu persetujuan 3 LP | WP-02 |
 | FS-C3 | Deploy ke layanan free tier | ❌ | ✅ (laporan pemilik) | Lihat FS-M6; `render.yaml` memang free tier, tetapi belum terbukti jalan | WP-00, WP-20 |
 
 ### 3.2 AI Engineer (Hafizh, Naufal)
@@ -83,7 +83,7 @@ Semua butir ❌ di Trello dan di repo. Kartu AI yang ada (Golden Set, LLM Cost C
 | AE-G3 | Prompt terstruktur (template, few-shot) | ❌ | WP-14 |
 | AE-G4 | Tolak pertanyaan di luar konteks, uji ≥10 pertanyaan | ❌ | WP-41 |
 | AE-G5 | Bonus: SLM/LLM open-source lokal sebagai generation | ❌ | WP-53 (opsional) |
-| AE-S1 | Kontrak API disepakati dengan FS sebelum coding | ❌ | WP-02 |
+| AE-S1 | Kontrak API disepakati dengan FS sebelum coding | 🟡 | WP-02 |
 | AE-S2 | Tangani input tidak valid dan kegagalan/kuota AI | ❌ | WP-14, WP-43 |
 | AE-S3 | Integrasi ke kanal UMKM (Telegram/WhatsApp) | ❌ | WP-40 |
 | AE-S4 | Dokumentasi API yang bisa dicoba (Swagger/OpenAPI) | ❌ | WP-10, WP-43 |
@@ -106,7 +106,7 @@ Semua ❌ di repo. Di luar repo: analisis tarif kurir (xlsx) menyentuh DS-M1, DS
 | DS-D3 | Pembaruan data lewat upload / koneksi | ❌ | ❌ | WP-44 |
 | DS-D4 | Prioritaskan data primer, dummy/publik jika kurang | ❌ | ❌ | WP-31 |
 | DS-D5 | Dasbor terintegrasi ke web app | ❌ | ❌ | WP-44 |
-| DS-L1 | Sepakati kebutuhan/format data dengan tim Gen AI | ❌ | ❌ | WP-02 |
+| DS-L1 | Sepakati kebutuhan/format data dengan tim Gen AI | ❌ | 🟡 | WP-02 |
 | DS-L2 | Pelabelan, transformasi, feature engineering | ❌ | ❌ | WP-11, WP-45 |
 | DS-L3 | Kamus data | ❌ | ❌ (file 0 byte) | WP-31 |
 | DS-L4 | Split train/test + cegah kebocoran | ❌ | ❌ | WP-11, WP-45 |
@@ -252,6 +252,8 @@ Spesifikasi dataset ETA (DS): `order_id, branch_id, distance_km, weight_kg, item
 | Tanggal | Catatan |
 |---|---|
 | 2026-11-08 | Dokumen dibuat. Tes, build, dan aplikasi belum dijalankan. |
+| 2026-11-08 | **Baseline tes** (`docs/reports/baseline-2026-11-08.md`): typecheck, test (5 + 117), lint, dan `demo:smoke` (19 langkah) lulus di stack lokal. |
+| 2026-11-08 | **WP-02 draf v0.1, belum dicentang.** `contracts/ml-api.openapi.json` (4 endpoint, valid menurut Redocly), `contracts/CHANGELOG.md`, `data-science/data_dictionary.md` (intent + ETA, tambah kolom `group_id`). Asumsi rekomendasi D1, D2, D4, D9 yang masih Terbuka. Centang setelah tiga LP menyetujui dan tenggat serah-terima diisi (bergantung D8). FS-C2, AE-S1, DS-L1 → 🟡. |
 | 2026-11-08 | **Koreksi status deploy atas laporan pemilik.** Diam API pada probe awal dinilai cold start free tier (bukan kerusakan), dan situs statis sudah pernah didemokan dan jalan. FS-M6 dan FS-C3 diubah ❓ → ✅ (berdasarkan laporan, bukan pengujian saya); hitungan 3.4 menjadi 14 / 2 / 0 / 47. Fokus berpindah ke paket aplikasi (Tahap 1 dan 2). |
 | 2026-11-08 | **WP-00 selesai.** Log Render menunjukkan deploy ulang 04:22 UTC (build memakai cache) dan "Your service is live" pukul 04:23:05 UTC, dengan `stock counters rebuilt` (30) lagi. Pemilik melaporkan `/health` kini menjawab `{"status":"ok"}`. Saya tidak mengulang probe sesudah redeploy. FS-M6 dan FS-C3 tetap ❓ sampai tiga situs statis dibuka dari ponsel dan satu pesanan lolos di URL publik (WP-20). Sisa risiko: sebelum redeploy, instance diam >170 dtk tanpa penyebab terlihat. |
 | 2026-11-08 | **WP-00 koreksi setelah log deploy diterima.** Log Render 7 Nov 15:32–15:33 UTC: image terbangun dan terdorong, "Your service is live", `api listening` port 3000, worker/sweeper/reconciliation jalan di proses API, `stock counters rebuilt` (30). Artinya DB dan Redis terjangkau saat boot, jadi dugaan "Redis kosong → checkout gagal" di entri bawah **tidak berlaku untuk deploy itu**. Log yang ditempel berakhir di 15:33 UTC 7 Nov, sebelum semua probe saya, jadi belum menjelaskan kenapa `/health` tidak menjawab 12 jam kemudian. Probe ulang 04:15 UTC: tetap 0 byte setelah 120 dtk. Hipotesis berikutnya (belum terbukti): instance free tier sedang tidur dan gagal bangun, atau macet setelah dibangunkan. Nama pod di log mengandung "hibernate", konsisten dengan itu tetapi bukan bukti. |

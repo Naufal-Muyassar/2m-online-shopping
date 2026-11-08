@@ -1,0 +1,409 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "2M ml-api (internal)",
+    "version": "0.1.0",
+    "summary": "Internal ML service: intent classification, FAQ chat with RAG, and delivery ETA.",
+    "description": "Draft v0.1 for WP-02, pending approval by AE, FS and DS. Only the Node API calls this service; browsers and apps must never reach it and never hold the LLM key. Every /v1 request carries the `X-Internal-Key` header. JSON fields are snake_case. Every successful /v1 response carries `model_version`. Errors use the same envelope as the Node API: `{ \"error\": { \"code\", \"message\", \"details?\" } }`. FastAPI's default 422 validation body must be remapped to this envelope with code `VALIDATION_ERROR` and status 400. Requests must not contain customer PII (names, phone numbers, addresses, other customers' order codes); Node masks the text before calling. Assumes the recommended options for D1 (FAQ chatbot + RAG), D2 (intent classifier as the main model, ETA as the DS model) and D4 (embedding API + FAISS), which are still open in PROJECT_PLAN.md section 5."
+  },
+  "servers": [
+    { "url": "http://localhost:8000", "description": "Local development" }
+  ],
+  "tags": [
+    { "name": "meta" },
+    { "name": "intent" },
+    { "name": "chat" },
+    { "name": "eta" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["meta"],
+        "operationId": "getHealth",
+        "summary": "Liveness and dependency status",
+        "description": "No key required so the hosting platform can probe it. Exposes no data beyond versions and up/down flags. `status` is `ok` while the intent model is loaded, even if the LLM is down, because chat can still answer with the extractive fallback.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service is up",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" },
+                "example": { "status": "ok", "model_version": "intent-2026.11.0", "llm": "up" }
+              }
+            }
+          },
+          "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/v1/intent": {
+      "post": {
+        "tags": ["intent"],
+        "operationId": "classifyIntent",
+        "summary": "Classify one customer message into an intent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/IntentRequest" },
+              "example": { "text": "pesanan saya udah sampai mana ya" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Predicted intent and the next-best alternatives",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IntentResponse" },
+                "example": {
+                  "intent": "cek_pesanan",
+                  "confidence": 0.91,
+                  "alternatives": [
+                    { "intent": "komplain", "confidence": 0.05 },
+                    { "intent": "info_umum", "confidence": 0.02 }
+                  ],
+                  "model_version": "intent-2026.11.0"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthenticated" },
+          "413": { "$ref": "#/components/responses/InputTooLong" },
+          "500": { "$ref": "#/components/responses/Internal" },
+          "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/v1/chat": {
+      "post": {
+        "tags": ["chat"],
+        "operationId": "chat",
+        "summary": "Answer a customer question from the 2M knowledge base",
+        "description": "Retrieves passages from `services/ml-api/knowledge/` and answers from those passages only. The user message is treated as data, never as instructions. When the LLM is unavailable, times out or is over budget, the service answers with an extractive fallback and sets `fallback_used: true` instead of failing, so `AI_UNAVAILABLE`, `AI_TIMEOUT` and `AI_BUDGET_EXCEEDED` are returned only when no fallback answer can be produced. Node keeps the daily per-user budget; this service enforces its own monthly cap.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChatRequest" },
+              "example": {
+                "message": "ongkir ke kecamatan sebelah berapa?",
+                "history": [
+                  { "role": "user", "text": "halo" },
+                  { "role": "assistant", "text": "Halo! Ada yang bisa dibantu?" }
+                ],
+                "context": { "branch_id": "6f1c2b9e-1d2a-4c55-9a3e-2b7f0d4e8a11" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Answer with sources and usage",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatResponse" },
+                "example": {
+                  "answer": "Ongkir dihitung dari jarak rute dan berat pesanan. Totalnya tampil di halaman checkout sebelum kamu membayar.",
+                  "intent": "tanya_ongkir",
+                  "sources": [{ "id": "ongkir#cara-hitung", "title": "Cara menghitung ongkir" }],
+                  "fallback_used": false,
+                  "usage": {
+                    "model": "gemini-flash",
+                    "prompt_version": "faq-v1",
+                    "input_tokens": 812,
+                    "output_tokens": 64,
+                    "latency_ms": 1430,
+                    "cached": false
+                  },
+                  "model_version": "intent-2026.11.0"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthenticated" },
+          "413": { "$ref": "#/components/responses/InputTooLong" },
+          "429": { "$ref": "#/components/responses/BudgetExceeded" },
+          "500": { "$ref": "#/components/responses/Internal" },
+          "503": { "$ref": "#/components/responses/Unavailable" },
+          "504": { "$ref": "#/components/responses/Timeout" }
+        }
+      }
+    },
+    "/v1/predict/eta": {
+      "post": {
+        "tags": ["eta"],
+        "operationId": "predictEta",
+        "summary": "Predict total delivery time for an order",
+        "description": "Predicts the time from PAID to DELIVERED in minutes. The model is trained mostly on simulated courier movement (see data-science/data_dictionary.md), so treat it as an estimate for display, not a promise.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EtaRequest" },
+              "example": { "distance_km": 3.4, "weight_kg": 6.5, "item_count": 4, "hour": 17, "dow": 4, "motor_cluster": "A" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Predicted minutes",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EtaResponse" },
+                "example": { "eta_minutes": 38, "model_version": "eta-2026.11.0" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationError" },
+          "401": { "$ref": "#/components/responses/Unauthenticated" },
+          "500": { "$ref": "#/components/responses/Internal" },
+          "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    }
+  },
+  "security": [{ "InternalKey": [] }],
+  "components": {
+    "securitySchemes": {
+      "InternalKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Internal-Key",
+        "description": "Shared secret between Node and ml-api. Stored only in server environment variables."
+      }
+    },
+    "schemas": {
+      "ModelVersion": {
+        "type": "string",
+        "description": "Version of the model artifact that produced the response, e.g. `intent-2026.11.0`.",
+        "minLength": 1
+      },
+      "Intent": {
+        "type": "string",
+        "description": "Intent classes from WP-11. Adding, removing or renaming a class is a contract change.",
+        "enum": ["cek_pesanan", "tanya_ongkir", "tanya_produk", "info_umum", "komplain", "di_luar_konteks"]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "model_version", "llm"],
+        "properties": {
+          "status": { "type": "string", "enum": ["ok"] },
+          "model_version": { "$ref": "#/components/schemas/ModelVersion" },
+          "llm": { "type": "string", "enum": ["up", "down"], "description": "`down` when the LLM provider is unreachable, out of budget or the circuit breaker is open." }
+        }
+      },
+      "IntentRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text"],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "One customer message, already masked by Node. Longer text returns 413 `AI_INPUT_TOO_LONG`."
+          }
+        }
+      },
+      "IntentScore": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["intent", "confidence"],
+        "properties": {
+          "intent": { "$ref": "#/components/schemas/Intent" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      },
+      "IntentResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["intent", "confidence", "alternatives", "model_version"],
+        "properties": {
+          "intent": { "$ref": "#/components/schemas/Intent" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "alternatives": {
+            "type": "array",
+            "description": "Next-best intents, highest confidence first, excluding `intent`. At most 2 items.",
+            "maxItems": 2,
+            "items": { "$ref": "#/components/schemas/IntentScore" }
+          },
+          "model_version": { "$ref": "#/components/schemas/ModelVersion" }
+        }
+      },
+      "ChatTurn": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "text"],
+        "properties": {
+          "role": { "type": "string", "enum": ["user", "assistant"] },
+          "text": { "type": "string", "minLength": 1, "maxLength": 1000 }
+        }
+      },
+      "ChatRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["message"],
+        "properties": {
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "The customer's question, already masked by Node. Longer text returns 413 `AI_INPUT_TOO_LONG`."
+          },
+          "history": {
+            "type": "array",
+            "description": "Earlier turns of the same thread, oldest first. Node sends at most the last 6 turns.",
+            "maxItems": 6,
+            "items": { "$ref": "#/components/schemas/ChatTurn" }
+          },
+          "context": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "branch_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Branch the customer shops from, used to pick branch-specific knowledge (hours, area). No user identifiers are sent."
+              }
+            }
+          }
+        }
+      },
+      "ChatSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title"],
+        "properties": {
+          "id": { "type": "string", "description": "Stable passage id, `<file>#<heading-slug>` under services/ml-api/knowledge/." },
+          "title": { "type": "string" }
+        }
+      },
+      "ChatUsage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["model", "prompt_version", "input_tokens", "output_tokens", "latency_ms", "cached"],
+        "description": "Copied by Node into `llm_usage`. When the answer comes from the extractive fallback without an LLM call, `model` is `extractive` and both token counts are 0.",
+        "properties": {
+          "model": { "type": "string", "description": "LLM model name as reported by the provider, or `extractive`." },
+          "prompt_version": { "type": "string", "description": "Version of the prompt template, e.g. `faq-v1`." },
+          "input_tokens": { "type": "integer", "minimum": 0 },
+          "output_tokens": { "type": "integer", "minimum": 0 },
+          "latency_ms": { "type": "integer", "minimum": 0, "description": "Wall time inside ml-api for this request." },
+          "cached": { "type": "boolean", "description": "True when the answer came from the response cache." }
+        }
+      },
+      "ChatResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["answer", "intent", "sources", "fallback_used", "usage", "model_version"],
+        "properties": {
+          "answer": { "type": "string", "minLength": 1, "description": "Answer in Bahasa Indonesia, plain text." },
+          "intent": { "$ref": "#/components/schemas/Intent" },
+          "sources": {
+            "type": "array",
+            "description": "Passages the answer is based on. Empty when the question is out of scope (`di_luar_konteks`) and the answer is a refusal.",
+            "items": { "$ref": "#/components/schemas/ChatSource" }
+          },
+          "fallback_used": { "type": "boolean", "description": "True when the answer came from the extractive fallback instead of the LLM." },
+          "usage": { "$ref": "#/components/schemas/ChatUsage" },
+          "model_version": { "$ref": "#/components/schemas/ModelVersion" }
+        }
+      },
+      "EtaRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["distance_km", "weight_kg", "item_count", "hour", "dow"],
+        "properties": {
+          "distance_km": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "Route distance from branch to address (`orders.route_distance_km`)." },
+          "weight_kg": { "type": "number", "minimum": 0, "description": "Total order weight." },
+          "item_count": { "type": "integer", "minimum": 1, "description": "Number of order lines." },
+          "hour": { "type": "integer", "minimum": 0, "maximum": 23, "description": "Hour the order was paid, Asia/Jakarta time." },
+          "dow": { "type": "integer", "minimum": 0, "maximum": 6, "description": "Day of week the order was paid, Asia/Jakarta time; 0 = Monday, 6 = Sunday." },
+          "motor_cluster": {
+            "type": ["string", "null"],
+            "enum": ["A", "B", null],
+            "description": "Assigned courier's motor cluster (`couriers.motor_cluster`). Null or omitted when no courier is assigned yet."
+          }
+        }
+      },
+      "EtaResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["eta_minutes", "model_version"],
+        "properties": {
+          "eta_minutes": { "type": "integer", "minimum": 1, "description": "Predicted minutes from PAID to DELIVERED, rounded up." },
+          "model_version": { "$ref": "#/components/schemas/ModelVersion" }
+        }
+      },
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "VALIDATION_ERROR",
+          "UNAUTHENTICATED",
+          "AI_INPUT_TOO_LONG",
+          "AI_BUDGET_EXCEEDED",
+          "AI_UNAVAILABLE",
+          "AI_TIMEOUT",
+          "INTERNAL"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message"],
+            "properties": {
+              "code": { "$ref": "#/components/schemas/ErrorCode" },
+              "message": { "type": "string", "description": "Developer-facing English text. Frontends map `code` to Bahasa Indonesia and never show this message." },
+              "details": { "description": "Optional structured detail, e.g. failing field names for VALIDATION_ERROR." }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "ValidationError": {
+        "description": "Body failed schema validation (`VALIDATION_ERROR`)",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": { "code": "VALIDATION_ERROR", "message": "Invalid request body", "details": [{ "field": "text", "issue": "required" }] } }
+          }
+        }
+      },
+      "Unauthenticated": {
+        "description": "Missing or wrong `X-Internal-Key` (`UNAUTHENTICATED`)",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      },
+      "InputTooLong": {
+        "description": "Text over the length limit (`AI_INPUT_TOO_LONG`)",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      },
+      "BudgetExceeded": {
+        "description": "Monthly LLM budget used up and no fallback answer was possible (`AI_BUDGET_EXCEEDED`)",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      },
+      "Unavailable": {
+        "description": "Model not loaded, or LLM down with no fallback answer (`AI_UNAVAILABLE`)",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      },
+      "Timeout": {
+        "description": "LLM call exceeded the time limit and no fallback answer was possible (`AI_TIMEOUT`)",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      },
+      "Internal": {
+        "description": "Unexpected error (`INTERNAL`)",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } }
+      }
+    }
+  }
+}
