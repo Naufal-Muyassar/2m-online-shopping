@@ -4,16 +4,15 @@ import { FaArrowRight, FaCommentDots, FaHistory, FaIdCard, FaPhone, FaSignInAlt,
 import { BalanceAmount } from "@/features/balance/BalanceAmount";
 import { useSession } from "./session";
 
-const row = "flex min-h-16 w-full items-center gap-3 rounded-full bg-surface p-2 pr-4 text-left shadow-sm";
-const rowIcon = "flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-surface text-primary";
+const rowIcon = "flex w-5 shrink-0 justify-center text-primary";
 
 function InfoRow({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div className={row}>
+    <div className="list-row">
       <span className={rowIcon}>{icon}</span>
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="truncate font-medium">{value}</p>
+        <p className="t-label">{label}</p>
+        <p className="mt-0.5 truncate font-semibold tabular-nums">{value}</p>
       </div>
     </div>
   );
@@ -21,11 +20,11 @@ function InfoRow({ icon, label, value }: { icon: ReactNode; label: string; value
 
 function LinkRow({ to, icon, label, value }: { to: string; icon: ReactNode; label: string; value?: ReactNode }) {
   return (
-    <Link to={to} className={`${row} transition active:scale-[0.98]`}>
+    <Link to={to} className="list-row font-semibold">
       <span className={rowIcon}>{icon}</span>
-      <span className="flex-1 font-medium">{label}</span>
+      <span className="flex-1">{label}</span>
       {value}
-      <FaArrowRight aria-hidden="true" className="text-muted-foreground" />
+      <FaArrowRight aria-hidden="true" className="row-arrow text-xs" />
     </Link>
   );
 }
@@ -47,26 +46,35 @@ export function ProfilePage() {
     <>
       <section
         aria-label="Foto profil"
-        className="flex flex-col items-center gap-2 rounded-b-2xl bg-hero px-4 pb-8 pt-[calc(2.5rem+env(safe-area-inset-top))] text-primary-foreground"
+        className="panel-ink flex animate-rise items-center gap-4 rounded-none px-4 pb-7 pt-[calc(2rem+env(safe-area-inset-top))]"
       >
-        <div className="flex size-28 items-center justify-center rounded-full bg-surface text-5xl font-bold uppercase text-primary shadow-lg">
+        <div className="flex size-20 shrink-0 items-center justify-center rounded-full bg-rail-foreground text-3xl font-extrabold uppercase text-rail">
           {user?.name ? user.name.trim().charAt(0) : <FaUser aria-hidden="true" />}
         </div>
-        <h1 className="mt-2 text-xl font-bold capitalize">{user?.name ?? "Pengguna"}</h1>
-        {user?.phone && <p className="text-sm opacity-90">{user.phone}</p>}
+        <div className="min-w-0">
+          <h1 className="t-headline truncate capitalize">{user?.name ?? "Pengguna"}</h1>
+          {user?.phone && <p className="t-label mt-1.5 tabular-nums">{user.phone}</p>}
+        </div>
       </section>
 
-      <main className="app-main gap-3">
-        <LinkRow to="/history" icon={<FaHistory aria-hidden="true" />} label="Riwayat pengantaran" />
-        <LinkRow to="/chat" icon={<FaCommentDots aria-hidden="true" />} label="Chat admin" />
-        {user && <LinkRow to="/balance" icon={<FaWallet aria-hidden="true" />} label="Saldo keuntungan" value={<BalanceAmount />} />}
-        <InfoRow icon={<FaIdCard aria-hidden="true" />} label="ID" value={user?.id ?? "Belum tersedia"} />
-        <InfoRow icon={<FaPhone aria-hidden="true" />} label="No. Telp" value={user?.phone ?? "Belum tersedia"} />
-        <button type="button" disabled={loading} onClick={() => void handleSessionAction()} className={`${row} disabled:opacity-60 ${user ? "text-destructive" : ""}`}>
-          <span className={user ? "flex size-11 shrink-0 items-center justify-center rounded-full bg-destructive-surface" : rowIcon}>
-            {user ? <FaSignOutAlt aria-hidden="true" /> : <FaSignInAlt aria-hidden="true" />}
-          </span>
-          <span className="flex-1 font-medium">{loading ? "Memuat…" : user ? "Keluar" : "Masuk"}</span>
+      <main className="app-main">
+        <nav aria-label="Menu profil" className="list">
+          <LinkRow to="/history" icon={<FaHistory aria-hidden="true" />} label="Riwayat pengantaran" />
+          <LinkRow to="/chat" icon={<FaCommentDots aria-hidden="true" />} label="Chat admin" />
+          {user && <LinkRow to="/balance" icon={<FaWallet aria-hidden="true" />} label="Saldo keuntungan" value={<BalanceAmount />} />}
+        </nav>
+        <div className="list">
+          <InfoRow icon={<FaIdCard aria-hidden="true" />} label="ID" value={user?.id ?? "Belum tersedia"} />
+          <InfoRow icon={<FaPhone aria-hidden="true" />} label="No. Telp" value={user?.phone ?? "Belum tersedia"} />
+        </div>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => void handleSessionAction()}
+          className={`btn btn-lg btn-block ${user ? "btn-danger-quiet" : "btn-primary"}`}
+        >
+          {user ? <FaSignOutAlt aria-hidden="true" /> : <FaSignInAlt aria-hidden="true" />}
+          {loading ? "Memuat…" : user ? "Keluar" : "Masuk"}
         </button>
       </main>
     </>

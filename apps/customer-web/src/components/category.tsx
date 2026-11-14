@@ -28,12 +28,8 @@ const ICONS: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   tepung: IconFlour,
 };
 
-const TINTS = [
-  "bg-primary-surface text-primary",
-  "bg-warning-surface text-warning",
-  "bg-success-surface text-success",
-  "bg-promo-surface text-promo",
-];
+// Two quiet tones keep the grid in the palette; the product name and price carry the colour.
+const TINTS = ["bg-muted text-foreground", "bg-primary-surface text-primary-pressed"];
 
 export function categoryTint(category: string): string {
   const sum = [...category].reduce((n, ch) => n + ch.charCodeAt(0), 0);

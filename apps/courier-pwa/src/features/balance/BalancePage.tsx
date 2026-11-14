@@ -20,21 +20,21 @@ function EntryRow({ entry }: { entry: CourierLedgerEntry }) {
   const earning = entry.amount > 0;
   const detail = earning ? entry.order_code : entry.recorded_by_name && `Dicatat ${entry.recorded_by_name}`;
   return (
-    <li className="flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-sm">
+    <li className="flex items-center gap-3 px-3.5 py-3">
       <span
         className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-full",
+          "flex size-10 shrink-0 items-center justify-center rounded-md text-sm",
           earning ? "bg-success-surface text-success" : "bg-muted text-muted-foreground",
         )}
       >
         {earning ? <FaArrowDown aria-hidden="true" /> : <FaArrowUp aria-hidden="true" />}
       </span>
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="font-medium">{entryTitle(entry)}</p>
-        {detail && <p className="truncate text-xs text-muted-foreground">{detail}</p>}
-        <p className="text-xs text-muted-foreground">{dateTime(entry.created_at)}</p>
+        <p className="font-bold">{entryTitle(entry)}</p>
+        {detail && <p className="t-label mt-0.5 truncate">{detail}</p>}
+        <p className="t-label mt-0.5 tabular-nums">{dateTime(entry.created_at)}</p>
       </div>
-      <span className={cn("shrink-0 font-bold tabular-nums", earning && "text-success")}>
+      <span className={cn("shrink-0 font-extrabold tabular-nums tracking-tight", earning && "text-success")}>
         {earning ? "+" : "−"}
         {formatIDR(Math.abs(entry.amount))}
       </span>
@@ -52,38 +52,42 @@ export function BalancePage() {
   return (
     <>
       <header className="app-header">
-        <Link to="/" aria-label="Kembali" className="icon-btn shrink-0">
+        <Link to="/" aria-label="Kembali" className="icon-btn">
           <FaArrowLeft aria-hidden="true" />
         </Link>
-        <h1 className="text-xl font-bold">Saldo keuntungan</h1>
+        <h1 className="t-title">Saldo keuntungan</h1>
       </header>
       <main className="app-main">
-        <section aria-label="Saldo saat ini" className="flex flex-col gap-1 rounded-2xl bg-foreground p-4 text-surface">
-          <p className="text-sm opacity-80">Saldo saat ini</p>
-          {user && <BalanceAmount className="text-3xl" />}
-          <p className="text-sm opacity-80">Tarik tunai di toko. Admin cabang yang mencatat penarikan Anda.</p>
+        <section aria-label="Saldo saat ini" className="panel-ink flex animate-rise flex-col gap-2">
+          <p className="t-label">Saldo saat ini</p>
+          {user && <BalanceAmount className="t-figure" />}
+          <p className="mt-2 border-t border-rail-foreground/20 pt-3 text-sm text-rail-muted">Tarik tunai di toko. Admin cabang yang mencatat penarikan Anda.</p>
         </section>
 
         <section aria-labelledby="balance-history-heading" className="flex flex-col gap-3">
-          <h2 id="balance-history-heading" className="text-lg font-bold">
-            Riwayat saldo
-          </h2>
+          <div className="section-head">
+            <h2 id="balance-history-heading" className="t-title">
+              Riwayat saldo
+            </h2>
+          </div>
           {history.isLoading && <LoadingBlock />}
           {history.isError && <ErrorCard message={errorMessage(history.error)} onRetry={() => void history.refetch()} />}
           {history.isSuccess && entries.length === 0 && (
             <EmptyState icon={<FaWallet />} title="Belum ada riwayat" hint="Upah masuk ke saldo setelah pesanan selesai." />
           )}
-          <ul className="flex flex-col gap-2">
-            {entries.map((entry) => (
-              <EntryRow key={entry.id} entry={entry} />
-            ))}
-          </ul>
+          {entries.length > 0 && (
+            <ul className="list">
+              {entries.map((entry) => (
+                <EntryRow key={entry.id} entry={entry} />
+              ))}
+            </ul>
+          )}
           {history.hasNextPage && (
             <button
               type="button"
               disabled={history.isFetchingNextPage}
               onClick={() => void history.fetchNextPage()}
-              className="min-h-11 rounded-full border border-border bg-surface px-4 font-medium disabled:opacity-60"
+              className="btn btn-secondary"
             >
               {history.isFetchingNextPage ? "Memuat…" : "Muat lagi"}
             </button>

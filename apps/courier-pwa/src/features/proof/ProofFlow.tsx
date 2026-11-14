@@ -50,11 +50,11 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
 
   return (
     <section className="card flex animate-rise flex-col gap-4">
-      <h2 className="text-xl font-bold">{failed ? "Gagal kirim" : "Selesai antar"}</h2>
+      <h2 className="t-title">{failed ? "Gagal kirim" : "Selesai antar"}</h2>
 
       {failed && (
         <>
-          <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
+          <label className="field-label flex flex-col gap-1.5">
             Alasan
             <select
               className="field h-14 text-lg"
@@ -70,7 +70,7 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
+          <label className="field-label flex flex-col gap-1.5">
             Catatan
             <textarea
               className="field min-h-24 text-lg"
@@ -83,7 +83,7 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
         </>
       )}
 
-      <label className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+      <label className="field-label flex flex-col gap-2">
         Foto bukti
         <input
           type="file"
@@ -100,9 +100,9 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
       {preview && <img src={preview} alt="Pratinjau foto bukti" className="max-h-64 w-full rounded-md border border-border object-contain" />}
 
       {step >= 0 && (
-        <ol className="flex flex-col gap-1 text-base" aria-label="Progres">
+        <ol className="flex flex-col gap-1.5 border-y border-border py-3 tabular-nums" aria-label="Progres">
           {STEPS.map((label, i) => (
-            <li key={label} className={i < step ? "text-success" : i === step ? "font-semibold" : "text-muted-foreground"}>
+            <li key={label} className={i < step ? "font-medium text-success" : i === step ? "font-bold" : "text-muted-foreground"}>
               {i < step ? "✓" : i === step && running ? "…" : "•"} {label}
               {i === 2 && step === 2 && running ? ` (${uploadPct}%)` : ""}
             </li>
@@ -116,12 +116,12 @@ export function ProofFlow({ orderId, mode, onDone, onCancel }: Props) {
         </p>
       )}
 
-      <Button variant={failed ? "destructive" : "hero"} loading={running} disabled={!canSubmit} onClick={submit}>
-        {error ? <FaRedoAlt aria-hidden="true" className="mr-2 inline" /> : failed ? <FaExclamationTriangle aria-hidden="true" className="mr-2 inline" /> : <FaCheck aria-hidden="true" className="mr-2 inline" />}
+      <Button variant={failed ? "destructive" : "primary"} loading={running} disabled={!canSubmit} onClick={submit}>
+        {error ? <FaRedoAlt aria-hidden="true" /> : failed ? <FaExclamationTriangle aria-hidden="true" /> : <FaCheck aria-hidden="true" />}
         {error ? "Coba lagi" : failed ? "Kirim laporan gagal" : "Kirim bukti & selesai"}
       </Button>
       <Button variant="secondary" disabled={running} onClick={onCancel}>
-        <FaTimes aria-hidden="true" className="mr-2 inline" />
+        <FaTimes aria-hidden="true" />
         Batal
       </Button>
     </section>

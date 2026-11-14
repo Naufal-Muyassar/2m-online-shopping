@@ -9,7 +9,7 @@ export function LoadingBlock({ rows = 2, label = "Memuat" }: { rows?: number; la
   return (
     <div aria-busy="true" aria-label={label} className="flex flex-col gap-3">
       {Array.from({ length: rows }, (_, i) => (
-        <Skeleton key={i} className="h-28 rounded-lg" />
+        <Skeleton key={i} className="h-28" />
       ))}
     </div>
   );
@@ -21,7 +21,7 @@ export function EmptyState({ icon, title, hint }: { icon: ReactNode; title: stri
       <span aria-hidden="true" className="empty-state-icon">
         {icon}
       </span>
-      <p className="text-lg font-bold text-foreground">{title}</p>
+      <p className="t-title text-foreground">{title}</p>
       {hint && <p className="text-sm">{hint}</p>}
     </div>
   );
@@ -30,13 +30,9 @@ export function EmptyState({ icon, title, hint }: { icon: ReactNode; title: stri
 export function ErrorCard({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div role="alert" className="card flex flex-col items-start gap-3">
-      <p className="text-sm text-muted-foreground">{message}</p>
+      <p className="text-sm font-medium text-destructive">{message}</p>
       {onRetry && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="min-h-11 rounded-md border border-border bg-surface px-4 text-sm font-semibold hover:bg-muted active:scale-[0.97]"
-        >
+        <button type="button" onClick={onRetry} className="btn btn-secondary">
           Coba lagi
         </button>
       )}

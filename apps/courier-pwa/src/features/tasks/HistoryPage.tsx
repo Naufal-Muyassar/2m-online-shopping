@@ -11,9 +11,9 @@ export function HistoryPage() {
   return (
     <>
       <header className="app-header">
-        <div>
-          <h1 className="text-xl font-bold">Riwayat</h1>
-          <p className="text-xs text-muted-foreground">10 terakhir selesai</p>
+        <div className="leading-tight">
+          <h1 className="t-title">Riwayat</h1>
+          <p className="t-label mt-0.5">10 terakhir selesai</p>
         </div>
       </header>
       <main className="app-main">

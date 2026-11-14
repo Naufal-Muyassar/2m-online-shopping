@@ -3,8 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { formatIDR, type MockInvoice } from "@2m/shared";
 import { api, errorMessage } from "../../lib/api";
 import { useToast } from "../../lib/toast";
-import { cn } from "../../lib/utils";
-import { btnSecondary, ErrorCard, PageSkeleton } from "../../components/States";
+import { ErrorCard, PageSkeleton } from "../../components/States";
 import { DemoBanner } from "../../components/DemoBanner";
 
 // Stand-in for the hosted payment page (API runs with PAYMENT_PROVIDER=mock and DEMO_MODE=true).
@@ -41,41 +40,45 @@ export function MockPayPage() {
   const pending = inv.status === "PENDING";
   return (
     <main className="app-main">
-      <h1 className="text-2xl font-bold">Pembayaran simulasi</h1>
-      <DemoBanner />
-      <p className="notice">Tidak ada uang yang dipindahkan.</p>
-      <section className="card animate-rise space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span>Jumlah</span>
-          <span className="text-base font-bold">{formatIDR(inv.amount)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Metode</span>
-          <span>{inv.method}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Status</span>
-          <span className={`pill ${pending ? "pill-warning" : "pill-info"}`}>{inv.status}</span>
-        </div>
-      </section>
-      {pending ? (
-        <div className="space-y-2">
-          <button onClick={() => act.mutate("pay")} disabled={act.isPending} className="btn-hero w-full">
-            {act.isPending ? "Memproses…" : "Bayar (simulasi)"}
+      <h1 className="t-headline">Pembayaran simulasi</h1>
+      <div className="page-narrow flex flex-col gap-4">
+        <DemoBanner />
+        <p className="notice">Tidak ada uang yang dipindahkan.</p>
+        <section className="card animate-rise text-sm">
+          <p className="t-label">Jumlah</p>
+          <p className="t-figure mt-1">{formatIDR(inv.amount)}</p>
+          <dl className="card-footer space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-muted-foreground">Metode</dt>
+              <dd className="font-semibold">{inv.method}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-muted-foreground">Status</dt>
+              <dd>
+                <span className={`pill pill-dot ${pending ? "pill-warning" : "pill-info"}`}>{inv.status}</span>
+              </dd>
+            </div>
+          </dl>
+        </section>
+        {pending ? (
+          <div className="flex flex-col gap-2">
+            <button onClick={() => act.mutate("pay")} disabled={act.isPending} className="btn btn-primary btn-lg btn-block">
+              {act.isPending ? "Memproses…" : "Bayar (simulasi)"}
+            </button>
+            <button onClick={() => act.mutate("expire")} disabled={act.isPending} className="btn btn-secondary btn-block">
+              Kedaluwarsakan
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => inv.order_id && navigate(`/orders/${inv.order_id}/return`, { replace: true })}
+            disabled={!inv.order_id}
+            className="btn btn-secondary btn-block"
+          >
+            Lihat pesanan
           </button>
-          <button onClick={() => act.mutate("expire")} disabled={act.isPending} className={cn(btnSecondary, "w-full")}>
-            Kedaluwarsakan
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => inv.order_id && navigate(`/orders/${inv.order_id}/return`, { replace: true })}
-          disabled={!inv.order_id}
-          className={cn(btnSecondary, "w-full")}
-        >
-          Lihat pesanan
-        </button>
-      )}
+        )}
+      </div>
     </main>
   );
 }

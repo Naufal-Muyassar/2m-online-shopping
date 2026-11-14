@@ -34,15 +34,16 @@ function greeting(hour: number): string {
 
 function BalanceBar() {
   return (
-    <Link to="/balance" className="flex min-h-16 items-center gap-3 rounded-full bg-surface p-2 pr-4 shadow-sm transition active:scale-[0.98]">
-      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-foreground text-lg text-surface">
+    <Link to="/balance" className="card card-link flex items-center gap-3 py-3">
+      <span className="empty-state-icon size-11 text-lg">
         <FaWallet aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1 leading-tight">
         <p className="font-bold">Saldo keuntungan</p>
-        <p className="truncate text-xs text-muted-foreground">Tarik tunai di toko</p>
+        <p className="t-label mt-0.5 truncate">Tarik tunai di toko</p>
       </div>
-      <BalanceAmount />
+      <BalanceAmount className="text-lg" />
+      <FaArrowRight aria-hidden="true" className="row-arrow text-xs" />
     </Link>
   );
 }
@@ -56,21 +57,23 @@ interface TileProps {
   badge?: number;
 }
 
+// Four tiles share one frame and its hairlines, so the grid itself is the decoration.
 function Tile({ icon, title, hint, to, onClick, badge = 0 }: TileProps) {
   const body = (
     <>
       <span className="flex items-start justify-between">
-        <span className="flex size-11 items-center justify-center rounded-full bg-primary-surface text-primary">{icon}</span>
-        <span className="relative flex size-9 items-center justify-center rounded-full bg-muted text-xs text-muted-foreground">
-          <FaArrowRight aria-hidden="true" className="-rotate-45" />
-          {badge > 0 && <span className="count-badge -right-1 -top-1">{badge}</span>}
+        <span className="text-xl text-primary">{icon}</span>
+        <span className="relative flex text-xs">
+          <FaArrowRight aria-hidden="true" className="-rotate-45 text-muted-foreground transition-colors duration-200 group-hover:text-foreground" />
+          {badge > 0 && <span className="count-badge -right-3 -top-3">{badge}</span>}
         </span>
       </span>
-      <span className="mt-3 block font-bold">{title}</span>
-      <span className="block text-xs text-muted-foreground">{hint}</span>
+      <span className="mt-5 block font-bold leading-tight">{title}</span>
+      <span className="t-label mt-1 block">{hint}</span>
     </>
   );
-  const className = "block rounded-2xl bg-surface p-3 text-left shadow-sm transition active:scale-[0.98] disabled:opacity-60";
+  const className =
+    "group block bg-surface p-3.5 text-left transition-colors duration-150 enabled:hover:bg-muted/50 enabled:active:bg-muted disabled:cursor-not-allowed disabled:text-muted-foreground [a&]:hover:bg-muted/50 [a&]:active:bg-muted";
   if (to) {
     return (
       <Link to={to} className={className}>
@@ -110,8 +113,8 @@ export function HomePage() {
   if (loading) {
     return (
       <main aria-busy="true" aria-label="Memuat sesi" className="app-main">
-        <Skeleton className="h-16 rounded-lg" />
-        <Skeleton className="h-40 rounded-lg" />
+        <Skeleton className="h-16" />
+        <Skeleton className="h-40" />
       </main>
     );
   }
@@ -127,24 +130,44 @@ export function HomePage() {
   return (
     <>
       <header className="app-header">
-        <Link to="/profile" aria-label="Buka profil" className="avatar size-11 text-lg">
+        <Link to="/profile" aria-label="Buka profil" className="avatar size-11 text-lg transition-transform duration-100 active:scale-95">
           {user.name.trim().charAt(0)}
         </Link>
         <div className="min-w-0 flex-1 leading-tight">
-          <h1 className="truncate font-bold capitalize">{user.name}</h1>
-          <p className="text-xs text-muted-foreground">{greeting(new Date().getHours())}</p>
+          <p className="t-label">{greeting(new Date().getHours())}</p>
+          <h1 className="truncate font-extrabold capitalize tracking-tight">{user.name}</h1>
         </div>
         <span className={`pill pill-dot ${pill?.className ?? ""}`}>{pill?.label ?? "…"}</span>
       </header>
 
       <main className="app-main">
+        <section className="panel-ink flex animate-rise flex-col gap-5" aria-label="Status kerja">
+          <div>
+            <p className="t-headline">{panel?.title ?? "Memuat status…"}</p>
+            <p className="mt-2 text-sm text-rail-muted">{panel?.hint}</p>
+          </div>
+          {status && !delivering && (
+            <button
+              type="button"
+              disabled={setStatus.isPending}
+              onClick={toggleStatus}
+              className={cn("btn btn-lg btn-block", idle ? "btn-invert-outline" : "btn-invert")}
+            >
+              {setStatus.isPending ? "Memproses…" : idle ? "Berhenti bekerja" : "Mulai bekerja"}
+            </button>
+          )}
+        </section>
+        {setStatus.isError && <p role="alert" className="alert-box">{errorMessage(setStatus.error)}</p>}
+
         <BalanceBar />
 
         <section aria-labelledby="services-heading" className="flex flex-col gap-3">
-          <h2 id="services-heading" className="text-lg font-bold">
-            Layanan
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="section-head">
+            <h2 id="services-heading" className="t-title">
+              Layanan
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
             <Tile
               icon={<FaBoxOpen aria-hidden="true" />}
               title="Order tersedia"
@@ -162,35 +185,17 @@ export function HomePage() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-3 rounded-2xl bg-foreground p-4 text-surface" aria-label="Status kerja">
-          <div>
-            <p className="text-lg font-bold">{panel?.title ?? "Memuat status…"}</p>
-            <p className="text-sm opacity-80">{panel?.hint}</p>
-          </div>
-          {status && !delivering && (
-            <button
-              type="button"
-              disabled={setStatus.isPending}
-              onClick={toggleStatus}
-              className={cn(
-                "min-h-14 rounded-full text-lg font-bold transition active:scale-[0.97] disabled:opacity-60",
-                idle ? "border border-surface/40 text-surface" : "bg-surface text-foreground",
-              )}
-            >
-              {setStatus.isPending ? "Memproses…" : idle ? "Berhenti bekerja" : "Mulai bekerja"}
-            </button>
-          )}
-        </section>
-        {setStatus.isError && <p role="alert" className="alert-box">{errorMessage(setStatus.error)}</p>}
-
         {orders.isLoading && <LoadingBlock rows={1} />}
         {orders.isError && <ErrorCard message={errorMessage(orders.error)} onRetry={() => void orders.refetch()} />}
 
         {delivering && (
           <section className="flex flex-col gap-3" aria-labelledby="current-orders-heading">
-            <h2 id="current-orders-heading" className="text-lg font-bold">
-              Pesanan saat ini
-            </h2>
+            <div className="section-head">
+              <h2 id="current-orders-heading" className="t-title">
+                Pesanan saat ini
+              </h2>
+              <span className="t-label tabular-nums">{active.length}</span>
+            </div>
             {active.map((o, i) => (
               <OrderCard key={o.id} order={o} index={i} />
             ))}
@@ -199,9 +204,12 @@ export function HomePage() {
 
         {idle && (
           <section id="available-jobs" className="flex scroll-mt-20 flex-col gap-3" aria-labelledby="available-jobs-heading">
-            <h2 id="available-jobs-heading" className="text-lg font-bold">
-              Order tersedia
-            </h2>
+            <div className="section-head">
+              <h2 id="available-jobs-heading" className="t-title">
+                Order tersedia
+              </h2>
+              <span className="t-label tabular-nums">{jobCount}</span>
+            </div>
             <JobList />
           </section>
         )}

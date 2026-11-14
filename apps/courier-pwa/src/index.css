@@ -2,13 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
+/* On a tablet or desktop the phone column sits on a darker page, so it reads as a deliberate sheet. */
+@media (min-width: 768px) {
+  body {
+    background-color: hsl(var(--muted));
+  }
+
+  .app-shell,
+  .app-shell-plain {
+    border-inline: 1px solid hsl(var(--border));
+    background-color: hsl(var(--background));
   }
 }

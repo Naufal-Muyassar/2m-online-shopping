@@ -1,10 +1,42 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
 import { errorMessage } from "../../lib/api";
 
-const input = "field";
-const primaryBtn = "inline-flex min-h-11 w-full items-center justify-center rounded-md bg-primary px-5 font-medium text-primary-foreground hover:bg-primary-pressed disabled:opacity-60";
+const fieldGroup = "flex flex-col gap-1.5";
+
+function Wordmark({ onInk = false }: { onInk?: boolean }) {
+  return (
+    <p className="flex items-center gap-3 text-lg font-extrabold tracking-tight">
+      <span
+        aria-hidden="true"
+        className={`flex size-10 items-center justify-center rounded-md text-sm ${onInk ? "bg-rail-foreground text-rail" : "bg-rail text-rail-foreground"}`}
+      >
+        2M
+      </span>
+      2M Sembako
+    </p>
+  );
+}
+
+// Wide screens split into an ink brand panel and the form; phones show the form under the wordmark.
+function AuthShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="grid min-h-dvh lg:grid-cols-2">
+      <aside className="hidden flex-col justify-between bg-rail p-12 text-rail-foreground lg:flex xl:p-16">
+        <Wordmark onInk />
+        <p className="t-display max-w-lg">Sembako harian, diantar ke rumah</p>
+        <span aria-hidden="true" className="h-px w-16 bg-rail-foreground/40" />
+      </aside>
+      <main className="mx-auto flex w-full max-w-md flex-col justify-center gap-8 px-4 py-10 sm:px-6">
+        <div className="lg:hidden">
+          <Wordmark />
+        </div>
+        {children}
+      </main>
+    </div>
+  );
+}
 
 export function LoginPage() {
   const { user, login } = useAuth();
@@ -32,39 +64,33 @@ export function LoginPage() {
   }
 
   return (
-    <div className="app-shell-plain page-wash">
-      <main className="flex flex-1 flex-col justify-center gap-6 p-4">
-        <div className="flex flex-col items-center gap-2">
-          <span className="avatar h-14 w-14 text-lg shadow-glow">2M</span>
-          <p className="text-lg font-bold">2M Sembako</p>
-        </div>
-        <form onSubmit={onSubmit} className="card animate-rise space-y-4">
-          <h1 className="text-2xl font-bold">Masuk</h1>
-          <label className="block space-y-1">
-            <span className="field-label">No. HP / Email</span>
-            <input className={input} value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" required />
-          </label>
-          <label className="block space-y-1">
-            <span className="field-label">Password</span>
-            <input type="password" className={input} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
-          </label>
-          {error && (
-            <p role="alert" className="alert-box">
-              {error}
-            </p>
-          )}
-          <button type="submit" disabled={pending} className={primaryBtn}>
-            {pending ? "Masuk…" : "Masuk"}
-          </button>
-          <p className="text-center text-sm">
-            Belum punya akun?{" "}
-            <Link to="/register" state={{ from }} className="font-medium text-accent underline">
-              Daftar
-            </Link>
+    <AuthShell>
+      <form onSubmit={onSubmit} className="flex animate-rise flex-col gap-5">
+        <h1 className="t-headline border-t border-foreground pt-5">Masuk</h1>
+        <label className={fieldGroup}>
+          <span className="field-label">No. HP / Email</span>
+          <input className="field" value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" required />
+        </label>
+        <label className={fieldGroup}>
+          <span className="field-label">Password</span>
+          <input type="password" className="field" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+        </label>
+        {error && (
+          <p role="alert" className="alert-box">
+            {error}
           </p>
-        </form>
-      </main>
-    </div>
+        )}
+        <button type="submit" disabled={pending} className="btn btn-primary btn-lg btn-block">
+          {pending ? "Masuk…" : "Masuk"}
+        </button>
+        <p className="text-sm text-muted-foreground">
+          Belum punya akun?{" "}
+          <Link to="/register" state={{ from }} className="link min-h-0">
+            Daftar
+          </Link>
+        </p>
+      </form>
+    </AuthShell>
   );
 }
 
@@ -95,46 +121,40 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="app-shell-plain page-wash">
-      <main className="flex flex-1 flex-col justify-center gap-6 p-4">
-        <div className="flex flex-col items-center gap-2">
-          <span className="avatar h-14 w-14 text-lg shadow-glow">2M</span>
-          <p className="text-lg font-bold">2M Sembako</p>
-        </div>
-        <form onSubmit={onSubmit} className="card animate-rise space-y-4">
-          <h1 className="text-2xl font-bold">Daftar</h1>
-          <label className="block space-y-1">
-            <span className="field-label">Nama</span>
-            <input className={input} value={form.name} onChange={set("name")} autoComplete="name" required />
-          </label>
-          <label className="block space-y-1">
-            <span className="field-label">No. HP</span>
-            <input className={input} value={form.phone} onChange={set("phone")} inputMode="tel" autoComplete="tel" required />
-          </label>
-          <label className="block space-y-1">
-            <span className="field-label">Email (opsional)</span>
-            <input type="email" className={input} value={form.email} onChange={set("email")} autoComplete="email" />
-          </label>
-          <label className="block space-y-1">
-            <span className="field-label">Password (min. 8 karakter)</span>
-            <input type="password" className={input} value={form.password} onChange={set("password")} minLength={8} autoComplete="new-password" required />
-          </label>
-          {error && (
-            <p role="alert" className="alert-box">
-              {error}
-            </p>
-          )}
-          <button type="submit" disabled={pending} className={primaryBtn}>
-            {pending ? "Mendaftar…" : "Daftar"}
-          </button>
-          <p className="text-center text-sm">
-            Sudah punya akun?{" "}
-            <Link to="/login" state={{ from }} className="font-medium text-accent underline">
-              Masuk
-            </Link>
+    <AuthShell>
+      <form onSubmit={onSubmit} className="flex animate-rise flex-col gap-5">
+        <h1 className="t-headline border-t border-foreground pt-5">Daftar</h1>
+        <label className={fieldGroup}>
+          <span className="field-label">Nama</span>
+          <input className="field" value={form.name} onChange={set("name")} autoComplete="name" required />
+        </label>
+        <label className={fieldGroup}>
+          <span className="field-label">No. HP</span>
+          <input className="field" value={form.phone} onChange={set("phone")} inputMode="tel" autoComplete="tel" required />
+        </label>
+        <label className={fieldGroup}>
+          <span className="field-label">Email (opsional)</span>
+          <input type="email" className="field" value={form.email} onChange={set("email")} autoComplete="email" />
+        </label>
+        <label className={fieldGroup}>
+          <span className="field-label">Password (min. 8 karakter)</span>
+          <input type="password" className="field" value={form.password} onChange={set("password")} minLength={8} autoComplete="new-password" required />
+        </label>
+        {error && (
+          <p role="alert" className="alert-box">
+            {error}
           </p>
-        </form>
-      </main>
-    </div>
+        )}
+        <button type="submit" disabled={pending} className="btn btn-primary btn-lg btn-block">
+          {pending ? "Mendaftar…" : "Daftar"}
+        </button>
+        <p className="text-sm text-muted-foreground">
+          Sudah punya akun?{" "}
+          <Link to="/login" state={{ from }} className="link min-h-0">
+            Masuk
+          </Link>
+        </p>
+      </form>
+    </AuthShell>
   );
 }

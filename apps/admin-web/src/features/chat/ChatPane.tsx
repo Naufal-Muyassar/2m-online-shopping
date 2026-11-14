@@ -19,9 +19,9 @@ function Messages({ messages }: { messages: ChatMessage[] }) {
         const newDay = i === 0 || dayLabel(messages[i - 1]!.created_at) !== dayLabel(m.created_at);
         return (
           <div key={m.id} className="flex flex-col gap-1">
-            {newDay && <p className="pill mx-auto my-2 bg-surface">{dayLabel(m.created_at)}</p>}
+            {newDay && <p className="chat-day">{dayLabel(m.created_at)}</p>}
             <p className={`bubble ${m.mine ? "bubble-mine" : "bubble-other"}`}>{m.body}</p>
-            <p className={`text-xs text-muted-foreground ${m.mine ? "self-end" : "self-start"}`}>
+            <p className={`t-label tabular-nums ${m.mine ? "self-end" : "self-start"}`}>
               {m.mine ? `${m.sender_name} · ` : ""}
               {fmtClock(m.created_at)}
             </p>
@@ -77,9 +77,9 @@ export function ChatPane({ threadId, showTitle = false }: { threadId: string; sh
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      {showTitle && <h2 className="text-lg font-bold">{data?.thread.title ?? "Chat"}</h2>}
-      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-lg bg-muted/50 p-3" aria-live="polite">
-        {isLoading && <div className="skeleton h-12 w-2/3 rounded-lg" role="status" aria-busy="true" aria-label="Memuat" />}
+      {showTitle && <h2 className="t-title">{data?.thread.title ?? "Chat"}</h2>}
+      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-lg border border-border bg-background p-3" aria-live="polite">
+        {isLoading && <div className="skeleton h-12 w-2/3" role="status" aria-busy="true" aria-label="Memuat" />}
         {isError && (
           <p className="alert-box" role="alert">
             {errorMessage(error)}
@@ -97,14 +97,9 @@ export function ChatPane({ threadId, showTitle = false }: { threadId: string; sh
           onKeyDown={onKeyDown}
           placeholder="Tulis pesan…"
           aria-label="Tulis pesan"
-          className="field max-h-32 resize-none rounded-2xl"
+          className="field max-h-32 resize-none"
         />
-        <button
-          type="submit"
-          aria-label="Kirim"
-          disabled={!text.trim() || send.isPending}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-xl text-primary-foreground hover:bg-primary-pressed disabled:bg-muted disabled:text-muted-foreground"
-        >
+        <button type="submit" aria-label="Kirim" disabled={!text.trim() || send.isPending} className="send-btn">
           <IconSend />
         </button>
       </form>

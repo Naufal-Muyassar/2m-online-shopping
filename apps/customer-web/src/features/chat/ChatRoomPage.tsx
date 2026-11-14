@@ -22,9 +22,9 @@ function Messages({ messages }: { messages: ChatMessage[] }) {
         const newDay = i === 0 || dayLabel(messages[i - 1]!.created_at) !== dayLabel(m.created_at);
         return (
           <div key={m.id} className="flex flex-col gap-1">
-            {newDay && <p className="pill mx-auto my-2 bg-surface">{dayLabel(m.created_at)}</p>}
+            {newDay && <p className="chat-day">{dayLabel(m.created_at)}</p>}
             <p className={`bubble ${m.mine ? "bubble-mine" : "bubble-other"}`}>{m.body}</p>
-            <p className={`text-xs text-muted-foreground ${m.mine ? "self-end" : "self-start"}`}>{fmtClock(m.created_at)}</p>
+            <p className={`t-label tabular-nums ${m.mine ? "self-end" : "self-start"}`}>{fmtClock(m.created_at)}</p>
           </div>
         );
       })}
@@ -78,22 +78,22 @@ export function ChatRoomPage() {
   }
 
   return (
-    <div className="mx-auto flex h-dvh max-w-[var(--content-max-width)] flex-col">
+    <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col bg-background md:border-x md:border-border">
       <header className="app-header">
-        <Link to={back} aria-label="Kembali" className="icon-btn shrink-0">
+        <Link to={back} aria-label="Kembali" className="icon-btn">
           <IconBack />
         </Link>
         <div className="min-w-0 flex-1 leading-tight">
-          <h1 className="truncate text-lg font-bold">{thread?.title ?? "Chat"}</h1>
-          {thread?.order_code && <p className="truncate text-xs text-muted-foreground">Pesanan {thread.order_code}</p>}
+          <h1 className="t-title truncate">{thread?.title ?? "Chat"}</h1>
+          {thread?.order_code && <p className="t-label mt-0.5 truncate">Pesanan {thread.order_code}</p>}
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 pb-3" aria-live="polite">
+      <main className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-3 md:px-6" aria-live="polite">
         {isLoading && (
           <div className="space-y-3 pt-2" aria-busy="true" aria-label="Memuat">
-            <div className="skeleton h-12 w-2/3 rounded-lg" />
-            <div className="skeleton ml-auto h-12 w-1/2 rounded-lg" />
+            <div className="skeleton h-12 w-2/3" />
+            <div className="skeleton ml-auto h-12 w-1/2" />
           </div>
         )}
         {isError && <ErrorCard message="Gagal memuat chat." onRetry={() => void refetch()} />}
@@ -103,9 +103,9 @@ export function ChatRoomPage() {
       </main>
 
       {thread && !thread.can_send ? (
-        <p className="notice mx-4 mb-4 text-center">Chat ditutup karena pesanan sudah selesai.</p>
+        <p className="notice mx-4 mb-4 text-center md:mx-6">Chat ditutup karena pesanan sudah selesai.</p>
       ) : (
-        <form onSubmit={submit} className="flex items-end gap-2 border-t border-border bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <form onSubmit={submit} className="flex items-end gap-2 border-t border-border bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:px-6">
           <textarea
             rows={1}
             value={text}
@@ -114,14 +114,9 @@ export function ChatRoomPage() {
             onKeyDown={onKeyDown}
             placeholder="Tulis pesan…"
             aria-label="Tulis pesan"
-            className="field max-h-32 resize-none rounded-2xl"
+            className="field max-h-32 resize-none"
           />
-          <button
-            type="submit"
-            aria-label="Kirim"
-            disabled={!text.trim() || send.isPending}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-xl text-primary-foreground hover:bg-primary-pressed disabled:bg-muted disabled:text-muted-foreground"
-          >
+          <button type="submit" aria-label="Kirim" disabled={!text.trim() || send.isPending} className="send-btn">
             <IconSend />
           </button>
         </form>

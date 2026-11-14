@@ -4,7 +4,7 @@ import { useAuth } from "../../lib/auth";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { useBranch } from "../branch-config/BranchProvider";
-import { COURIER_LABELS, useBranchCouriers } from "./hooks";
+import { COURIER_LABELS, isOnline, useBranchCouriers } from "./hooks";
 
 const COURIER_PILL: Record<string, string> = {
   IDLE: "pill-success",
@@ -57,18 +57,19 @@ export function CouriersTab({ onOpenChat }: { onOpenChat: (courierId: string) =>
     onError: (err) => toast("error", errorMessage(err)),
   });
 
-  if (!branchId) return <p className="p-4 text-sm text-muted-foreground">Pilih cabang…</p>;
+  if (!branchId) return <p className="p-4 text-sm text-muted-foreground md:p-6">Pilih cabang…</p>;
   if (isLoading)
     return (
-      <div className="space-y-3 p-4" role="status" aria-busy="true" aria-label="Memuat">
-        <div className="skeleton h-12" />
-        <div className="skeleton h-12" />
-        <div className="skeleton h-12" />
+      <div className="space-y-3 p-4 md:p-6" role="status" aria-busy="true" aria-label="Memuat">
+        <div className="skeleton h-10 w-48" />
+        <div className="skeleton h-14" />
+        <div className="skeleton h-14" />
+        <div className="skeleton h-14" />
       </div>
     );
   if (isError)
     return (
-      <div className="p-4">
+      <div className="p-4 md:p-6">
         <p className="alert-box" role="alert">
           {errorMessage(error)}
         </p>
@@ -77,77 +78,86 @@ export function CouriersTab({ onOpenChat }: { onOpenChat: (courierId: string) =>
 
   const couriers = data?.couriers ?? [];
   const showCluster = couriers.some((c) => c.motor_cluster != null);
+  const online = couriers.filter(isOnline).length;
 
   return (
-    <div className="space-y-4 p-4">
-      <h1 className="text-2xl font-bold">Kurir</h1>
-      <div className="card animate-rise overflow-x-auto p-0 shadow-md">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Nama</th>
-              <th className="px-2">Partner</th>
-              {showCluster && <th className="px-2">Motor</th>}
-              <th className="px-2">Status</th>
-              <th className="px-2">Ping terakhir</th>
-              <th className="px-2">Order</th>
-              <th className="px-4" />
-            </tr>
-          </thead>
-          <tbody>
-            {couriers.map((c) => {
-              const order = c.current_order;
-              return (
-                <tr key={c.user_id} className="border-b last:border-b-0 hover:bg-muted/30">
-                  <td className="px-4 py-3">
-                    <span className="flex items-center gap-3 font-bold">
-                      <span className={cn("avatar size-9 text-sm", c.status === "OFFLINE" && "grayscale")} aria-hidden="true">
-                        {c.name.charAt(0)}
-                      </span>
-                      {c.name}
-                    </span>
-                  </td>
-                  <td className="px-2">{c.partner_name}</td>
-                  {showCluster && <td className="px-2">{c.motor_cluster ?? "-"}</td>}
-                  <td className="px-2">
-                    <span className={cn("pill pill-dot", COURIER_PILL[c.status])}>{COURIER_LABELS[c.status]}</span>
-                  </td>
-                  <td className="px-2">{pingAge(c.last_ping_at)}</td>
-                  <td className="px-2">
-                    {order ? (
-                      <span className="inline-flex flex-wrap items-center gap-2">
-                        {order.code}
-                        <span className={cn("pill", ORDER_PILL[order.status])}>{ORDER_LABELS[order.status] ?? order.status}</span>
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td className="space-x-2 px-4 text-right">
-                    {isBranchAdmin && order?.status === "FAILED" && (
-                      <button
-                        className="min-h-11 rounded-md bg-primary px-3 py-2 font-bold text-primary-foreground hover:bg-primary-pressed disabled:opacity-60"
-                        disabled={confirmReturn.isPending && confirmReturn.variables === order.id}
-                        onClick={() => confirmReturn.mutate(order.id)}
-                      >
-                        Konfirmasi barang kembali
-                      </button>
-                    )}
-                    <button
-                      className="min-h-11 rounded-full border bg-surface px-4 font-medium hover:bg-muted"
-                      onClick={() => onOpenChat(c.user_id)}
-                    >
-                      Chat
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    <div className="flex flex-col gap-5 p-4 md:p-6">
+      <div className="flex items-end justify-between gap-4">
+        <h1 className="t-headline">Kurir</h1>
+        <p className="t-label pb-1 tabular-nums">
+          {online} dari {couriers.length} kurir online
+        </p>
       </div>
+      {couriers.length > 0 && (
+        <div className="card animate-rise overflow-hidden p-0 md:p-0">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Partner</th>
+                {showCluster && <th>Motor</th>}
+                <th>Status</th>
+                <th>Ping terakhir</th>
+                <th>Order</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {couriers.map((c) => {
+                const order = c.current_order;
+                return (
+                  <tr key={c.user_id}>
+                    <td data-primary>
+                      <span className="flex items-center gap-3 font-bold">
+                        <span className={cn("avatar size-9 text-sm", c.status === "OFFLINE" && "grayscale")} aria-hidden="true">
+                          {c.name.charAt(0)}
+                        </span>
+                        {c.name}
+                      </span>
+                    </td>
+                    <td data-label="Partner">{c.partner_name}</td>
+                    {showCluster && <td data-label="Motor">{c.motor_cluster ?? "-"}</td>}
+                    <td data-label="Status">
+                      <span className={cn("pill pill-dot", COURIER_PILL[c.status])}>{COURIER_LABELS[c.status]}</span>
+                    </td>
+                    <td data-label="Ping terakhir" className="tabular-nums">
+                      {pingAge(c.last_ping_at)}
+                    </td>
+                    <td data-label="Order">
+                      {order ? (
+                        <span className="inline-flex flex-wrap items-center justify-end gap-2 md:justify-start">
+                          <span className="font-semibold tabular-nums">{order.code}</span>
+                          <span className={cn("pill", ORDER_PILL[order.status])}>{ORDER_LABELS[order.status] ?? order.status}</span>
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td data-actions className="md:whitespace-nowrap md:text-right">
+                      <span className="inline-flex flex-wrap gap-2 md:justify-end">
+                        {isBranchAdmin && order?.status === "FAILED" && (
+                          <button
+                            className="btn btn-primary btn-sm"
+                            disabled={confirmReturn.isPending && confirmReturn.variables === order.id}
+                            onClick={() => confirmReturn.mutate(order.id)}
+                          >
+                            Konfirmasi barang kembali
+                          </button>
+                        )}
+                        <button className="btn btn-secondary btn-sm" onClick={() => onOpenChat(c.user_id)}>
+                          Chat
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
       {couriers.length === 0 && (
-        <div className="empty-state mt-4">
+        <div className="empty-state">
           <p>Belum ada kurir.</p>
         </div>
       )}

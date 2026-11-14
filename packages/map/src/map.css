@@ -48,7 +48,7 @@
 
 .map-pin-branch .map-pin-glyph {
   border: 2px solid hsl(var(--primary));
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   background: hsl(var(--surface));
   color: hsl(var(--primary));
   box-shadow: 0 4px 12px hsl(var(--shadow-tint) / 0.24);
@@ -95,7 +95,8 @@
   left: 50%;
   z-index: 2;
   padding: 0.125rem 0.5rem;
-  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.375rem;
   background: hsl(var(--surface));
   color: hsl(var(--foreground));
   font-size: 0.6875rem;
@@ -114,11 +115,34 @@
   stroke-dasharray: 2 9;
 }
 
+/* Address picker: the branch's service area, its centre and the chosen point. */
+.map-area {
+  stroke: hsl(var(--primary));
+  stroke-width: 1.5;
+  stroke-dasharray: 3 7;
+  fill: hsl(var(--primary));
+  fill-opacity: 0.06;
+}
+
+.map-area-center {
+  stroke: hsl(var(--surface));
+  stroke-width: 2;
+  fill: hsl(var(--primary));
+  fill-opacity: 1;
+}
+
+.map-pick {
+  stroke: hsl(var(--surface));
+  stroke-width: 3;
+  fill: hsl(var(--promo));
+  fill-opacity: 1;
+}
+
 .map-2m .leaflet-bar {
   overflow: hidden;
-  border: 0;
-  border-radius: 0.875rem;
-  box-shadow: 0 4px 14px hsl(var(--shadow-tint) / 0.18);
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.625rem;
+  box-shadow: 0 4px 14px hsl(var(--shadow-tint) / 0.14);
 }
 
 .map-2m .leaflet-bar a {
@@ -128,6 +152,11 @@
   background: hsl(var(--surface));
   color: hsl(var(--foreground));
   line-height: 2.25rem;
+  transition: background-color 160ms ease;
+}
+
+.map-2m .leaflet-bar a:hover {
+  background: hsl(var(--muted));
 }
 
 .map-2m .leaflet-control-attribution {

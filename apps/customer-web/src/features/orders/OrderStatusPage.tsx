@@ -6,7 +6,7 @@ import { useChatThreads, useOpenChat, useOrder } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { IconChat } from "../../components/Icons";
-import { btnSecondary, ErrorCard, PageSkeleton } from "../../components/States";
+import { ErrorCard, PageSkeleton } from "../../components/States";
 import { StatusPill } from "../../components/StatusPill";
 import { TrackingCard } from "./TrackingCard";
 
@@ -34,12 +34,21 @@ function CourierChatButton({ orderId, courierName }: { orderId: string; courierN
           { onSuccess: (t) => navigate(`/chat/${t.id}`), onError: (e) => toast("error", errorMessage(e)) },
         )
       }
-      className={cn(btnSecondary, "relative mt-2 w-full gap-2 rounded-full")}
+      className="btn btn-secondary w-full sm:w-auto sm:self-start"
     >
-      <IconChat className="text-lg text-primary" />
+      <IconChat className="text-lg" />
       Chat {courierName}
       {unread > 0 && <span className="count-badge static">{unread}</span>}
     </button>
+  );
+}
+
+function MoneyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span>{label}</span>
+      <span className="tabular-nums">{value}</span>
+    </div>
   );
 }
 
@@ -78,155 +87,145 @@ export function OrderStatusPage() {
 
   return (
     <main className="app-main">
-      <div className="space-y-1">
-        <p className="eyebrow">Pesanan · {order.branch_name}</p>
-        <h1 className="text-2xl font-bold">{order.code}</h1>
-        <div className="flex flex-wrap items-center gap-2">
+      <header className="flex flex-col gap-3">
+        <p className="t-label">Pesanan · {order.branch_name}</p>
+        <h1 className="t-headline tabular-nums">{order.code}</h1>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <StatusPill status={order.status} />
           {courier && <span className="text-sm text-muted-foreground">Kurir: {courier.first_name}</span>}
         </div>
         {courier && <CourierChatButton orderId={order.id} courierName={courier.first_name} />}
-        {failure && <p className="alert-box mt-2">{failure}</p>}
-      </div>
+        {failure && <p className="alert-box">{failure}</p>}
+      </header>
 
-      <ol className="card animate-rise space-y-3" aria-label="Status pesanan">
-        {steps.map((s) => {
-          const at = reachedAt.get(s);
-          const done = isDone(s);
-          const current = s === order.status || (!exit && s === (STEP_OF[order.status] ?? order.status));
-          return (
-            <li key={s} className="flex items-start gap-3">
-              <span
-                className={cn(
-                  "mt-1 h-3 w-3 shrink-0 rounded-full border",
-                  done ? (exit === s ? "border-destructive bg-destructive" : "border-primary bg-primary") : "border-border bg-surface",
-                  current && "ring-4 ring-primary-surface",
-                )}
-              />
-              <div className={cn("text-sm", !done && "text-muted-foreground", current && "font-bold")}>
-                {LABEL[s]}
-                {done && at && <span className="ml-2 text-xs font-normal text-muted-foreground">{fmtTime(at)}</span>}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-8">
+        <div className="flex min-w-0 flex-col gap-5">
+          <ol className="card animate-rise" aria-label="Status pesanan">
+            {steps.map((s, i) => {
+              const at = reachedAt.get(s);
+              const done = isDone(s);
+              const current = s === order.status || (!exit && s === (STEP_OF[order.status] ?? order.status));
+              return (
+                <li key={s} className="relative flex items-start gap-3.5 pb-5 last:pb-0">
+                  {i < steps.length - 1 && (
+                    <span aria-hidden="true" className={cn("absolute bottom-0 left-[0.3125rem] top-5 w-px", done ? "bg-foreground" : "bg-border")} />
+                  )}
+                  <span
+                    className={cn(
+                      "relative mt-1.5 size-[0.6875rem] shrink-0 rounded-full border",
+                      done ? (exit === s ? "border-destructive bg-destructive" : "border-foreground bg-foreground") : "border-input bg-surface",
+                      current && (exit === s ? "ring-4 ring-destructive-surface" : "ring-4 ring-primary-surface"),
+                    )}
+                  />
+                  <div className={cn("flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3", !done && "text-muted-foreground", current && "font-extrabold")}>
+                    <span>{LABEL[s]}</span>
+                    {done && at && <span className="t-label tabular-nums">{fmtTime(at)}</span>}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
 
-      {order.status === "PENDING_PAYMENT" && (
-        <div className="notice flex flex-col items-start gap-3">
-          <p>Pesanan menunggu pembayaran.</p>
-          {data.invoice_url && (
-            <a href={data.invoice_url} className="btn-hero">
-              Bayar sekarang
-            </a>
+          {order.status === "PENDING_PAYMENT" && (
+            <div className="notice flex flex-col items-start gap-3">
+              <p>Pesanan menunggu pembayaran.</p>
+              {data.invoice_url && (
+                <a href={data.invoice_url} className="btn btn-primary">
+                  Bayar sekarang
+                </a>
+              )}
+            </div>
+          )}
+
+          {data.tracking_available && <TrackingCard orderId={order.id} />}
+
+          {proof && (
+            <section className="card animate-rise space-y-3 text-sm">
+              <h2 className="t-title">Bukti pengantaran</h2>
+              <button type="button" onClick={() => setZoom(true)} className="block w-full overflow-hidden rounded-md border border-border" aria-label="Perbesar foto">
+                <img
+                  src={proof.photo_url}
+                  alt="Bukti pengantaran"
+                  onError={onImageError}
+                  className="max-h-72 w-full object-cover transition-transform duration-300 ease-settle hover:scale-[1.02]"
+                />
+              </button>
+              <p className="t-label">Diambil {fmtTime(proof.taken_at)}</p>
+            </section>
+          )}
+          {proof && zoom && (
+            <div role="dialog" aria-label="Bukti pengantaran" onClick={() => setZoom(false)} className="dialog-backdrop">
+              <img src={proof.photo_url} alt="Bukti pengantaran" onError={onImageError} className="max-h-full max-w-full animate-pop rounded-lg shadow-lg" />
+            </div>
           )}
         </div>
-      )}
 
-      {data.tracking_available && <TrackingCard orderId={order.id} />}
+        <div className="flex min-w-0 flex-col gap-5">
+          <section className="card animate-rise text-sm">
+            <h2 className="t-title mb-3">Barang</h2>
+            <table className="w-full">
+              <thead className="text-left">
+                <tr className="border-b border-foreground">
+                  <th className="t-label pb-2">Nama</th>
+                  <th className="t-label pb-2 text-right">Jumlah</th>
+                  <th className="t-label hidden pb-2 text-right sm:table-cell">Harga</th>
+                  <th className="t-label pb-2 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {items.map((i, idx) => (
+                  <tr key={idx} className="align-top">
+                    <td className="py-2 pr-2 font-medium">{i.name}</td>
+                    <td className="whitespace-nowrap py-2 pl-2 text-right tabular-nums">
+                      {i.qty} {i.unit}
+                    </td>
+                    <td className="hidden whitespace-nowrap py-2 pl-2 text-right tabular-nums sm:table-cell">{formatIDR(i.unit_price)}</td>
+                    <td className="whitespace-nowrap py-2 pl-2 text-right font-semibold tabular-nums">{formatIDR(i.line_total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="card-footer space-y-1.5">
+              <MoneyRow label="Subtotal" value={formatIDR(pricing.subtotal)} />
+              <MoneyRow
+                label={`Ongkir${pricing.route_distance_km != null ? ` (${pricing.route_distance_km} km)` : ""}`}
+                value={formatIDR(pricing.delivery_fee)}
+              />
+              {pricing.voucher_discount > 0 && <MoneyRow label="Diskon voucher" value={`-${formatIDR(pricing.voucher_discount)}`} />}
+              {pricing.payment_fee > 0 && <MoneyRow label="Biaya pembayaran" value={formatIDR(pricing.payment_fee)} />}
+            </div>
+            <div className="card-footer flex items-baseline justify-between gap-3">
+              <span className="t-title">Total</span>
+              <span className="t-figure">{formatIDR(pricing.grand_total)}</span>
+            </div>
+          </section>
 
-      {proof && (
-        <section className="card animate-rise space-y-2 text-sm">
-          <h2 className="text-base font-bold">Bukti pengantaran</h2>
-          <button type="button" onClick={() => setZoom(true)} className="block w-full" aria-label="Perbesar foto">
-            <img
-              src={proof.photo_url}
-              alt="Bukti pengantaran"
-              onError={onImageError}
-              className="max-h-64 w-full rounded-md object-cover"
-            />
-          </button>
-          <p className="text-xs text-muted-foreground">Diambil {fmtTime(proof.taken_at)}</p>
-        </section>
-      )}
-      {proof && zoom && (
-        <div
-          role="dialog"
-          aria-label="Bukti pengantaran"
-          onClick={() => setZoom(false)}
-          className="sheet-backdrop items-center p-4"
-        >
-          <img src={proof.photo_url} alt="Bukti pengantaran" onError={onImageError} className="max-h-full max-w-full rounded-lg shadow-lg" />
+          <section className="card animate-rise space-y-1.5 text-sm">
+            <h2 className="t-title mb-2">Alamat pengiriman</h2>
+            <p className="font-semibold">
+              {address.receiver_name} · {address.receiver_phone}
+            </p>
+            <p className="text-muted-foreground">
+              {address.label}: {address.street}
+              {address.rt_rw && `, RT/RW ${address.rt_rw}`}
+              {address.unit && `, ${address.unit}`}
+            </p>
+            {address.courier_note && <p className="note-rail !mt-3 text-muted-foreground">Catatan: {address.courier_note}</p>}
+          </section>
+
+          <section className="card animate-rise space-y-1.5 text-sm">
+            <h2 className="t-title mb-2">Pembayaran</h2>
+            <p className="font-semibold">{payment.method ?? "-"}</p>
+            {payment.paid_at && <p className="text-muted-foreground">Dibayar {fmtTime(payment.paid_at)}</p>}
+          </section>
         </div>
-      )}
+      </div>
 
-      <section className="card animate-rise text-sm">
-        <h2 className="mb-2 text-base font-bold">Barang</h2>
-        <table className="w-full">
-          <thead className="text-left text-xs text-muted-foreground">
-            <tr>
-              <th className="font-normal">Nama</th>
-              <th className="text-right font-normal">Jumlah</th>
-              <th className="text-right font-normal">Harga</th>
-              <th className="text-right font-normal">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((i, idx) => (
-              <tr key={idx} className="align-top">
-                <td className="py-1">{i.name}</td>
-                <td className="py-1 text-right">
-                  {i.qty} {i.unit}
-                </td>
-                <td className="py-1 text-right">{formatIDR(i.unit_price)}</td>
-                <td className="py-1 text-right">{formatIDR(i.line_total)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-
-      <section className="card animate-rise space-y-1 text-sm">
-        <div className="flex justify-between">
-          <span>Subtotal</span>
-          <span>{formatIDR(pricing.subtotal)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Ongkir{pricing.route_distance_km != null && ` (${pricing.route_distance_km} km)`}</span>
-          <span>{formatIDR(pricing.delivery_fee)}</span>
-        </div>
-        {pricing.voucher_discount > 0 && (
-          <div className="flex justify-between">
-            <span>Diskon voucher</span>
-            <span>-{formatIDR(pricing.voucher_discount)}</span>
-          </div>
-        )}
-        {pricing.payment_fee > 0 && (
-          <div className="flex justify-between">
-            <span>Biaya pembayaran</span>
-            <span>{formatIDR(pricing.payment_fee)}</span>
-          </div>
-        )}
-        <div className="card-footer flex justify-between text-lg font-bold">
-          <span>Total</span>
-          <span>{formatIDR(pricing.grand_total)}</span>
-        </div>
-      </section>
-
-      <section className="card animate-rise space-y-1 text-sm">
-        <h2 className="text-base font-bold">Alamat pengiriman</h2>
-        <p>
-          {address.receiver_name} · {address.receiver_phone}
-        </p>
-        <p className="text-muted-foreground">
-          {address.label}: {address.street}
-          {address.rt_rw && `, RT/RW ${address.rt_rw}`}
-          {address.unit && `, ${address.unit}`}
-        </p>
-        {address.courier_note && <p className="note-rail text-muted-foreground">Catatan: {address.courier_note}</p>}
-      </section>
-
-      <section className="card animate-rise space-y-1 text-sm">
-        <h2 className="text-base font-bold">Pembayaran</h2>
-        <p>{payment.method ?? "-"}</p>
-        {payment.paid_at && <p className="text-muted-foreground">Dibayar {fmtTime(payment.paid_at)}</p>}
-      </section>
-
-      <div className="flex justify-between text-sm">
-        <Link to="/orders" className="inline-flex min-h-11 items-center font-medium text-accent">
+      <div className="flex justify-between border-t border-border pt-2 text-sm">
+        <Link to="/orders" className="link">
           Pesanan saya
         </Link>
-        <Link to="/" className="inline-flex min-h-11 items-center font-medium text-accent">
+        <Link to="/" className="link">
           Belanja lagi
         </Link>
       </div>

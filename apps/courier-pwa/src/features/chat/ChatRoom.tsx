@@ -21,9 +21,9 @@ function Messages({ messages }: { messages: ChatMessage[] }) {
         const newDay = i === 0 || dayLabel(messages[i - 1]!.created_at) !== dayLabel(m.created_at);
         return (
           <div key={m.id} className="flex flex-col gap-1">
-            {newDay && <p className="pill mx-auto my-2 bg-surface">{dayLabel(m.created_at)}</p>}
+            {newDay && <p className="chat-day">{dayLabel(m.created_at)}</p>}
             <p className={`bubble ${m.mine ? "bubble-mine" : "bubble-other"}`}>{m.body}</p>
-            <p className={`text-xs text-muted-foreground ${m.mine ? "self-end" : "self-start"}`}>{fmtClock(m.created_at)}</p>
+            <p className={`t-label tabular-nums ${m.mine ? "self-end" : "self-start"}`}>{fmtClock(m.created_at)}</p>
           </div>
         );
       })}
@@ -78,20 +78,20 @@ function ChatRoom({ threadId }: { threadId: string }) {
   return (
     <div className="flex h-dvh flex-col">
       <header className="app-header">
-        <Link to={back} aria-label="Kembali" className="icon-btn shrink-0">
+        <Link to={back} aria-label="Kembali" className="icon-btn">
           <FaArrowLeft aria-hidden="true" />
         </Link>
         <div className="min-w-0 flex-1 leading-tight">
-          <h1 className="truncate text-lg font-bold">{thread?.title ?? "Chat"}</h1>
-          {thread?.order_code && <p className="truncate text-xs text-muted-foreground">Order {thread.order_code}</p>}
+          <h1 className="t-title truncate">{thread?.title ?? "Chat"}</h1>
+          {thread?.order_code && <p className="t-label mt-0.5 truncate">Order {thread.order_code}</p>}
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 pb-3" aria-live="polite">
+      <main className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-3" aria-live="polite">
         {isLoading && (
           <div className="flex flex-col gap-3 pt-2" aria-busy="true" aria-label="Memuat">
-            <div className="skeleton h-12 w-2/3 rounded-lg" />
-            <div className="skeleton ml-auto h-12 w-1/2 rounded-lg" />
+            <div className="skeleton h-12 w-2/3" />
+            <div className="skeleton ml-auto h-12 w-1/2" />
           </div>
         )}
         {isError && <ErrorCard message={errorMessage(error)} onRetry={() => void refetch()} />}
@@ -112,14 +112,9 @@ function ChatRoom({ threadId }: { threadId: string }) {
             onKeyDown={onKeyDown}
             placeholder="Tulis pesan…"
             aria-label="Tulis pesan"
-            className="field max-h-32 resize-none rounded-2xl"
+            className="field max-h-32 resize-none"
           />
-          <button
-            type="submit"
-            aria-label="Kirim"
-            disabled={!text.trim() || send.isPending}
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-95 disabled:bg-muted disabled:text-muted-foreground"
-          >
+          <button type="submit" aria-label="Kirim" disabled={!text.trim() || send.isPending} className="send-btn">
             <FaPaperPlane aria-hidden="true" />
           </button>
         </form>
@@ -145,7 +140,7 @@ export function AdminChatPage() {
   if (!thread.data) {
     return (
       <main className="app-main" aria-busy="true" aria-label="Memuat">
-        <div className="skeleton h-16 rounded-lg" />
+        <div className="skeleton h-16" />
       </main>
     );
   }

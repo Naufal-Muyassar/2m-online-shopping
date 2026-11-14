@@ -19,13 +19,8 @@ function UpdateBanner({ onDelivery }: { onDelivery: boolean }) {
   return (
     <div role="status" className="notice mx-4 mt-3 flex items-center justify-between gap-3">
       <span>{onDelivery ? "Versi baru tersedia. Perbarui setelah pengantaran selesai." : "Versi baru tersedia."}</span>
-      <button
-        type="button"
-        disabled={onDelivery}
-        onClick={applyUpdate}
-        className="min-h-11 shrink-0 rounded-md bg-primary px-4 font-bold text-primary-foreground transition duration-150 hover:bg-primary-pressed active:scale-[0.97] disabled:opacity-60"
-      >
-        <FaSyncAlt aria-hidden="true" className="mr-2 inline" />
+      <button type="button" disabled={onDelivery} onClick={applyUpdate} className="btn btn-primary shrink-0">
+        <FaSyncAlt aria-hidden="true" />
         Perbarui
       </button>
     </div>

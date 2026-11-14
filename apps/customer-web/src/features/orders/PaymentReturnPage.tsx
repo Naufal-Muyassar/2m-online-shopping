@@ -21,31 +21,37 @@ export function PaymentReturnPage() {
 
   if (order.status === "CANCELLED") {
     return (
-      <main className="app-main items-center text-center">
-        <span className="empty-state-icon">
-          <IconAlert />
-        </span>
-        <h1 className="text-2xl font-bold">Pembayaran tidak berhasil</h1>
-        <p className="text-sm text-muted-foreground">Pesanan {order.code} dibatalkan karena pembayaran kedaluwarsa atau gagal.</p>
-        <Link to={`/orders/${order.id}`} className="inline-flex min-h-11 items-center font-medium text-accent">
-          Lihat detail pesanan
-        </Link>
-        <Link to="/" className="inline-flex min-h-11 items-center font-medium text-accent">
-          Belanja lagi
-        </Link>
+      <main className="app-main">
+        <div className="page-narrow flex animate-rise flex-col items-start gap-4 py-6 md:py-12">
+          <span className="empty-state-icon bg-destructive-surface text-destructive">
+            <IconAlert />
+          </span>
+          <h1 className="t-headline">Pembayaran tidak berhasil</h1>
+          <p className="text-muted-foreground">Pesanan {order.code} dibatalkan karena pembayaran kedaluwarsa atau gagal.</p>
+          <div className="flex flex-wrap gap-x-6">
+            <Link to={`/orders/${order.id}`} className="link">
+              Lihat detail pesanan
+            </Link>
+            <Link to="/" className="link">
+              Belanja lagi
+            </Link>
+          </div>
+        </div>
       </main>
     );
   }
   if (order.status !== "PENDING_PAYMENT") return <Navigate to={`/orders/${order.id}`} replace />;
 
   return (
-    <main className="app-main items-center text-center" aria-live="polite">
-      <div className="skeleton h-14 w-14 rounded-full" aria-hidden="true" />
-      <h1 className="text-2xl font-bold">Memverifikasi pembayaran…</h1>
-      <p className="text-sm text-muted-foreground">Jangan tutup halaman ini. Status pesanan {order.code} diperbarui otomatis.</p>
-      <Link to={`/orders/${order.id}`} className="inline-flex min-h-11 items-center font-medium text-accent">
-        Lihat detail pesanan
-      </Link>
+    <main className="app-main" aria-live="polite">
+      <div className="page-narrow flex animate-rise flex-col items-start gap-4 py-6 md:py-12">
+        <div className="skeleton size-12" aria-hidden="true" />
+        <h1 className="t-headline">Memverifikasi pembayaran…</h1>
+        <p className="text-muted-foreground">Jangan tutup halaman ini. Status pesanan {order.code} diperbarui otomatis.</p>
+        <Link to={`/orders/${order.id}`} className="link">
+          Lihat detail pesanan
+        </Link>
+      </div>
     </main>
   );
 }

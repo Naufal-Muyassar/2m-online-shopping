@@ -2,34 +2,32 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
 import { IconChat, IconChevron, IconLogout, IconReceipt } from "../../components/Icons";
 
-const row = "flex min-h-14 w-full items-center gap-3 rounded-full bg-surface px-4 font-medium shadow-sm hover:bg-muted";
-
 export function AccountPage() {
   const { user, logout } = useAuth();
 
   return (
     <main className="app-main">
-      <section className="flex flex-col items-center gap-2 rounded-2xl bg-hero px-4 py-8 text-primary-foreground">
-        <span className="flex size-20 items-center justify-center rounded-full bg-surface text-3xl font-bold uppercase text-primary">
-          {user?.name.charAt(0)}
-        </span>
-        <h1 className="text-xl font-bold capitalize">{user?.name}</h1>
-        <p className="text-sm opacity-90">{user?.phone}</p>
+      <section className="flex animate-rise items-center gap-4 border-b border-foreground pb-5 md:pb-7">
+        <span className="avatar size-16 text-2xl md:size-20 md:text-3xl">{user?.name.charAt(0)}</span>
+        <div className="min-w-0">
+          <h1 className="t-headline truncate capitalize">{user?.name}</h1>
+          <p className="t-label mt-1.5 tabular-nums">{user?.phone}</p>
+        </div>
       </section>
 
-      <nav aria-label="Menu akun" className="flex flex-col gap-3">
-        <Link to="/orders" className={row}>
-          <IconReceipt className="text-xl text-primary" />
+      <nav aria-label="Menu akun" className="list page-narrow animate-rise">
+        <Link to="/orders" className="list-row font-semibold">
+          <IconReceipt className="shrink-0 text-xl text-primary" />
           <span className="flex-1">Pesanan saya</span>
-          <IconChevron className="text-muted-foreground" />
+          <IconChevron className="row-arrow" />
         </Link>
-        <Link to="/chat" className={row}>
-          <IconChat className="text-xl text-primary" />
+        <Link to="/chat" className="list-row font-semibold">
+          <IconChat className="shrink-0 text-xl text-primary" />
           <span className="flex-1">Chat toko</span>
-          <IconChevron className="text-muted-foreground" />
+          <IconChevron className="row-arrow" />
         </Link>
-        <button type="button" onClick={() => void logout()} className={`${row} text-left text-destructive`}>
-          <IconLogout className="text-xl" />
+        <button type="button" onClick={() => void logout()} className="list-row font-semibold text-destructive">
+          <IconLogout className="shrink-0 text-xl" />
           <span className="flex-1">Keluar</span>
         </button>
       </nav>

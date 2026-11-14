@@ -25,7 +25,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={push}>
       {children}
       <div
-        className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--nav-height)+2rem)] z-[1000] mx-auto flex max-w-[28rem] flex-col gap-2"
+        className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--nav-height)+1.25rem+env(safe-area-inset-bottom))] z-[1000] mx-auto flex max-w-[28rem] flex-col gap-2 md:inset-x-auto md:bottom-6 md:right-6 md:mx-0 md:w-[22rem]"
         role="status"
         aria-live="polite"
       >

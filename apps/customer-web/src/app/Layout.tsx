@@ -6,18 +6,18 @@ import { cn } from "../lib/utils";
 import { IconCart, IconChat, IconChevron, IconPin, IconReceipt, IconSearch, IconStore, IconUser } from "../components/Icons";
 import { PageSkeleton } from "../components/States";
 
-function CartCount({ branchId }: { branchId: string }) {
+function CartCount({ branchId, className }: { branchId: string; className?: string }) {
   const { data } = useCart(branchId);
   const count = data?.items.reduce((n, i) => n + i.qty, 0) ?? 0;
   if (count <= 0) return null;
-  return <span className="count-badge left-1/2 top-1 ml-2">{count}</span>;
+  return <span className={cn("count-badge", className)}>{count}</span>;
 }
 
-function ChatCount() {
+function ChatCount({ className }: { className?: string }) {
   const { data } = useChatThreads("customer_admin");
   const count = data?.reduce((n, t) => n + t.unread_count, 0) ?? 0;
   if (count <= 0) return null;
-  return <span className="count-badge left-1/2 top-1 ml-2">{count}</span>;
+  return <span className={cn("count-badge", className)}>{count}</span>;
 }
 
 interface Tab {
@@ -26,10 +26,13 @@ interface Tab {
   label: string;
   icon: ReactNode;
   active: boolean;
-  badge?: ReactNode;
+  // Rendered twice: over the icon in the phone tab bar, inline in the desktop header.
+  badge?: (className: string) => ReactNode;
 }
 
 const LAST_BRANCH_KEY = "2m.last_branch";
+const BADGE_ON_ICON = "left-1/2 top-1.5 ml-1.5";
+const BADGE_INLINE = "static";
 
 export const CATALOG_SEARCH_ID = "catalog-search";
 
@@ -59,12 +62,19 @@ export function Layout() {
         label: "Keranjang",
         icon: <IconCart />,
         active: pathname === `/b/${branchId}/cart`,
-        badge: <CartCount branchId={branchId} />,
+        badge: (className) => <CartCount branchId={branchId} className={className} />,
       });
     }
     tabs.push(
       { key: "orders", to: "/orders", label: "Pesanan", icon: <IconReceipt />, active: pathname.startsWith("/orders") },
-      { key: "chat", to: "/chat", label: "Chat", icon: <IconChat />, active: pathname === "/chat", badge: <ChatCount /> },
+      {
+        key: "chat",
+        to: "/chat",
+        label: "Chat",
+        icon: <IconChat />,
+        active: pathname === "/chat",
+        badge: (className) => <ChatCount className={className} />,
+      },
       { key: "account", to: "/account", label: "Akun", icon: <IconUser />, active: pathname === "/account" },
     );
   } else {
@@ -72,43 +82,62 @@ export function Layout() {
   }
 
   return (
-    <div className={cn(onCatalog && "page-wash")}>
-      <div className={cn("app-shell", onCatalog && "md:max-w-4xl")}>
-        <header className={cn("app-header", onCatalog && "static bg-transparent backdrop-blur-none")}>
-          <Link to="/" aria-label="Ganti cabang" className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="min-w-0 leading-tight">
-              <span className="block text-xs text-muted-foreground">Belanja di</span>
-              <span className="flex items-center gap-1 font-bold">
-                <IconPin className="shrink-0 text-primary" />
-                <span className="truncate">{branch?.name ?? "2M Sembako"}</span>
-                <IconChevron className="shrink-0 rotate-90 text-sm text-muted-foreground" />
-              </span>
+    <div className="flex min-h-dvh flex-col">
+      <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 md:px-8">
+          <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-md bg-rail text-sm font-extrabold tracking-tight text-rail-foreground">
+            2M
+          </span>
+          <Link
+            to="/"
+            aria-label="Ganti cabang"
+            className="group -my-1 flex min-w-0 flex-col justify-center rounded-md py-1 pr-2 leading-tight transition-transform duration-100 active:scale-[0.98]"
+          >
+            <span className="t-label">Belanja di</span>
+            <span className="flex items-center gap-1 font-extrabold tracking-tight">
+              <IconPin className="shrink-0 text-primary" />
+              <span className="truncate">{branch?.name ?? "2M Sembako"}</span>
+              <IconChevron className="shrink-0 rotate-90 text-sm text-muted-foreground transition-transform duration-200 ease-settle group-hover:translate-y-0.5" />
             </span>
           </Link>
+
+          <nav aria-label="Navigasi utama" className="ml-auto hidden items-center gap-1 md:flex">
+            {tabs.map((t) => (
+              <Link key={t.key} to={t.to} aria-current={t.active ? "page" : undefined} className="nav-link">
+                {t.label}
+                {t.badge?.(BADGE_INLINE)}
+              </Link>
+            ))}
+          </nav>
+
           {onCatalog && (
             <button
               type="button"
               aria-label="Cari produk"
               onClick={() => document.getElementById(CATALOG_SEARCH_ID)?.focus()}
-              className="icon-btn shrink-0 bg-surface shadow-sm"
+              className="icon-btn ml-auto md:hidden"
             >
               <IconSearch />
             </button>
           )}
-        </header>
+        </div>
+      </header>
+
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col pb-[calc(var(--nav-height)+1rem+env(safe-area-inset-bottom))] md:px-4 md:pb-8">
         <Outlet />
-        <nav className="tab-bar" aria-label="Navigasi utama">
-          <div className="tab-bar-inner">
-            {tabs.map((t) => (
-              <Link key={t.key} to={t.to} aria-current={t.active ? "page" : undefined} className="tab-bar-item">
-                <span className="tab-bar-icon">{t.icon}</span>
-                {t.label}
-                {t.badge}
-              </Link>
-            ))}
-          </div>
-        </nav>
       </div>
+
+      <nav className="tab-bar md:hidden" aria-label="Navigasi utama">
+        <div className="tab-bar-inner">
+          {tabs.map((t) => (
+            <Link key={t.key} to={t.to} aria-current={t.active ? "page" : undefined} className="tab-bar-item">
+              <span className="tab-bar-icon">{t.icon}</span>
+              {t.label}
+              {t.badge?.(BADGE_ON_ICON)}
+            </Link>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }

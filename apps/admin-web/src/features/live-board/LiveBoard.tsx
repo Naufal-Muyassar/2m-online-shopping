@@ -9,6 +9,7 @@ import {
   type ChatOpenRequest,
   type MetaConfigResponse,
 } from "@2m/shared";
+import { Dialog } from "../../components/Dialog";
 import { Segmented, useSwapX } from "../../components/Segmented";
 import { api, errorMessage } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -32,25 +33,6 @@ function useRefreshBoard() {
     void queryClient.invalidateQueries({ queryKey: ["admin-couriers", branchId] });
   };
 }
-
-export function Dialog({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div
-      className="fixed inset-0 z-40 flex animate-fade-in items-center justify-center bg-foreground/50 p-4 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="card w-full max-w-sm animate-rise space-y-4 p-5 shadow-lg">
-        <h2 className="text-lg font-bold">{title}</h2>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-export const SECONDARY_BTN = "min-h-11 rounded-md border bg-surface px-4 py-2 font-medium hover:bg-muted disabled:opacity-60";
-export const PRIMARY_BTN =
-  "min-h-11 rounded-md bg-primary px-4 py-2 font-bold text-primary-foreground hover:bg-primary-pressed disabled:opacity-60";
 
 const ORDER_PILL: Record<string, string> = {
   PENDING_PAYMENT: "pill-warning",
@@ -97,10 +79,10 @@ function AssignDialog({ order, onClose }: { order: AdminOrder; onClose: () => vo
 
   return (
     <Dialog title={`Tugaskan ${order.code}`}>
-      <label className="field-label block">
+      <label className="field-label flex flex-col gap-1.5">
         Kurir (IDLE)
         <select
-          className="field mt-1"
+          className="field"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           disabled={couriers.isLoading}
@@ -125,10 +107,10 @@ function AssignDialog({ order, onClose }: { order: AdminOrder; onClose: () => vo
         </p>
       )}
       <div className="flex justify-end gap-2">
-        <button className={SECONDARY_BTN} onClick={onClose} disabled={assign.isPending}>
+        <button className="btn btn-secondary" onClick={onClose} disabled={assign.isPending}>
           Batal
         </button>
-        <button className={PRIMARY_BTN} onClick={() => assign.mutate()} disabled={assign.isPending || !target}>
+        <button className="btn btn-primary" onClick={() => assign.mutate()} disabled={assign.isPending || !target}>
           {assign.isPending ? "Memproses…" : "Tugaskan"}
         </button>
       </div>
@@ -157,10 +139,10 @@ function ReleaseDialog({ order, onClose }: { order: AdminOrder; onClose: () => v
       <p className="text-sm text-muted-foreground">
         Order kembali ke "Menunggu kurir"{order.assigned_courier ? ` dan ${order.assigned_courier.name} menjadi IDLE` : ""}.
       </p>
-      <label className="field-label block">
+      <label className="field-label flex flex-col gap-1.5">
         Alasan
         <textarea
-          className="field mt-1"
+          className="field"
           maxLength={200}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -173,11 +155,11 @@ function ReleaseDialog({ order, onClose }: { order: AdminOrder; onClose: () => v
         </p>
       )}
       <div className="flex justify-end gap-2">
-        <button className={SECONDARY_BTN} onClick={onClose} disabled={release.isPending}>
+        <button className="btn btn-secondary" onClick={onClose} disabled={release.isPending}>
           Batal
         </button>
         <button
-          className="min-h-11 rounded-md bg-destructive px-4 py-2 font-bold text-destructive-foreground hover:opacity-90 disabled:opacity-60"
+          className="btn btn-danger"
           onClick={() => release.mutate()}
           disabled={release.isPending || reason.trim() === ""}
         >
@@ -211,29 +193,20 @@ function OrderActions({ order }: { order: AdminOrder }) {
     onError: (err) => toast("error", errorMessage(err)),
   });
 
-  const buttonClass = "w-full min-h-11 rounded-md px-3 py-2 font-bold disabled:opacity-60";
-
   return (
     <>
       {isBranchAdmin && order.status === "PAID" && (
-        <button
-          className={cn(buttonClass, "bg-primary text-primary-foreground hover:bg-primary-pressed")}
-          disabled={accept.isPending}
-          onClick={() => accept.mutate()}
-        >
+        <button className="btn btn-primary btn-lg btn-block" disabled={accept.isPending} onClick={() => accept.mutate()}>
           {accept.isPending ? "Memproses…" : "Terima"}
         </button>
       )}
       {isBranchAdmin && order.status === "ACCEPTED" && (
-        <button className={cn(buttonClass, "border bg-surface hover:bg-muted")} onClick={() => setDialog("assign")}>
+        <button className="btn btn-secondary btn-block" onClick={() => setDialog("assign")}>
           Tugaskan manual
         </button>
       )}
       {isBranchAdmin && order.status === "PICKING" && (
-        <button
-          className={cn(buttonClass, "bg-destructive-surface text-destructive hover:bg-destructive hover:text-destructive-foreground")}
-          onClick={() => setDialog("release")}
-        >
+        <button className="btn btn-danger-quiet btn-block" onClick={() => setDialog("release")}>
           Lepas kurir
         </button>
       )}
@@ -269,11 +242,7 @@ function ForcePaidButton({ order }: { order: AdminOrder }) {
 
   if (!demoMode) return null;
   return (
-    <button
-      className="min-h-11 w-full rounded-md bg-destructive px-3 py-2 font-bold text-destructive-foreground hover:opacity-90 disabled:opacity-60"
-      disabled={forcePaid.isPending}
-      onClick={() => forcePaid.mutate()}
-    >
+    <button className="btn btn-danger btn-block" disabled={forcePaid.isPending} onClick={() => forcePaid.mutate()}>
       Tandai PAID (demo)
     </button>
   );
@@ -282,16 +251,16 @@ function ForcePaidButton({ order }: { order: AdminOrder }) {
 function RouteBlock({ order, selected, from }: { order: AdminOrder; selected: boolean; from: string }) {
   const stop = (label: string, value: string, hint?: string) => (
     <div className="min-w-0">
-      <p className={cn("text-xs", selected ? "text-rail-muted" : "text-muted-foreground")}>{label}</p>
+      <p className={cn("t-label", selected && "text-rail-muted")}>{label}</p>
       <p className="truncate font-bold">{value}</p>
-      {hint && <p className={cn("truncate text-xs", selected ? "text-rail-muted" : "text-muted-foreground")}>{hint}</p>}
+      {hint && <p className={cn("t-label truncate", selected && "text-rail-muted")}>{hint}</p>}
     </div>
   );
   return (
-    <div className={cn("mt-3 flex gap-3 rounded-2xl p-3", selected ? "bg-white/10" : "bg-muted/60")}>
+    <div className={cn("mt-3 flex gap-3 border-t pt-3", selected ? "border-rail-foreground/20" : "border-border")}>
       <div className="flex flex-col items-center py-1.5" aria-hidden="true">
-        <span className={cn("size-2.5 rounded-full", selected ? "bg-surface" : "border-2 border-primary")} />
-        <span className={cn("my-1 w-px flex-1 border-l border-dashed", selected ? "border-surface/60" : "border-input")} />
+        <span className={cn("size-2.5 rounded-full", selected ? "bg-rail-foreground" : "border-2 border-foreground")} />
+        <span className={cn("my-1 w-px flex-1 border-l border-dashed", selected ? "border-rail-foreground/50" : "border-input")} />
         <span className="size-2.5 rounded-full bg-promo" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -310,26 +279,26 @@ function TrackCard({ order, selected, from, onSelect }: { order: AdminOrder; sel
         onClick={onSelect}
         aria-pressed={selected}
         className={cn(
-          "w-full rounded-[1.25rem] p-3.5 text-left text-sm transition-[background-color,box-shadow,transform] duration-200 active:scale-[0.985]",
-          selected ? "bg-hero text-primary-foreground" : "bg-surface shadow-sm hover:shadow-md",
-          late && !selected && "bg-destructive-surface ring-1 ring-destructive",
-          late && selected && "ring-2 ring-destructive",
+          "w-full rounded-lg border p-3.5 text-left text-sm transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.985]",
+          selected ? "border-rail bg-rail text-rail-foreground" : "border-border bg-surface hover:border-foreground/50",
+          late && !selected && "border-destructive bg-destructive-surface",
+          late && selected && "ring-2 ring-destructive ring-offset-2 ring-offset-surface",
         )}
       >
-        <span className="flex items-center justify-between gap-2 font-bold">
-          <span className="truncate tabular-nums">{order.code}</span>
+        <span className="flex items-center justify-between gap-2">
+          <span className="truncate font-extrabold tabular-nums tracking-tight">{order.code}</span>
           <span className={cn("pill pill-dot shrink-0", ORDER_PILL[order.status])}>{STATUS_LABELS[order.status] ?? order.status}</span>
         </span>
         <span className="mt-3 flex items-center gap-2">
-          <span className={cn("avatar size-9 text-sm", selected && "bg-none bg-white/15")} aria-hidden="true">
+          <span className={cn("avatar size-9 text-sm", selected && "bg-rail-foreground/15 text-rail-foreground")} aria-hidden="true">
             {order.assigned_courier?.name.charAt(0) ?? "?"}
           </span>
           <span className="min-w-0 leading-tight">
             <span className="block truncate font-semibold">{order.assigned_courier?.name ?? "Belum ada kurir"}</span>
             <span
               className={cn(
-                "block text-xs",
-                late ? (selected ? "font-semibold text-surface" : "font-semibold text-destructive") : selected ? "text-rail-muted" : "text-muted-foreground",
+                "block text-xs tabular-nums",
+                late ? (selected ? "font-bold text-rail-foreground" : "font-bold text-destructive") : selected ? "text-rail-muted" : "text-muted-foreground",
               )}
             >
               {age} mnt di status ini{late ? ", melewati SLA" : ""}
@@ -363,9 +332,9 @@ const PANEL_TABS: { id: PanelTab; label: string }[] = [
 
 function DetailRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex justify-between gap-3 py-2 text-sm">
+    <div className="flex justify-between gap-3 py-2.5 text-sm">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 text-right font-medium">{children}</dd>
+      <dd className="min-w-0 text-right font-semibold">{children}</dd>
     </div>
   );
 }
@@ -379,19 +348,24 @@ function OrderPanel({ order, from }: { order: AdminOrder; from: string }) {
 
   return (
     <section
-      className="material relative z-[600] flex min-h-[28rem] flex-col gap-3 rounded-[1.75rem] p-4 xl:absolute xl:bottom-3 xl:right-3 xl:top-3 xl:min-h-0 xl:w-[24rem]"
+      className="material relative z-[600] flex min-h-[28rem] flex-col gap-3 rounded-2xl p-4 xl:absolute xl:bottom-3 xl:right-3 xl:top-3 xl:min-h-0 xl:w-[24rem]"
       aria-label={`Order ${order.code}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-xl font-bold tabular-nums">{order.code}</h2>
+        <h2 className="text-xl font-extrabold tabular-nums tracking-tight">{order.code}</h2>
         <span className={cn("pill pill-dot", ORDER_PILL[order.status])}>{STATUS_LABELS[order.status] ?? order.status}</span>
       </div>
-      <Segmented label="Panel order" value={tab} onChange={setTab} items={PANEL_TABS} />
+      <Segmented
+        label="Panel order"
+        value={tab}
+        onChange={setTab}
+        items={PANEL_TABS.map((t) => ({ id: t.id, title: t.label, label: <span className="whitespace-nowrap max-sm:text-xs">{t.label}</span> }))}
+      />
 
       <div key={tab} className="swap-in flex min-h-0 flex-1 flex-col" style={{ "--swap-x": swapX } as CSSProperties}>
         {tab === "detail" && (
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-            <dl className="divide-y">
+            <dl className="divide-y divide-border border-y border-border">
               <DetailRow label="Dikirim dari">{from}</DetailRow>
               <DetailRow label="Penerima">{order.receiver_name}</DetailRow>
               <DetailRow label="Area">{order.area_hint}</DetailRow>
@@ -399,18 +373,18 @@ function OrderPanel({ order, from }: { order: AdminOrder; from: string }) {
               <DetailRow label="Di status ini">{age} mnt</DetailRow>
             </dl>
             <div>
-              <h3 className="mb-1 font-bold">Barang</h3>
-              <ul className="divide-y text-sm">
+              <h3 className="t-label mb-1">Barang</h3>
+              <ul className="divide-y divide-border text-sm">
                 {order.items.map((item) => (
                   <li key={item.name} className="flex justify-between gap-3 py-2">
                     <span>{item.name}</span>
-                    <span className="font-bold tabular-nums">×{item.qty}</span>
+                    <span className="font-extrabold tabular-nums">×{item.qty}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 flex justify-between border-t pt-2 text-lg font-bold">
-                <span>Total</span>
-                <span className="tabular-nums">{formatIDR(order.grand_total)}</span>
+              <p className="mt-1 flex items-baseline justify-between border-t border-foreground pt-3">
+                <span className="t-title">Total</span>
+                <span className="text-2xl font-extrabold tabular-nums tracking-tight">{formatIDR(order.grand_total)}</span>
               </p>
             </div>
             <div className="mt-auto space-y-2">
@@ -464,17 +438,17 @@ export function LiveBoard({ search }: { search: string }) {
       (await api.get<AdminOrdersResponse>("/admin/orders", { params: { branch_id: branchId } })).data,
   });
 
-  if (!branchId) return <p className="p-4 text-sm text-muted-foreground">Pilih cabang…</p>;
+  if (!branchId) return <p className="p-4 text-sm text-muted-foreground md:p-6">Pilih cabang…</p>;
   if (isLoading)
     return (
-      <div className="grid gap-4 p-4 lg:grid-cols-[24rem_minmax(0,1fr)]" role="status" aria-busy="true" aria-label="Memuat">
+      <div className="grid gap-4 p-4 md:p-6 lg:grid-cols-[24rem_minmax(0,1fr)]" role="status" aria-busy="true" aria-label="Memuat">
         <div className="skeleton h-96" />
         <div className="skeleton h-96" />
       </div>
     );
   if (isError)
     return (
-      <div className="p-4">
+      <div className="p-4 md:p-6">
         <p className="alert-box" role="alert">
           {errorMessage(error)}
         </p>
@@ -496,9 +470,9 @@ export function LiveBoard({ search }: { search: string }) {
   const branch = branches.find((b) => b.id === branchId) ?? null;
 
   return (
-    <div className="grid gap-4 p-4 lg:h-[calc(100dvh-5rem)] lg:grid-cols-[24rem_minmax(0,1fr)]">
-      <section className="card flex min-h-0 flex-col gap-3 shadow-md">
-        <h1 className="text-2xl font-bold">Tracking order</h1>
+    <div className="grid grid-cols-1 gap-4 p-4 md:p-6 lg:h-[calc(100dvh-4rem)] lg:grid-cols-[24rem_minmax(0,1fr)]">
+      <section className="card flex min-h-0 flex-col gap-4 max-lg:max-h-[38rem]">
+        <h1 className="t-headline">Tracking order</h1>
         <Segmented
           label="Status order"
           value={tab}
@@ -508,7 +482,7 @@ export function LiveBoard({ search }: { search: string }) {
             title: `${t.title}: ${inTab(t.id).length}`,
             label: (
               <>
-                <span className="text-base font-bold leading-tight tabular-nums">{inTab(t.id).length}</span>
+                <span className="text-base font-extrabold leading-tight tabular-nums">{inTab(t.id).length}</span>
                 <span className="max-w-full truncate text-[0.6875rem] font-semibold leading-tight">{t.short}</span>
               </>
             ),
@@ -516,7 +490,7 @@ export function LiveBoard({ search }: { search: string }) {
         />
         <ul
           key={tab}
-          className="swap-in -mx-1 flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-1 pb-1"
+          className="swap-in -mx-1 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-1 pb-1"
           style={{ "--swap-x": swapX } as CSSProperties}
         >
           {items.map((o) => (
@@ -531,7 +505,7 @@ export function LiveBoard({ search }: { search: string }) {
       </section>
 
       <div className="flex min-h-0 flex-col gap-4 xl:relative">
-        <div className="relative isolate h-72 shrink-0 overflow-hidden rounded-[1.75rem] shadow-md lg:h-auto lg:min-h-64 lg:flex-1 xl:absolute xl:inset-0">
+        <div className="relative isolate h-72 shrink-0 overflow-hidden rounded-2xl border border-border sm:h-96 lg:h-auto lg:min-h-64 lg:flex-1 xl:absolute xl:inset-0">
           <TrackingMap order={selected} couriers={couriers.data?.couriers ?? []} branch={branch} />
         </div>
         {selected && <OrderPanel key={selected.id} order={selected} from={from} />}

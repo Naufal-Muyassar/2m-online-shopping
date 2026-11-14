@@ -1,13 +1,12 @@
 import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "hero" | "secondary" | "destructive";
+type Variant = "primary" | "secondary" | "destructive";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "rounded-md bg-primary text-primary-foreground enabled:hover:bg-primary-pressed",
-  hero: "btn-hero",
-  secondary: "rounded-md border border-border bg-surface text-foreground enabled:hover:bg-muted",
-  destructive: "rounded-md bg-destructive text-destructive-foreground enabled:hover:brightness-110",
+  primary: "btn-primary",
+  secondary: "btn-secondary",
+  destructive: "btn-danger",
 };
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -15,18 +14,10 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
+// Courier actions are full width and 3.5rem tall: they are pressed on the move, often with one thumb.
 export function Button({ variant = "primary", loading, disabled, className, children, ...rest }: Props) {
   return (
-    <button
-      type="button"
-      disabled={disabled || loading}
-      className={cn(
-        "inline-flex min-h-14 w-full items-center justify-center px-4 text-lg font-bold transition duration-150 enabled:active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60",
-        VARIANTS[variant],
-        className,
-      )}
-      {...rest}
-    >
+    <button type="button" disabled={disabled || loading} className={cn("btn btn-lg btn-block", VARIANTS[variant], className)} {...rest}>
       {loading ? "Memproses…" : children}
     </button>
   );

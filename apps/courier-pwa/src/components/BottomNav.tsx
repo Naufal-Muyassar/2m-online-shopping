@@ -17,11 +17,9 @@ export function BottomNav() {
     <nav aria-label="Navigasi utama" className="dock">
       {TABS.map(({ to, label, Icon }) => (
         <Link key={to} to={to} aria-label={label} aria-current={pathname === to ? "page" : undefined} className="dock-tab">
-          <span className="dock-tab-icon">
-            <Icon aria-hidden="true" />
-          </span>
+          <Icon aria-hidden="true" className="shrink-0" />
           <span className="dock-tab-label">{label}</span>
-          {to === "/chat" && unread > 0 && <span className="count-badge right-1 top-0">{unread}</span>}
+          {to === "/chat" && unread > 0 && <span className="count-badge right-2 top-1">{unread}</span>}
         </Link>
       ))}
     </nav>

@@ -55,8 +55,8 @@ function SlideToLogin() {
   };
 
   return (
-    <div ref={trackRef} className="relative flex h-16 items-center rounded-full bg-surface p-1.5">
-      <span className="absolute right-6 flex items-center gap-2 font-medium italic text-foreground">
+    <div ref={trackRef} className="relative flex h-16 items-center rounded-xl bg-rail-foreground p-1.5">
+      <span className="absolute right-6 flex items-center gap-2 text-sm font-bold text-rail">
         Geser <FaArrowRight aria-hidden="true" />
       </span>
       <button
@@ -69,7 +69,7 @@ function SlideToLogin() {
           if (!dragged.current) navigate("/login");
         }}
         style={{ transform: `translateX(${offset}px)` }}
-        className="relative h-full touch-none rounded-full bg-foreground px-8 font-bold text-surface"
+        className="relative h-full touch-none rounded-[0.625rem] bg-rail px-8 font-extrabold text-rail-foreground shadow-md"
       >
         Masuk
       </button>
@@ -79,21 +79,22 @@ function SlideToLogin() {
 
 export function LoggedOutDashboard() {
   return (
-    <div className="flex min-h-dvh flex-col bg-primary-surface">
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 pt-10">
-        <p className="flex items-center gap-2 text-xl font-bold text-primary">
-          <span className="flex size-10 items-center justify-center rounded-md bg-hero text-sm text-primary-foreground">2M</span>
+    <div className="flex min-h-dvh flex-col">
+      <div className="flex flex-1 flex-col gap-6 px-5 pb-8 pt-[calc(1.5rem+env(safe-area-inset-top))]">
+        <p className="flex items-center gap-3 text-lg font-extrabold tracking-tight">
+          <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-md bg-rail text-sm text-rail-foreground">
+            2M
+          </span>
           Kurir
         </p>
-        <DeliveryArt />
+        <div className="flex flex-1 items-center justify-center">
+          <DeliveryArt />
+        </div>
       </div>
-      <svg viewBox="0 0 400 48" preserveAspectRatio="none" className="-mb-px block h-12 w-full" aria-hidden="true" focusable="false">
-        <path d="M0 48V24C70 24 110 0 200 0s130 24 200 24v24z" fill="hsl(var(--foreground))" />
-      </svg>
-      <main className="flex flex-col gap-5 bg-foreground px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-3 text-center text-surface">
+      <main className="panel-ink flex flex-col gap-6 rounded-none px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-7">
         <div>
-          <h1 className="text-3xl font-bold">Antar cepat, aman, dan tepat waktu</h1>
-          <p className="mt-2 opacity-80">Masuk ke akun kurir untuk melihat order dan mulai bekerja.</p>
+          <h1 className="t-display">Antar cepat, aman, dan tepat waktu</h1>
+          <p className="mt-3 text-rail-muted">Masuk ke akun kurir untuk melihat order dan mulai bekerja.</p>
         </div>
         <SlideToLogin />
       </main>

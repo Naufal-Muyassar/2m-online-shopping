@@ -1,4 +1,5 @@
 import { IconMinus, IconPlus } from "./Icons";
+import { cn } from "../lib/utils";
 
 interface Props {
   name: string;
@@ -7,21 +8,19 @@ interface Props {
   canIncrease: boolean;
   onDecrease: () => void;
   onIncrease: () => void;
+  className?: string;
 }
 
-const stepButton =
-  "flex size-11 shrink-0 items-center justify-center rounded-full text-lg text-primary hover:bg-primary-surface disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent";
-
-export function QtyStepper({ name, qty, canDecrease, canIncrease, onDecrease, onIncrease }: Props) {
+export function QtyStepper({ name, qty, canDecrease, canIncrease, onDecrease, onIncrease, className }: Props) {
   return (
-    <div className="flex items-center justify-between rounded-full border border-border bg-surface">
-      <button type="button" aria-label={`Kurangi ${name}`} disabled={!canDecrease} onClick={onDecrease} className={stepButton}>
+    <div className={cn("stepper", className)}>
+      <button type="button" aria-label={`Kurangi ${name}`} disabled={!canDecrease} onClick={onDecrease} className="stepper-key">
         <IconMinus />
       </button>
-      <span className="min-w-6 text-center text-sm font-bold" aria-live="polite">
+      <span className="min-w-8 text-center text-sm font-extrabold tabular-nums" aria-live="polite">
         {qty}
       </span>
-      <button type="button" aria-label={`Tambah ${name}`} disabled={!canIncrease} onClick={onIncrease} className={stepButton}>
+      <button type="button" aria-label={`Tambah ${name}`} disabled={!canIncrease} onClick={onIncrease} className="stepper-key">
         <IconPlus />
       </button>
     </div>

@@ -24,16 +24,17 @@ const STEPS = [
 function Stepper({ status }: { status: string }) {
   const current = STEPS.findIndex((s) => s.status === status);
   return (
-    <ol className="flex gap-2" aria-label="Tahap pesanan">
+    <ol className="grid grid-cols-2 gap-3" aria-label="Tahap pesanan">
       {STEPS.map((s, i) => (
         <li
           key={s.status}
-          className={`flex-1 rounded-full px-3 py-2 text-center text-sm font-bold transition-colors ${
+          aria-current={i === current ? "step" : undefined}
+          className={`border-t-2 pt-2 text-sm transition-colors duration-300 ${
             i === current
-              ? "bg-primary text-primary-foreground shadow-glow"
+              ? "border-foreground font-extrabold"
               : i < current
-                ? "bg-success-surface text-success"
-                : "bg-muted text-muted-foreground"
+                ? "border-success font-semibold text-success"
+                : "border-border font-semibold text-muted-foreground"
           }`}
         >
           {i + 1}. {s.label}
@@ -54,8 +55,8 @@ function PickingChecklist({ order }: { order: CourierOrder }) {
   return (
     <section className="card animate-rise">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-bold">Barang</h2>
-        <span className={`pill ${ready === order.items.length ? "pill-success" : "pill-warning"}`}>
+        <h2 className="t-title">Barang</h2>
+        <span className={`pill tabular-nums ${ready === order.items.length ? "pill-success" : "pill-warning"}`}>
           {ready} dari {order.items.length} item siap
         </span>
       </div>
@@ -63,10 +64,10 @@ function PickingChecklist({ order }: { order: CourierOrder }) {
         {order.items.map((it) => {
           const done = it.picked_qty >= it.qty;
           return (
-            <li key={it.id} className={`rounded-md border p-2 transition-colors ${done ? "border-success bg-success-surface" : "border-border bg-surface"}`}>
+            <li key={it.id} className={`rounded-md border p-2.5 transition-colors duration-200 ${done ? "border-success bg-success-surface" : "border-border bg-surface"}`}>
               <button
                 type="button"
-                className="flex min-h-12 w-full items-center justify-between gap-2 text-left active:scale-[0.99]"
+                className="flex min-h-12 w-full items-center justify-between gap-2 text-left transition-transform duration-100 active:scale-[0.99]"
                 disabled={pick.isPending}
                 onClick={() => set(it.id, it.qty)}
               >
@@ -74,9 +75,9 @@ function PickingChecklist({ order }: { order: CourierOrder }) {
                   <span aria-hidden className={done ? "font-bold text-success" : "text-muted-foreground"}>
                     {done ? "✓" : "○"}
                   </span>
-                  <span>{it.name}</span>
+                  <span className="font-medium">{it.name}</span>
                 </span>
-                <span className="font-bold">
+                <span className="font-extrabold tabular-nums">
                   {it.picked_qty}/{it.qty}
                 </span>
               </button>
@@ -84,7 +85,7 @@ function PickingChecklist({ order }: { order: CourierOrder }) {
                 <button
                   type="button"
                   aria-label={`Kurangi ${it.name}`}
-                  className="icon-btn size-12 border border-border bg-surface text-2xl disabled:opacity-60"
+                  className="icon-btn size-12 text-2xl"
                   disabled={pick.isPending || it.picked_qty <= 0}
                   onClick={() => set(it.id, it.picked_qty - 1)}
                 >
@@ -93,7 +94,7 @@ function PickingChecklist({ order }: { order: CourierOrder }) {
                 <button
                   type="button"
                   aria-label={`Tambah ${it.name}`}
-                  className="icon-btn size-12 bg-primary-surface text-2xl text-primary-pressed disabled:opacity-60"
+                  className="icon-btn size-12 border-foreground text-2xl"
                   disabled={pick.isPending || it.picked_qty >= it.qty}
                   onClick={() => set(it.id, it.picked_qty + 1)}
                 >
@@ -123,12 +124,12 @@ function ReleaseDialog({ orderId, onClose, onReleased }: { orderId: string; onCl
     });
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Lepas order" className="sheet-backdrop z-50">
+    <div role="dialog" aria-modal="true" aria-label="Lepas order" className="sheet-backdrop">
       <div className="sheet-panel">
         <span aria-hidden="true" className="sheet-grabber" />
-        <h2 className="text-xl font-bold">Lepas order?</h2>
+        <h2 className="t-headline">Lepas order?</h2>
         <p className="text-muted-foreground">Order kembali ke daftar job dan bisa diambil kurir lain.</p>
-        <label className="flex flex-col gap-1 text-sm font-medium text-muted-foreground">
+        <label className="field-label flex flex-col gap-1.5">
           Alasan
           <textarea
             className="field min-h-24 text-lg"
@@ -170,9 +171,9 @@ function CustomerChatButton({ orderId }: { orderId: string }) {
           { onSuccess: (t) => navigate(`/chat/${t.id}`), onError: (err) => notify("error", errorMessage(err)) },
         )
       }
-      className="mt-3 flex min-h-14 w-full items-center justify-center gap-2 rounded-full border border-border bg-surface text-lg font-bold transition active:scale-[0.97] disabled:opacity-60"
+      className="btn btn-secondary btn-lg btn-block"
     >
-      <FaCommentDots aria-hidden="true" className="text-primary" />
+      <FaCommentDots aria-hidden="true" />
       Chat pelanggan
       {unread > 0 && <span className="count-badge static">{unread}</span>}
     </button>
@@ -196,9 +197,9 @@ function DeliveryMap({ order }: { order: CourierOrder }) {
         markers={markers}
         route={ROUTE}
         ariaLabel="Peta lokasi Anda dan tujuan"
-        className="isolate h-64 w-full overflow-hidden rounded-[1.25rem] shadow-md"
+        className="isolate h-64 w-full overflow-hidden rounded-lg border border-border sm:h-72"
       />
-      {!me && <p className="mt-2 text-sm text-muted-foreground">Menunggu lokasi Anda. Pastikan izin lokasi aktif.</p>}
+      {!me && <p className="t-label mt-2">Menunggu lokasi Anda. Pastikan izin lokasi aktif.</p>}
     </section>
   );
 }
@@ -210,7 +211,7 @@ function LocationNotice() {
       <FaMapMarkerAlt aria-hidden="true" className="mt-1 shrink-0" />
       <div>
         <p>Jaga layar tetap menyala agar lokasi terkirim</p>
-        {sec !== null && <p className="font-bold">Lokasi terakhir terkirim {sec} detik lalu</p>}
+        {sec !== null && <p className="font-extrabold tabular-nums">Lokasi terakhir terkirim {sec} detik lalu</p>}
       </div>
     </div>
   );
@@ -267,8 +268,8 @@ export function OrderDetailPage() {
         <p role="alert" className="alert-box">
           {errorMessage(query.error)}
         </p>
-        <Link to="/" className="inline-flex min-h-11 items-center font-semibold text-accent underline">
-          <FaArrowLeft aria-hidden="true" className="mr-2 inline" />
+        <Link to="/" className="link self-start">
+          <FaArrowLeft aria-hidden="true" />
           Kembali
         </Link>
       </main>
@@ -283,60 +284,56 @@ export function OrderDetailPage() {
   return (
     <>
       <header className="app-header">
-        <Link to="/" aria-label="Kembali" className="icon-btn shrink-0">
+        <Link to="/" aria-label="Kembali" className="icon-btn">
           <FaArrowLeft aria-hidden="true" />
         </Link>
-        <h1 className="min-w-0 flex-1 truncate text-xl font-bold">{order.code}</h1>
-        <span className={`pill pill-dot ${STATUS_PILLS[order.status] ?? ""}`}>{STATUS_LABELS[order.status] ?? order.status}</span>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <h1 className="text-lg font-extrabold tabular-nums tracking-tight">{order.code}</h1>
+          <span className={`pill pill-dot ${STATUS_PILLS[order.status] ?? ""}`}>{STATUS_LABELS[order.status] ?? order.status}</span>
+        </div>
       </header>
 
       <main className="app-main pb-8">
         {(order.status === "PICKING" || order.status === "ON_DELIVERY") && <Stepper status={order.status} />}
 
-        {returning && <p className="alert-box font-medium">Kembalikan barang ke cabang – menunggu konfirmasi admin</p>}
+        {returning && <p className="alert-box">Kembalikan barang ke cabang – menunggu konfirmasi admin</p>}
 
         {(order.status === "PICKING" || order.status === "ON_DELIVERY") && <DeliveryMap order={order} />}
 
         {order.status === "PICKING" && <PickingChecklist order={order} />}
 
-        <section className="card animate-rise" style={{ animationDelay: "70ms" }}>
-          <h2 className="eyebrow">Penerima</h2>
-          <p className="mt-1 text-lg font-bold">{a.receiver_name}</p>
-          <a
-            href={`tel:${a.receiver_phone}`}
-            className="mt-1 flex min-h-11 items-center text-lg font-semibold text-accent underline transition-colors hover:text-primary-pressed"
-          >
-            <FaPhone aria-hidden="true" className="mr-2" />
+        <section className="card animate-rise" style={{ animationDelay: "60ms" }}>
+          <h2 className="t-label">Penerima</h2>
+          <p className="t-headline mt-1">{a.receiver_name}</p>
+          <a href={`tel:${a.receiver_phone}`} className="link mt-1 gap-2 text-lg tabular-nums">
+            <FaPhone aria-hidden="true" className="text-sm" />
             {a.receiver_phone}
           </a>
-          <p className="mt-2 [overflow-wrap:anywhere]">
+          <p className="mt-2 border-t border-border pt-3 [overflow-wrap:anywhere]">
             {a.street}
             {a.rt_rw ? `, RT/RW ${a.rt_rw}` : ""}
             {a.unit ? `, ${a.unit}` : ""}
           </p>
           {a.courier_note && <p className="note-rail mt-3 text-sm">Catatan: {a.courier_note}</p>}
-          <a
-            href={maps}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 flex min-h-14 items-center justify-center rounded-full bg-accent text-lg font-bold text-accent-foreground transition active:scale-[0.97]"
-          >
-            <FaMapMarkerAlt aria-hidden="true" className="mr-2" />
-            Buka di Google Maps
-          </a>
-          <CustomerChatButton orderId={order.id} />
+          <div className="mt-4 flex flex-col gap-2">
+            <a href={maps} target="_blank" rel="noreferrer" className="btn btn-secondary btn-lg btn-block border-foreground">
+              <FaMapMarkerAlt aria-hidden="true" />
+              Buka di Google Maps
+            </a>
+            <CustomerChatButton orderId={order.id} />
+          </div>
         </section>
 
         {order.status === "ON_DELIVERY" && <LocationNotice />}
 
         {order.status !== "PICKING" && (
-          <section className="card animate-rise" style={{ animationDelay: "140ms" }}>
-            <h2 className="eyebrow">Barang</h2>
+          <section className="card animate-rise" style={{ animationDelay: "120ms" }}>
+            <h2 className="t-label">Barang</h2>
             <ul className="mt-1 divide-y divide-border">
               {order.items.map((it) => (
-                <li key={it.id} className="flex justify-between gap-3 py-2">
-                  <span>{it.name}</span>
-                  <span className="font-bold">×{it.qty}</span>
+                <li key={it.id} className="flex justify-between gap-3 py-2.5">
+                  <span className="font-medium">{it.name}</span>
+                  <span className="font-extrabold tabular-nums">×{it.qty}</span>
                 </li>
               ))}
             </ul>
@@ -345,11 +342,11 @@ export function OrderDetailPage() {
 
         {order.status === "PICKING" && (
           <>
-            <Button variant="hero" loading={statusMutation.isPending} onClick={() => void start()}>
-              <FaTruck aria-hidden="true" className="mr-2 inline" />
+            <Button loading={statusMutation.isPending} onClick={() => void start()}>
+              <FaTruck aria-hidden="true" />
               Mulai antar
             </Button>
-            {!allPicked && <p className="text-center text-sm text-muted-foreground">Siapkan semua barang dulu untuk berangkat.</p>}
+            {!allPicked && <p className="t-label text-center">Siapkan semua barang dulu untuk berangkat.</p>}
             {startError && (
               <p role="alert" className="alert-box">
                 {startError}
@@ -366,12 +363,12 @@ export function OrderDetailPage() {
 
         {order.status === "ON_DELIVERY" && panel === "none" && (
           <>
-            <Button variant="hero" onClick={() => setPanel("deliver")}>
-              <FaCheck aria-hidden="true" className="mr-2 inline" />
+            <Button onClick={() => setPanel("deliver")}>
+              <FaCheck aria-hidden="true" />
               Selesai
             </Button>
             <Button variant="destructive" onClick={() => setPanel("fail")}>
-              <FaExclamationTriangle aria-hidden="true" className="mr-2 inline" />
+              <FaExclamationTriangle aria-hidden="true" />
               Gagal kirim
             </Button>
           </>

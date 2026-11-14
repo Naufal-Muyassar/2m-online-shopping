@@ -48,10 +48,13 @@ function Shell() {
       <nav
         ref={nav}
         aria-label="Navigasi utama"
-        className="fixed inset-x-3 bottom-3 z-[700] flex gap-1 rounded-[1.75rem] bg-rail p-1.5 shadow-nav md:sticky md:inset-x-auto md:bottom-auto md:top-0 md:h-dvh md:w-24 md:shrink-0 md:flex-col md:rounded-none md:p-2.5 md:py-4"
+        className="rail fixed inset-x-3 bottom-3 z-[700] flex gap-1 rounded-[1.125rem] bg-rail p-1.5 shadow-nav md:sticky md:inset-x-auto md:bottom-auto md:top-0 md:h-dvh md:w-[5.5rem] md:shrink-0 md:flex-col md:rounded-none md:p-2 md:py-4 md:shadow-none"
       >
-        <span aria-hidden="true" className="segmented-thumb rounded-[1.25rem] bg-rail-foreground shadow-none" data-ready={thumb.ready} style={thumb.style} />
-        <span className="mx-auto mb-5 hidden size-12 items-center justify-center rounded-2xl bg-rail-foreground text-lg font-extrabold tracking-tight text-rail md:flex">
+        <span aria-hidden="true" className="segmented-thumb rounded-xl bg-rail-foreground shadow-none" data-ready={thumb.ready} style={thumb.style} />
+        <span
+          aria-hidden="true"
+          className="mx-auto mb-5 hidden size-11 items-center justify-center rounded-md bg-rail-foreground text-base font-extrabold tracking-tight text-rail md:flex"
+        >
           2M
         </span>
         {TABS.map(({ id, label, Icon, soon }) => (
@@ -62,7 +65,7 @@ function Shell() {
             aria-current={tab === id ? "page" : undefined}
             onClick={() => setTab(id)}
             className={cn(
-              "relative z-[1] min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-[1.25rem] px-1 text-xs font-semibold transition-[color,transform] duration-150 active:scale-[0.96] md:flex-none",
+              "relative z-[1] min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[0.6875rem] font-bold transition-[color,transform] duration-150 active:scale-[0.96] md:min-h-[3.75rem] md:flex-none",
               soon ? "hidden cursor-not-allowed opacity-40 active:scale-100 md:flex" : "flex",
               tab === id ? "text-rail" : "text-rail-muted hover:text-rail-foreground",
             )}
@@ -75,24 +78,24 @@ function Shell() {
       </nav>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex min-h-20 flex-wrap items-center gap-3 px-4 py-3">
+        <header className="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-4 py-2.5 md:px-6">
           {tab === "board" && (
-            <div className="relative min-w-56 flex-1 md:max-w-md">
-              <IconSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg text-muted-foreground" />
+            <div className="relative order-last w-full sm:order-none sm:w-auto sm:min-w-56 sm:flex-1 md:max-w-md">
+              <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-muted-foreground" />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari kode order atau penerima…"
                 aria-label="Cari order"
-                className="field rounded-full pl-11"
+                className="field pl-10"
               />
             </div>
           )}
-          <div className="ml-auto flex items-center gap-3 text-sm">
+          <div className="ml-auto flex min-w-0 items-center gap-3 text-sm">
             {user?.role === "super_admin" && (
               <select
-                className="field w-auto"
+                className="field w-auto min-w-0 max-w-[11rem] font-semibold sm:max-w-none"
                 value={branchId ?? ""}
                 onChange={(e) => {
                   setThreadId(null);
@@ -111,8 +114,8 @@ function Shell() {
             <span className="avatar" aria-hidden="true">
               {user?.name?.charAt(0)}
             </span>
-            <span className="font-medium">{user?.name}</span>
-            <button className="min-h-11 rounded-full border bg-surface px-4 font-medium hover:bg-muted" onClick={() => void logout()}>
+            <span className="hidden max-w-40 truncate font-bold lg:inline">{user?.name}</span>
+            <button className="btn btn-secondary" onClick={() => void logout()}>
               Keluar
             </button>
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "@2m/map/map.css";
 
 const TILE_URL = import.meta.env.VITE_MAP_TILE_URL ?? "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTRIBUTION = import.meta.env.VITE_MAP_ATTRIBUTION ?? "© OpenStreetMap contributors";
@@ -16,6 +17,7 @@ interface Props {
   onChange: (p: LatLng) => void;
 }
 
+// Shapes take their colour from the map-* classes in @2m/map, so the picker follows the palette tokens.
 export function MapPicker({ branch, value, onChange }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -27,8 +29,9 @@ export function MapPicker({ branch, value, onChange }: Props) {
     if (!el.current) return;
     const m = L.map(el.current).setView(value ?? branch, 14);
     L.tileLayer(TILE_URL, { attribution: ATTRIBUTION, maxZoom: 19 }).addTo(m);
-    L.circle(branch, { radius: branch.radiusM, color: "#1F6B4F", weight: 1, fillOpacity: 0.05, interactive: false }).addTo(m);
-    L.circleMarker(branch, { radius: 5, color: "#1F6B4F", fillOpacity: 1, interactive: false }).addTo(m);
+    m.attributionControl.setPrefix(false);
+    L.circle(branch, { radius: branch.radiusM, className: "map-area", interactive: false }).addTo(m);
+    L.circleMarker(branch, { radius: 5, className: "map-area-center", interactive: false }).addTo(m);
     m.on("click", (e: L.LeafletMouseEvent) => onChangeRef.current({ lat: e.latlng.lat, lng: e.latlng.lng }));
     map.current = m;
     return () => {
@@ -48,8 +51,15 @@ export function MapPicker({ branch, value, onChange }: Props) {
       return;
     }
     if (pin.current) pin.current.setLatLng(value);
-    else pin.current = L.circleMarker(value, { radius: 9, color: "#A63F24", fillColor: "#A63F24", fillOpacity: 0.8 }).addTo(m);
+    else pin.current = L.circleMarker(value, { radius: 9, className: "map-pick" }).addTo(m);
   }, [value?.lat, value?.lng]);
 
-  return <div ref={el} className="isolate h-72 w-full overflow-hidden rounded-lg border border-border shadow-md" role="application" aria-label="Peta pin alamat" />;
+  return (
+    <div
+      ref={el}
+      className="map-2m isolate h-72 w-full overflow-hidden rounded-lg border border-border lg:h-full lg:min-h-[26rem]"
+      role="application"
+      aria-label="Peta pin alamat"
+    />
+  );
 }

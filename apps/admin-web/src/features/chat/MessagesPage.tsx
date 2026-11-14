@@ -28,8 +28,8 @@ function RowShell({ selected, onClick, children }: { selected: boolean; onClick:
         onClick={onClick}
         aria-pressed={selected}
         className={cn(
-          "flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-[background-color,transform] duration-150 active:scale-[0.985]",
-          selected ? "bg-primary-surface" : "hover:bg-muted",
+          "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-[background-color,border-color,transform] duration-150 active:scale-[0.985]",
+          selected ? "border-foreground bg-surface" : "border-transparent hover:bg-muted/70",
         )}
       >
         {children}
@@ -47,7 +47,7 @@ function ThreadRow({ thread, selected, onClick }: { thread: ChatThread; selected
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline justify-between gap-2">
           <span className="truncate font-bold">{thread.title}</span>
-          {thread.last_message && <span className="shrink-0 text-xs text-muted-foreground">{fmtTime(thread.last_message.at)}</span>}
+          {thread.last_message && <span className="t-label shrink-0 tabular-nums">{fmtTime(thread.last_message.at)}</span>}
         </span>
         <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
           <span className="truncate">
@@ -109,7 +109,7 @@ function CourierChat({ courier }: { courier: AdminCourier }) {
           {courier.name.charAt(0)}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-lg font-bold leading-tight">{courier.name}</span>
+          <span className="t-title block truncate">{courier.name}</span>
           <span className="block truncate text-sm text-muted-foreground">
             {courier.current_order ? `Mengantar ${courier.current_order.code}` : courier.partner_name}
           </span>
@@ -138,7 +138,7 @@ export function MessagesPage({ channel, threadId, courierId, onChannel, onThread
   const unread = useUnreadChats();
   const swapX = useSwapX(INBOXES.findIndex((i) => i.id === channel));
 
-  if (!branchId) return <p className="p-4 text-sm text-muted-foreground">Pilih cabang…</p>;
+  if (!branchId) return <p className="p-4 text-sm text-muted-foreground md:p-6">Pilih cabang…</p>;
 
   const isCourier = channel === "courier_admin";
   const threadOf = (id: string) => threads.data?.find((t) => t.courier_id === id);
@@ -150,9 +150,9 @@ export function MessagesPage({ channel, threadId, courierId, onChannel, onThread
   const failed = threads.isError || (isCourier && couriers.isError);
 
   return (
-    <div className="grid gap-4 p-4 lg:h-[calc(100dvh-5rem)] lg:grid-cols-[24rem_minmax(0,1fr)]">
-      <section className="card flex min-h-0 flex-col gap-3 shadow-md">
-        <h1 className="text-2xl font-bold">Pesan</h1>
+    <div className="grid grid-cols-1 gap-4 p-4 md:p-6 lg:h-[calc(100dvh-4rem)] lg:grid-cols-[24rem_minmax(0,1fr)]">
+      <section className="card flex min-h-0 flex-col gap-4 max-lg:max-h-[30rem]">
+        <h1 className="t-headline">Pesan</h1>
         <Segmented
           label="Kotak pesan"
           value={channel}
@@ -193,7 +193,7 @@ export function MessagesPage({ channel, threadId, courierId, onChannel, onThread
         </ul>
       </section>
 
-      <section className="card flex min-h-[28rem] flex-col gap-3 shadow-md">
+      <section className="card flex min-h-[28rem] flex-col gap-3">
         {isCourier && activeCourier && <CourierChat key={activeCourier.user_id} courier={activeCourier} />}
         {!isCourier && selectedThread && <ChatPane key={selectedThread} threadId={selectedThread} showTitle />}
         {(isCourier ? !activeCourier : !selectedThread) && (

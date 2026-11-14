@@ -19,15 +19,11 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   render() {
     if (!this.state.failed) return this.props.children;
     return (
-      <div className="p-4">
+      <div className="p-4 md:p-6">
         <div className="empty-state bg-surface" role="alert">
-          <p className="text-lg font-bold text-foreground">Halaman ini gagal ditampilkan</p>
+          <p className="t-title text-foreground">Halaman ini gagal ditampilkan</p>
           <p className="max-w-md text-sm">Data dari server tidak sesuai dengan aplikasi. Pastikan API sudah versi terbaru, lalu coba lagi.</p>
-          <button
-            type="button"
-            className="mt-2 min-h-11 rounded-full bg-primary px-5 font-bold text-primary-foreground hover:bg-primary-pressed"
-            onClick={() => this.setState({ failed: false })}
-          >
+          <button type="button" className="btn btn-primary mt-2" onClick={() => this.setState({ failed: false })}>
             Coba lagi
           </button>
         </div>

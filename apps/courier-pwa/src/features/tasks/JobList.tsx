@@ -11,29 +11,32 @@ import { timeAgo } from "@/lib/utils";
 import { getFreshFix } from "@/platform/geo";
 import { useClaimJob, useJobs } from "./hooks";
 
+function Stat({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="bg-surface px-3 py-2.5">
+      <dt className="t-label">{label}</dt>
+      <dd className={strong ? "mt-0.5 text-lg font-extrabold tabular-nums tracking-tight text-success" : "mt-0.5 font-bold tabular-nums"}>{value}</dd>
+    </div>
+  );
+}
+
 function JobCard({ job, busy, claiming, onClaim, index }: { job: CourierJob; busy: boolean; claiming: boolean; onClaim: () => void; index: number }) {
   return (
-    <article className="card animate-rise" style={{ animationDelay: `${Math.min(index, 6) * 70}ms` }}>
+    <article className="card animate-rise" style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-lg font-bold">{job.code}</span>
+        <span className="text-lg font-extrabold tabular-nums tracking-tight">{job.code}</span>
         <span className="pill">{timeAgo(job.accepted_at)}</span>
       </div>
-      <p className="mt-1 text-base">{job.area_hint}</p>
-      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-base">
-        <dt className="text-sm text-muted-foreground">Jarak</dt>
-        <dd className="text-right font-semibold">{job.route_distance_km === null ? "–" : `${job.route_distance_km} km`}</dd>
-        <dt className="text-sm text-muted-foreground">Jumlah item</dt>
-        <dd className="text-right font-semibold">{job.item_count}</dd>
-        <dt className="text-sm text-muted-foreground">Berat</dt>
-        <dd className="text-right font-semibold">{job.total_weight_kg} kg</dd>
-        <dt className="text-sm text-muted-foreground">Upah</dt>
-        <dd className="text-right font-bold text-success">{job.courier_wage === null ? "–" : formatIDR(job.courier_wage)}</dd>
+      <p className="mt-1 text-muted-foreground">{job.area_hint}</p>
+      <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border">
+        <Stat label="Upah" value={job.courier_wage === null ? "–" : formatIDR(job.courier_wage)} strong />
+        <Stat label="Jarak" value={job.route_distance_km === null ? "–" : `${job.route_distance_km} km`} />
+        <Stat label="Jumlah item" value={String(job.item_count)} />
+        <Stat label="Berat" value={`${job.total_weight_kg} kg`} />
       </dl>
-      <div className="card-footer">
-        <Button variant="hero" loading={claiming} disabled={busy && !claiming} onClick={onClaim}>
-          Ambil order
-        </Button>
-      </div>
+      <Button className="mt-4" loading={claiming} disabled={busy && !claiming} onClick={onClaim}>
+        Ambil order
+      </Button>
     </article>
   );
 }

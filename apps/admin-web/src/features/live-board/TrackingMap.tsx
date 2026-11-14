@@ -66,10 +66,10 @@ export function TrackingMap({ order, couriers, branch }: Props) {
         ariaLabel={order ? `Peta order ${order.code}` : "Peta kurir cabang"}
         className="absolute inset-0 isolate"
       />
-      <div className="material-chip pointer-events-none absolute left-3 top-3 z-[500] max-w-[calc(100%-1.5rem)] rounded-2xl px-4 py-2.5 xl:max-w-[calc(100%-26rem)]">
+      <div className="material-chip pointer-events-none absolute left-3 top-3 z-[500] max-w-[calc(100%-1.5rem)] rounded-lg px-4 py-2.5 xl:max-w-[calc(100%-26rem)]">
         {order ? (
           <>
-            <p className="truncate font-bold leading-tight">{courier ? courier.name : "Belum ada kurir"}</p>
+            <p className="truncate font-extrabold leading-tight tracking-tight">{courier ? courier.name : "Belum ada kurir"}</p>
             <p className="truncate text-sm text-muted-foreground">
               {distance !== null ? `${distance.toLocaleString("id-ID", { maximumFractionDigits: 1 })} km garis lurus ke tujuan` : `Tujuan ${order.receiver_name}`}
               {courier ? `, ${pingText(courier.last_ping_at).toLowerCase()}` : ""}
@@ -77,7 +77,7 @@ export function TrackingMap({ order, couriers, branch }: Props) {
           </>
         ) : (
           <>
-            <p className="truncate font-bold leading-tight">{branch?.name ?? "Cabang"}</p>
+            <p className="truncate font-extrabold leading-tight tracking-tight">{branch?.name ?? "Cabang"}</p>
             <p className="truncate text-sm text-muted-foreground">
               {online} dari {couriers.length} kurir online
             </p>
