@@ -13,6 +13,7 @@ import { setPaymentProvider } from "../../src/modules/payments/registry";
 let fx: Fixture;
 let productId: string;
 let heavyProductId: string;
+let scarceProductId: string;
 let nearAddressId: string;
 
 beforeAll(async () => {
@@ -29,7 +30,7 @@ beforeAll(async () => {
      VALUES ($1, 5, 30, 25)`,
     [fx.branchId],
   );
-  const mk = async (weight: number, price: number) => {
+  const mk = async (weight: number, price: number, stock = 100) => {
     const id = (
       await pool.query(
         `INSERT INTO products (sku, name, unit, category, weight_kg) VALUES ($1, $1, 'pcs', 'test', $2) RETURNING id`,
@@ -37,11 +38,12 @@ beforeAll(async () => {
       )
     ).rows[0].id as string;
     await pool.query(`INSERT INTO branch_products (branch_id, product_id, price) VALUES ($1, $2, $3)`, [fx.branchId, id, price]);
-    await giveStock(pool, fx.branchId, id, 100);
+    await giveStock(pool, fx.branchId, id, stock);
     return id;
   };
   productId = await mk(1, 15000);
   heavyProductId = await mk(20, 50000);
+  scarceProductId = await mk(0.5, 8000, 3);
   nearAddressId = (
     await address.create(fx.users.customer, {
       branch_id: fx.branchId, label: "near", lat: -6.205, lng: 106.805, street: "x", receiver_name: "x", receiver_phone: "0812345678",
@@ -71,6 +73,20 @@ describe("customer ordering", () => {
       code: "MAX_WEIGHT_EXCEEDED",
     });
     await cart.removeItem(fx.users.customer, fx.branchId, heavyProductId);
+  });
+
+  it("caps cart lines at the sellable stock and reports it per item", async () => {
+    const added = await cart.addItem(fx.users.customer, fx.branchId, scarceProductId, 3);
+    expect(added.items.find((i) => i.product_id === scarceProductId)).toMatchObject({ qty: 3, sellable_qty: 3 });
+    await expect(cart.addItem(fx.users.customer, fx.branchId, scarceProductId, 1)).rejects.toMatchObject({
+      code: "OUT_OF_STOCK",
+      details: { items: [{ available: 3 }] },
+    });
+    await expect(cart.setQty(fx.users.customer, fx.branchId, scarceProductId, 4)).rejects.toMatchObject({ code: "OUT_OF_STOCK" });
+    // Lowering is always allowed.
+    const lowered = await cart.setQty(fx.users.customer, fx.branchId, scarceProductId, 2);
+    expect(lowered.items.find((i) => i.product_id === scarceProductId)?.qty).toBe(2);
+    await cart.removeItem(fx.users.customer, fx.branchId, scarceProductId);
   });
 
   it("prices, creates a PENDING_PAYMENT order and empties the cart", async () => {

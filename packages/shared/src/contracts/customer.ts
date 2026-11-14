@@ -68,6 +68,8 @@ export const cartItemSchema = z.object({
   weight_kg: z.number(),
   qty: z.number().int(),
   line_total: z.number().int(),
+  // Units the branch can still sell now; the stepper caps at min(this, limits.max_qty_per_sku).
+  sellable_qty: z.number().int().min(0),
 });
 export const cartSchema = z.object({
   branch_id: uuid,

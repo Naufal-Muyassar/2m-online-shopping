@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
-import { pool } from "../../src/shared/db";
+import { pool, withTransaction } from "../../src/shared/db";
 import { closeRedis, getRedis } from "../../src/shared/redis";
 import { createFixture, giveStock, type Fixture } from "../../src/modules/orders/test-fixtures";
 import * as cart from "../../src/modules/cart/service";
+import * as cartRepo from "../../src/modules/cart/repo";
 import { createOrder } from "../../src/modules/orders/customer";
 import { FakeProvider } from "../../src/modules/payments/fake-provider";
 import { setPaymentProvider } from "../../src/modules/payments/registry";
@@ -87,6 +88,15 @@ async function buy(c: Customer, lines: [string, number][]) {
   return checkout(c);
 }
 
+// The cart refuses more than the sellable stock, so a line above it can only come from a cart filled
+// while stock was higher. Write it straight to the cart to test that checkout still refuses it.
+async function cartAboveStock(userId: string, productId: string, qty: number): Promise<void> {
+  await withTransaction(async (tx) => {
+    const cartId = await cartRepo.lockOrCreateCart(tx, userId, fx.branchId);
+    await cartRepo.setQty(tx, cartId, fx.branchId, productId, qty);
+  });
+}
+
 async function drainOutbox(): Promise<void> {
   for (let i = 0; i < 20; i++) if ((await processBatch()) === 0) return;
 }
@@ -159,7 +169,7 @@ describe("stock reservation", () => {
     expect(await reservationStatuses(order.id)).toEqual(["ACTIVE"]);
 
     const other = await newCustomer();
-    await cart.addItem(other.userId, fx.branchId, productId, 4);
+    await cartAboveStock(other.userId, productId, 4);
     await expect(checkout(other)).rejects.toMatchObject({ code: "OUT_OF_STOCK" });
     await cart.setQty(other.userId, fx.branchId, productId, 3);
     await expect(checkout(other)).resolves.toMatchObject({ status: "PENDING_PAYMENT" });
@@ -172,7 +182,7 @@ describe("stock reservation", () => {
     await getRedis().del(`stock:${fx.branchId}:${productId}`);
 
     const other = await newCustomer();
-    await cart.addItem(other.userId, fx.branchId, productId, 4);
+    await cartAboveStock(other.userId, productId, 4);
     await expect(checkout(other)).rejects.toMatchObject({ code: "OUT_OF_STOCK" });
     expect(await readCounter(fx.branchId, productId)).toBe(3);
   });
@@ -182,7 +192,7 @@ describe("stock reservation", () => {
     const scarce = await newProduct(1, 15000);
     const c = await newCustomer();
     await cart.addItem(c.userId, fx.branchId, plenty, 2);
-    await cart.addItem(c.userId, fx.branchId, scarce, 2);
+    await cartAboveStock(c.userId, scarce, 2);
 
     const err = await checkout(c).catch((e) => e);
     expect(err).toMatchObject({ code: "OUT_OF_STOCK", status: 409 });
@@ -208,7 +218,7 @@ describe("stock reservation", () => {
     expect(await readCounter(fx.branchId, productId)).toBe(2);
 
     const c = await newCustomer();
-    await cart.addItem(c.userId, fx.branchId, productId, 3);
+    await cartAboveStock(c.userId, productId, 3);
     await expect(checkout(c)).rejects.toMatchObject({ code: "OUT_OF_STOCK" });
   });
 
