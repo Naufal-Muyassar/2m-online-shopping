@@ -60,7 +60,7 @@ export function ProfilePage() {
       <main className="app-main">
         <nav aria-label="Menu profil" className="list">
           <LinkRow to="/history" icon={<FaHistory aria-hidden="true" />} label="Riwayat pengantaran" />
-          <LinkRow to="/chat" icon={<FaCommentDots aria-hidden="true" />} label="Chat admin" />
+          <LinkRow to="/chat/admin"icon={<FaCommentDots aria-hidden="true" />} label="Chat admin" />
           {user && <LinkRow to="/balance" icon={<FaWallet aria-hidden="true" />} label="Saldo keuntungan" value={<BalanceAmount />} />}
         </nav>
         <div className="list">

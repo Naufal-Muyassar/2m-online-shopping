@@ -4,6 +4,7 @@ import { BalancePage } from "@/features/balance/BalancePage";
 import { LoginPage } from "@/features/session/LoginPage";
 import { ProfilePage } from "@/features/session/ProfilePage";
 import { AdminChatPage, ChatRoomPage } from "@/features/chat/ChatRoom";
+import { ChatListPage } from "@/features/chat/ChatListPage";
 import { HistoryPage } from "@/features/tasks/HistoryPage";
 import { HomePage } from "@/features/tasks/HomePage";
 import { OrderDetailPage } from "@/features/tasks/OrderDetailPage";
@@ -36,7 +37,7 @@ function Shell() {
   const active = orders.data?.active.find((o) => o.status === "ON_DELIVERY" || o.status === "ASSIGNED");
   const hasOnDelivery = orders.data?.active.some((o) => o.status === "ON_DELIVERY") ?? false;
   const onDelivery = me.data?.status === "DELIVERING" || hasOnDelivery;
-  const showNav = user !== null && (pathname === "/" || pathname === "/history" || pathname === "/profile");
+  const showNav = user !== null && (pathname === "/" || pathname === "/history" || pathname === "/chat" || pathname === "/profile");
 
   useForegroundPings(me.data?.status, active?.id, active?.status === "ON_DELIVERY");
   useWakeLock(hasOnDelivery);
@@ -59,7 +60,8 @@ export function App() {
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/balance" element={<BalancePage />} />
-        <Route path="/chat" element={<AdminChatPage />} />
+        <Route path="/chat" element={<ChatListPage />} />
+        <Route path="/chat/admin" element={<AdminChatPage />} />
         <Route path="/chat/:threadId" element={<ChatRoomPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />
       </Route>

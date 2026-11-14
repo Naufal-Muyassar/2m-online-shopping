@@ -13,14 +13,18 @@ import { api } from "@/lib/api";
 const ROOM_POLL_MS = 4_000;
 const LIST_POLL_MS = 15_000;
 
-export function useChatThreads(channel: ChatChannel, enabled = true) {
+// Every thread the courier can see (admin and customers), one poll shared by the dock, home and chat list.
+export function useChatThreads(enabled = true) {
   return useQuery({
-    queryKey: ["chat-threads", channel],
-    queryFn: async () => (await api.get<ChatThreadsResponse>("/chat/threads", { params: { channel } })).data.threads,
+    queryKey: ["chat-threads"],
+    queryFn: async () => (await api.get<ChatThreadsResponse>("/chat/threads")).data.threads,
     enabled,
     refetchInterval: LIST_POLL_MS,
   });
 }
+
+export const unreadIn = (threads: ChatThread[] | undefined, channel?: ChatChannel) =>
+  (threads ?? []).filter((t) => !channel || t.channel === channel).reduce((n, t) => n + t.unread_count, 0);
 
 export function useChatMessages(threadId: string) {
   return useQuery({

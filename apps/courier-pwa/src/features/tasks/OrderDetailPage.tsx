@@ -159,7 +159,8 @@ function CustomerChatButton({ orderId }: { orderId: string }) {
   const navigate = useNavigate();
   const { notify } = useToast();
   const open = useOpenChat();
-  const unread = useChatThreads("customer_courier").data?.find((t) => t.order_id === orderId)?.unread_count ?? 0;
+  const unread =
+    useChatThreads().data?.find((t) => t.channel === "customer_courier" && t.order_id === orderId)?.unread_count ?? 0;
 
   return (
     <button

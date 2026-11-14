@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { FaCommentDots, FaHistory, FaHome, FaUser } from "react-icons/fa";
-import { useChatThreads } from "@/features/chat/hooks";
+import { unreadIn, useChatThreads } from "@/features/chat/hooks";
 
 const TABS = [
   { to: "/", label: "Beranda", Icon: FaHome },
@@ -11,7 +11,7 @@ const TABS = [
 
 export function BottomNav() {
   const { pathname } = useLocation();
-  const unread = useChatThreads("courier_admin").data?.reduce((n, t) => n + t.unread_count, 0) ?? 0;
+  const unread = unreadIn(useChatThreads().data);
 
   return (
     <nav aria-label="Navigasi utama" className="dock">
