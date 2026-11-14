@@ -172,10 +172,11 @@ function CustomerChatButton({ orderId }: { orderId: string }) {
           { onSuccess: (t) => navigate(`/chat/${t.id}`), onError: (err) => notify("error", errorMessage(err)) },
         )
       }
+      aria-label={unread > 0 ? `Chat pelanggan, ${unread} pesan belum dibaca` : "Chat pelanggan"}
       className="btn btn-secondary btn-lg btn-block"
     >
       <FaCommentDots aria-hidden="true" />
-      Chat pelanggan
+      Chat
       {unread > 0 && <span className="count-badge static">{unread}</span>}
     </button>
   );
@@ -306,10 +307,10 @@ export function OrderDetailPage() {
         <section className="card animate-rise" style={{ animationDelay: "60ms" }}>
           <h2 className="t-label">Penerima</h2>
           <p className="t-headline mt-1">{a.receiver_name}</p>
-          <a href={`tel:${a.receiver_phone}`} className="link mt-1 gap-2 text-lg tabular-nums">
-            <FaPhone aria-hidden="true" className="text-sm" />
+          <p className="mt-1 flex items-center gap-2 text-lg font-semibold tabular-nums">
+            <FaPhone aria-hidden="true" className="text-sm text-muted-foreground" />
             {a.receiver_phone}
-          </a>
+          </p>
           <p className="mt-2 border-t border-border pt-3 [overflow-wrap:anywhere]">
             {a.street}
             {a.rt_rw ? `, RT/RW ${a.rt_rw}` : ""}
@@ -321,7 +322,14 @@ export function OrderDetailPage() {
               <FaMapMarkerAlt aria-hidden="true" />
               Buka di Google Maps
             </a>
-            <CustomerChatButton orderId={order.id} />
+            {/* Calling and chatting sit side by side: the two ways to reach the receiver. */}
+            <div className="grid grid-cols-2 gap-2">
+              <a href={`tel:${a.receiver_phone}`} aria-label={`Telepon ${a.receiver_name}`} className="btn btn-secondary btn-lg btn-block">
+                <FaPhone aria-hidden="true" />
+                Telepon
+              </a>
+              <CustomerChatButton orderId={order.id} />
+            </div>
           </div>
         </section>
 
