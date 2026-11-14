@@ -5,7 +5,7 @@ import { errorMessage } from "../../lib/api";
 import { useChatThreads, useOpenChat, useOrder } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
-import { IconChat } from "../../components/Icons";
+import { IconChat, IconReceipt, IconStore } from "../../components/Icons";
 import { ErrorCard, PageSkeleton } from "../../components/States";
 import { StatusPill } from "../../components/StatusPill";
 import { TrackingCard } from "./TrackingCard";
@@ -51,6 +51,12 @@ function MoneyRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+// Straight back to the catalogue of the branch the customer last shopped at; the picker if there is none.
+const shopAgainTo = () => {
+  const branchId = localStorage.getItem("2m.last_branch");
+  return branchId ? `/b/${branchId}` : "/";
+};
 
 export function OrderStatusPage() {
   const { orderId = "" } = useParams();
@@ -221,14 +227,18 @@ export function OrderStatusPage() {
         </div>
       </div>
 
-      <div className="flex justify-between border-t border-border pt-2 text-sm">
-        <Link to="/orders" className="link">
+      {/* Two equal keys on a phone, a right-aligned pair from sm. "Belanja lagi" is the primary
+          unless "Bayar sekarang" above already is. */}
+      <nav aria-label="Lanjutan" className="grid grid-cols-2 gap-3 border-t border-border pt-4 sm:flex sm:justify-end">
+        <Link to="/orders" className="btn btn-secondary">
+          <IconReceipt />
           Pesanan saya
         </Link>
-        <Link to="/" className="link">
+        <Link to={shopAgainTo()} className={cn("btn", order.status === "PENDING_PAYMENT" ? "btn-secondary" : "btn-primary")}>
+          <IconStore />
           Belanja lagi
         </Link>
-      </div>
+      </nav>
     </main>
   );
 }
