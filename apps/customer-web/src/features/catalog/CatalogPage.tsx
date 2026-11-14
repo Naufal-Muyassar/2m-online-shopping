@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { formatIDR, type Product } from "@2m/shared";
 import { CATALOG_SEARCH_ID } from "../../app/Layout";
@@ -8,7 +9,7 @@ import { useBranches, useCart, useCartMutations, useProducts } from "../../lib/q
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { CategoryIcon, categoryTint } from "../../components/category";
-import { IconArrowRight, IconGrid, IconPlus, IconSearch } from "../../components/Icons";
+import { IconArrowRight, IconFilter, IconGrid, IconPlus, IconSearch } from "../../components/Icons";
 import { QtyStepper } from "../../components/QtyStepper";
 import { EmptyState, ErrorCard, rise } from "../../components/States";
 
@@ -97,6 +98,72 @@ function ProductCard({ product: p, index, qty, maxPerSku, busy, onAdd, onSetQty 
   );
 }
 
+// Phone only: the category chips live in a bottom sheet behind one filter button, so the search row stays a single line.
+function CategorySheet({
+  categories,
+  value,
+  onPick,
+  onClose,
+}: {
+  categories: string[];
+  value: string | undefined;
+  onPick: (c: string | undefined) => void;
+  onClose: () => void;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    panelRef.current?.querySelector<HTMLElement>("[aria-pressed='true']")?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    // The chips come back from md up, so the sheet has nothing left to do there.
+    const wide = window.matchMedia("(min-width: 768px)");
+    const onWide = () => {
+      if (wide.matches) onClose();
+    };
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
+    wide.addEventListener("change", onWide);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener("keydown", onKey);
+      wide.removeEventListener("change", onWide);
+      opener?.focus();
+    };
+  }, [onClose]);
+
+  // Portal: the sticky search bar uses backdrop-filter, which would trap a fixed child inside it.
+  return createPortal(
+    <div className="sheet-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="category-sheet-title" className="sheet-panel">
+        <span aria-hidden="true" className="sheet-grabber" />
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 id="category-sheet-title" className="t-title">
+            Kategori
+          </h2>
+          <button type="button" onClick={onClose} className="link text-sm font-semibold">
+            Tutup
+          </button>
+        </div>
+        <ul className="grid grid-cols-2 gap-2">
+          {[undefined, ...categories].map((c) => (
+            <li key={c ?? "all"}>
+              <button type="button" onClick={() => onPick(c)} aria-pressed={value === c} className="chip w-full capitalize">
+                <span className="text-base">{c ? <CategoryIcon category={c} /> : <IconGrid />}</span>
+                <span className="truncate">{c ?? "Semua"}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export function CatalogPage() {
   const { branchId = "" } = useParams();
   const { user } = useAuth();
@@ -105,6 +172,7 @@ export function CatalogPage() {
   const toast = useToast();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | undefined>();
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [page, setPage] = useState(1);
   const q = useDebounced(search.trim(), 300);
   const { data, isLoading, isError } = useProducts(branchId, category, q, page);
@@ -117,6 +185,7 @@ export function CatalogPage() {
   const productsRef = useRef<HTMLDivElement>(null);
   const browsing = !category && !search.trim();
   const fail = (e: unknown) => toast("error", errorMessage(e));
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
 
   useEffect(() => setPage(1), [q, category]);
 
@@ -155,19 +224,32 @@ export function CatalogPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12">
         <aside className="sticky top-16 z-10 -mx-4 flex min-w-0 flex-col gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-md lg:top-24 lg:mx-0 lg:gap-5 lg:self-start lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-          <div className="relative">
-            <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-muted-foreground" />
-            <input
-              id={CATALOG_SEARCH_ID}
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari produk…"
-              className="field pl-10"
-              aria-label="Cari produk"
-            />
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-muted-foreground" />
+              <input
+                id={CATALOG_SEARCH_ID}
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari produk…"
+                className="field pl-10"
+                aria-label="Cari produk"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={sheetOpen}
+              aria-label={category ? `Kategori: ${category}` : "Pilih kategori"}
+              className={cn("chip max-w-[45%] capitalize md:hidden", category && "border-foreground bg-foreground text-background")}
+            >
+              <IconFilter className="shrink-0 text-base" />
+              <span className="truncate">{category ?? "Kategori"}</span>
+            </button>
           </div>
-          <section aria-labelledby="categories-heading" className="flex flex-col gap-3">
+          <section aria-labelledby="categories-heading" className="hidden flex-col gap-3 md:flex">
             <div className="section-head hidden lg:flex">
               <h2 id="categories-heading" className="t-title">
                 Kategori
@@ -189,6 +271,17 @@ export function CatalogPage() {
               ))}
             </ul>
           </section>
+          {sheetOpen && (
+            <CategorySheet
+              categories={data?.categories ?? []}
+              value={category}
+              onPick={(c) => {
+                setCategory(c);
+                setSheetOpen(false);
+              }}
+              onClose={closeSheet}
+            />
+          )}
         </aside>
 
         <div className="flex min-w-0 flex-col gap-6">

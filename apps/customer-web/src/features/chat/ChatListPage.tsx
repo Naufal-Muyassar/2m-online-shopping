@@ -43,7 +43,7 @@ export function ChatListPage() {
         <p className="text-muted-foreground">Tanya stok, pesanan, atau pengantaran ke admin toko.</p>
       </div>
 
-      <div className="page-narrow flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {threads.length === 0 && !branch && (
           <EmptyState icon={<IconChat />} title="Belum ada chat.">
             <p className="text-sm">Pilih cabang dulu untuk mulai chat dengan toko.</p>

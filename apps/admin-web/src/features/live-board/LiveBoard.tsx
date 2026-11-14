@@ -19,6 +19,7 @@ import { useBranch } from "../branch-config/BranchProvider";
 import { OpenedChat } from "../chat/OpenedChat";
 import { useBranchCouriers } from "../couriers/hooks";
 import { BOARD_COLUMNS, BOARD_POLL_MS, COLUMN_LABELS, COLUMN_SHORT_LABELS, SLA_MINUTES, ageMinutes, type BoardColumn } from "./constants";
+import { ResizeHandle, usePanelWidth } from "./PanelResize";
 import { TrackingMap } from "./TrackingMap";
 
 export const BOARD_KEY = "admin-orders";
@@ -339,18 +340,36 @@ function DetailRow({ label, children }: { label: string; children: ReactNode }) 
   );
 }
 
-function OrderPanel({ order, from }: { order: AdminOrder; from: string }) {
+interface OrderPanelProps {
+  order: AdminOrder;
+  from: string;
+  width: number;
+  onWidth: (w: number) => void;
+}
+
+function OrderPanel({ order, from, width, onWidth }: OrderPanelProps) {
   const { user } = useAuth();
   const [tab, setTab] = useState<PanelTab>("detail");
+  // Follows the pointer during a drag; the saved width (and the map padding) changes on release.
+  const [liveWidth, setLiveWidth] = useState<number | null>(null);
   const swapX = useSwapX(PANEL_TABS.findIndex((t) => t.id === tab));
   const { age } = slaState(order);
   const courier = order.assigned_courier;
 
   return (
     <section
-      className="material relative z-[600] flex min-h-[28rem] flex-col gap-3 rounded-2xl p-4 xl:absolute xl:bottom-3 xl:right-3 xl:top-3 xl:min-h-0 xl:w-[24rem]"
+      className="material group/panel relative z-[600] flex min-h-[28rem] flex-col gap-3 rounded-2xl p-4 xl:absolute xl:bottom-3 xl:right-3 xl:top-3 xl:min-h-0 xl:w-[var(--panel-w)]"
+      style={{ "--panel-w": `${liveWidth ?? width}px` } as CSSProperties}
       aria-label={`Order ${order.code}`}
     >
+      <ResizeHandle
+        width={liveWidth ?? width}
+        onDrag={setLiveWidth}
+        onCommit={(w) => {
+          setLiveWidth(null);
+          onWidth(w);
+        }}
+      />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xl font-extrabold tabular-nums tracking-tight">{order.code}</h2>
         <span className={cn("pill pill-dot", ORDER_PILL[order.status])}>{STATUS_LABELS[order.status] ?? order.status}</span>
@@ -428,6 +447,7 @@ export function LiveBoard({ search }: { search: string }) {
   const { branchId, branchName, branches } = useBranch();
   const [tab, setTab] = useState<ListTab>("PAID");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [panelWidth, setPanelWidth] = usePanelWidth();
   const couriers = useBranchCouriers(MAP_POLL_MS);
   const swapX = useSwapX(TAB_ORDER.indexOf(tab));
   const { data, isLoading, isError, error } = useQuery({
@@ -490,7 +510,8 @@ export function LiveBoard({ search }: { search: string }) {
         />
         <ul
           key={tab}
-          className="swap-in -mx-1 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-1 pb-1"
+          // The late ring sits 4px outside a card; the matching inset keeps the scroll box from clipping it on every side.
+          className="swap-in -m-1.5 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-1.5"
           style={{ "--swap-x": swapX } as CSSProperties}
         >
           {items.map((o) => (
@@ -506,9 +527,9 @@ export function LiveBoard({ search }: { search: string }) {
 
       <div className="flex min-h-0 flex-col gap-4 xl:relative">
         <div className="relative isolate h-72 shrink-0 overflow-hidden rounded-2xl border border-border sm:h-96 lg:h-auto lg:min-h-64 lg:flex-1 xl:absolute xl:inset-0">
-          <TrackingMap order={selected} couriers={couriers.data?.couriers ?? []} branch={branch} />
+          <TrackingMap order={selected} couriers={couriers.data?.couriers ?? []} branch={branch} panelWidth={panelWidth} />
         </div>
-        {selected && <OrderPanel key={selected.id} order={selected} from={from} />}
+        {selected && <OrderPanel key={selected.id} order={selected} from={from} width={panelWidth} onWidth={setPanelWidth} />}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore, type CSSProperties } from "react";
 import { MapView, type MapMarker } from "@2m/map";
 import { TRACKING_STALE_SEC, haversineKm, type AdminCourier, type AdminOrder, type BranchesResponse } from "@2m/shared";
 import { isOnline } from "../couriers/hooks";
@@ -12,8 +12,8 @@ const subscribeWide = (cb: () => void) => {
 
 const COURIER_ROUTE = ["courier", "destination"];
 const BRANCH_ROUTE = ["branch", "destination"];
-// The order panel floats over the right side of the map on wide screens.
-const PADDING_WIDE: [number, number, number, number] = [96, 420, 64, 64];
+// The order panel floats over the right side of the map on wide screens; the right padding clears it plus its 12px inset and a margin.
+const PANEL_CLEARANCE = 36;
 const PADDING_NARROW: [number, number, number, number] = [88, 48, 48, 48];
 
 function pingText(iso: string | null): string {
@@ -30,10 +30,17 @@ interface Props {
   order: AdminOrder | null;
   couriers: AdminCourier[];
   branch: BranchesResponse["branches"][number] | null;
+  /** Width of the floating order panel, in px. */
+  panelWidth: number;
 }
 
-export function TrackingMap({ order, couriers, branch }: Props) {
+export function TrackingMap({ order, couriers, branch, panelWidth }: Props) {
   const wide = useSyncExternalStore(subscribeWide, () => window.matchMedia(WIDE).matches);
+  const hasPanel = wide && order !== null;
+  const padding = useMemo<[number, number, number, number]>(
+    () => (hasPanel ? [96, panelWidth + PANEL_CLEARANCE, 64, 64] : PADDING_NARROW),
+    [hasPanel, panelWidth],
+  );
   const courier = order?.assigned_courier ? (couriers.find((c) => c.user_id === order.assigned_courier?.user_id) ?? null) : null;
   const courierPos = courier?.position ?? null;
 
@@ -62,11 +69,13 @@ export function TrackingMap({ order, couriers, branch }: Props) {
         markers={markers}
         route={!order ? undefined : courierPos ? COURIER_ROUTE : BRANCH_ROUTE}
         fitKey={order?.id ?? "fleet"}
-        fitPadding={wide ? PADDING_WIDE : PADDING_NARROW}
+        fitPadding={padding}
         ariaLabel={order ? `Peta order ${order.code}` : "Peta kurir cabang"}
         className="absolute inset-0 isolate"
       />
-      <div className="material-chip pointer-events-none absolute left-3 top-3 z-[500] max-w-[calc(100%-1.5rem)] rounded-lg px-4 py-2.5 xl:max-w-[calc(100%-26rem)]">
+      <div className="material-chip pointer-events-none absolute left-3 top-3 z-[500] max-w-[calc(100%-1.5rem)] rounded-lg px-4 py-2.5 xl:max-w-[calc(100%-var(--panel-w)-2.25rem)]"
+        style={{ "--panel-w": `${order ? panelWidth : 0}px` } as CSSProperties}
+      >
         {order ? (
           <>
             <p className="truncate font-extrabold leading-tight tracking-tight">{courier ? courier.name : "Belum ada kurir"}</p>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { CHAT_MESSAGE_MAX, type ChatMessage } from "@2m/shared";
 import { FaArrowLeft, FaPaperPlane } from "react-icons/fa";
 import { ErrorCard } from "@/components/ui/feedback";
@@ -31,6 +31,14 @@ function Messages({ messages }: { messages: ChatMessage[] }) {
   );
 }
 
+// Back returns to wherever the room was opened from (the Chat tab, an order, Home). A room opened
+// directly, with no earlier page in this app, falls back to its order or to the Chat tab.
+function useBack(fallback: string) {
+  const navigate = useNavigate();
+  const { key } = useLocation();
+  return () => (key !== "default" ? navigate(-1) : navigate(fallback, { replace: true }));
+}
+
 function ChatRoom({ threadId }: { threadId: string }) {
   const { notify } = useToast();
   const { data, isLoading, isError, error, refetch } = useChatMessages(threadId);
@@ -50,7 +58,7 @@ function ChatRoom({ threadId }: { threadId: string }) {
   }, [unread, threadId]);
 
   const thread = data?.thread;
-  const back = thread?.order_id ? `/orders/${thread.order_id}` : "/chat";
+  const back = useBack(thread?.order_id ? `/orders/${thread.order_id}` : "/chat");
 
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
@@ -78,9 +86,9 @@ function ChatRoom({ threadId }: { threadId: string }) {
   return (
     <div className="flex h-dvh flex-col">
       <header className="app-header">
-        <Link to={back} aria-label="Kembali" className="icon-btn">
+        <button type="button" onClick={back} aria-label="Kembali" className="icon-btn">
           <FaArrowLeft aria-hidden="true" />
-        </Link>
+        </button>
         <div className="min-w-0 flex-1 leading-tight">
           <h1 className="t-title truncate">{thread?.title ?? "Chat"}</h1>
           {thread?.order_code && <p className="t-label mt-0.5 truncate">Order {thread.order_code}</p>}

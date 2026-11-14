@@ -10,12 +10,13 @@ export function AccountPage() {
       <section className="flex animate-rise items-center gap-4 border-b border-foreground pb-5 md:pb-7">
         <span className="avatar size-16 text-2xl md:size-20 md:text-3xl">{user?.name.charAt(0)}</span>
         <div className="min-w-0">
-          <h1 className="t-headline truncate capitalize">{user?.name}</h1>
-          <p className="t-label mt-1.5 tabular-nums">{user?.phone}</p>
+          {/* truncate clips at the line box; the bottom padding keeps descenders (g, y, p) inside it. */}
+          <h1 className="t-headline truncate pb-[0.14em] capitalize">{user?.name}</h1>
+          <p className="t-label mt-1 tabular-nums">{user?.phone}</p>
         </div>
       </section>
 
-      <nav aria-label="Menu akun" className="list page-narrow animate-rise">
+      <nav aria-label="Menu akun" className="list animate-rise">
         <Link to="/orders" className="list-row font-semibold">
           <IconReceipt className="shrink-0 text-xl text-primary" />
           <span className="flex-1">Pesanan saya</span>

@@ -9,14 +9,14 @@ export function BranchPicker() {
     <main className="app-main">
       <h1 className="t-headline">Pilih cabang</h1>
       {isLoading && (
-        <div className="page-narrow space-y-3" aria-busy="true" aria-label="Memuat">
+        <div className="space-y-3" aria-busy="true" aria-label="Memuat">
           <div className="skeleton h-[4.5rem]" />
           <div className="skeleton h-[4.5rem]" />
         </div>
       )}
       {isError && <ErrorCard message="Gagal memuat cabang." />}
       {data && data.length > 0 && (
-        <ul className="list page-narrow">
+        <ul className="list">
           {data.map((b, i) => (
             <li key={b.id} className="animate-rise" style={rise(i)}>
               <Link to={`/b/${b.id}`} className="list-row py-4">

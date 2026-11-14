@@ -89,7 +89,8 @@ Check every screen at 375, 768, 1100 and 1440. The page never scrolls sideways. 
 - **Header:** a 4rem bar with a bottom hairline: search (Tracking only), branch select, avatar, "Keluar". On phones the search drops to its own row.
 - **Tracking and Pesan:** a 24rem list column, then a working area.
   - On Tracking the working area is the live map. The selected order card is solid ink; a late card is destructive.
-  - From `xl` (1280px) up, the order panel floats over the right side of the map as a `.material` sheet.
+  - From `xl` (1280px) up, the order panel floats over the right side of the map as a `.material` sheet. It is 24rem wide and can be widened with a grip on its left edge (shown on panel hover or keyboard focus; drag, arrow keys, double-click to reset) up to a quarter of the window, never capped below 32rem. The width is saved per browser and the map's fit padding follows it.
+  - The order list keeps a 6px inset inside its scroll box so the 4px late ring on a selected card is never clipped.
   - Below `xl` the panel stacks under the map; below `lg` the list is capped in height so the map stays reachable.
 - **Kurir and Saldo:** a `.data-table` in a card. Each row starts with an avatar, statuses are pills with Indonesian labels. Under 768px every row becomes a labelled block (`data-label`, `data-primary`, `data-actions` on the cells).
 
@@ -98,12 +99,14 @@ Check every screen at 375, 768, 1100 and 1440. The page never scrolls sideways. 
 - One centred column (`--content-max-width` 34rem), with a sticky header and a floating ink dock. From 768px the column sits on a `--muted` page with side hairlines, so it reads as a deliberate sheet.
 - Home leads with the ink status panel and its action, then the balance row, the four-tile `Layanan` grid (one frame, shared hairlines) and the job list.
 - Actions use `Button` (full width, 3.5rem). Destructive actions sit last and use `variant="destructive"`.
+- The Chat tab is a list: the branch admin first, then the customer chats that are still open. Back in a chat room returns to the page it was opened from (the list, an order, Home); a room opened directly falls back to its order, else to the Chat tab.
 - The order detail shows the two-step progress rule, the delivery map (your position, the destination, a dashed line), then the receiver card.
 
 ### Customer web (phone first, wide from 768px)
 
 - A sticky header with the 2M mark and the branch switcher. From `md` the destinations are text links in the header; below that, a full-width tab bar at the bottom with a short ink bar over the current tab.
-- Content sits in a 72rem shell. Pages that have two concerns split at `lg`: catalogue (category rail + grid), cart and checkout (items + sticky summary), order (timeline and tracking + items and totals), address form (map + fields). Single-concern pages use `.page-narrow` (44rem, left-aligned to the shell edge).
+- Content sits in a 72rem shell. Pages that have two concerns split at `lg`: catalogue (category rail + grid), cart and checkout (items + sticky summary), order (timeline and tracking + items and totals), address form (map + fields). List pages (branch picker, chat list, account) use the full shell width like the other tabs. `.page-narrow` (44rem, left-aligned to the shell edge) is for forms and single messages (address, mock pay, payment return).
+- Below `md` the catalogue's category chips move into a bottom sheet behind a filter button beside the search field; the button turns ink while a category is active. From `md` the chips show inline (a scroll row, then the rail at `lg`).
 - The tracking card shows the map while the order is ON_DELIVERY.
 - Login and register split into an ink brand panel and the form at `lg`.
 
@@ -186,7 +189,6 @@ These do not yet meet the standard. Fix them when touching the area:
 - **No drag on sheets.** Bottom sheets cannot be dragged down to close.
 - **No dark mode.** The preset declares `darkMode: ["class"]`, but no dark tokens exist. The ink surfaces (rail, dock, `.panel-ink`) are the only dark elements.
 - **Product photos.** Product tiles show a category icon on a tint; there are no product images yet.
-- **Full-width narrow pages on desktop.** Branch picker, account and chat list use a 44rem column and leave the right side of the 72rem shell empty.
 
 ## 10. Before shipping UI
 
