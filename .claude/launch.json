@@ -20,6 +20,12 @@
       "port": 5172
     },
     {
+      "name": "courier-pwa-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "courier-pwa", "exec", "vite", "preview", "--port", "4172", "--strictPort"],
+      "port": 4172
+    },
+    {
       "name": "customer-web",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "customer-web", "dev"],

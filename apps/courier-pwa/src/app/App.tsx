@@ -15,14 +15,23 @@ import { FaSyncAlt } from "react-icons/fa";
 import { useSession } from "@/features/session/session";
 
 function UpdateBanner({ onDelivery }: { onDelivery: boolean }) {
-  const { available, applyUpdate } = usePwaUpdate();
+  const { available, updating, applyUpdate } = usePwaUpdate();
   if (!available) return null;
+  // A reload mid-delivery could drop a proof photo that has not been sent yet, so the update waits.
+  // No dead button in the meantime: the sentence says when it becomes possible.
+  if (onDelivery) {
+    return (
+      <p role="status" className="notice mx-4 mt-3">
+        Versi baru tersedia. Tombol Perbarui muncul setelah pengantaran selesai.
+      </p>
+    );
+  }
   return (
     <div role="status" className="notice mx-4 mt-3 flex items-center justify-between gap-3">
-      <span>{onDelivery ? "Versi baru tersedia. Perbarui setelah pengantaran selesai." : "Versi baru tersedia."}</span>
-      <button type="button" disabled={onDelivery} onClick={applyUpdate} className="btn btn-primary shrink-0">
-        <FaSyncAlt aria-hidden="true" />
-        Perbarui
+      <span>Versi baru tersedia.</span>
+      <button type="button" disabled={updating} onClick={applyUpdate} className="btn btn-primary shrink-0">
+        <FaSyncAlt aria-hidden="true" className={updating ? "animate-spin motion-reduce:animate-none" : undefined} />
+        {updating ? "Memperbarui…" : "Perbarui"}
       </button>
     </div>
   );
