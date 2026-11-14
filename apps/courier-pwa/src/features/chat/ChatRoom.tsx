@@ -50,7 +50,7 @@ function ChatRoom({ threadId }: { threadId: string }) {
   }, [unread, threadId]);
 
   const thread = data?.thread;
-  const back = thread?.order_id ? `/orders/${thread.order_id}` : "/";
+  const back = thread?.order_id ? `/orders/${thread.order_id}` : "/chat";
 
   const submit = (e?: FormEvent) => {
     e?.preventDefault();

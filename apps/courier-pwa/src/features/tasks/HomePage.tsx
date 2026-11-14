@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { FaArrowRight, FaBoxOpen, FaCommentDots, FaHistory, FaMotorcycle, FaWallet } from "react-icons/fa";
 import { BalanceAmount } from "@/features/balance/BalanceAmount";
-import { useChatThreads } from "@/features/chat/hooks";
+import { unreadIn, useChatThreads } from "@/features/chat/hooks";
 import { useSession } from "@/features/session/session";
 import { ErrorCard, LoadingBlock, Skeleton } from "@/components/ui/feedback";
 import { useToast } from "@/components/ui/toast";
@@ -99,7 +99,7 @@ export function HomePage() {
   const delivering = status === "DELIVERING";
   const idle = status === "IDLE";
   const jobs = useJobs(sessionReady && idle);
-  const adminUnread = useChatThreads("courier_admin", sessionReady).data?.reduce((n, t) => n + t.unread_count, 0) ?? 0;
+  const adminUnread = unreadIn(useChatThreads(sessionReady).data, "courier_admin");
 
   const toggleStatus = () => {
     if (!status || delivering) return;
@@ -181,7 +181,7 @@ export function HomePage() {
               to={firstActive ? `/orders/${firstActive.id}` : undefined}
             />
             <Tile icon={<FaHistory aria-hidden="true" />} title="Riwayat" hint="10 terakhir selesai" to="/history" />
-            <Tile icon={<FaCommentDots aria-hidden="true" />} title="Chat admin" hint="Tanya admin cabang" to="/chat" badge={adminUnread} />
+            <Tile icon={<FaCommentDots aria-hidden="true" />} title="Chat admin" hint="Tanya admin cabang" to="/chat/admin"badge={adminUnread} />
           </div>
         </section>
 
