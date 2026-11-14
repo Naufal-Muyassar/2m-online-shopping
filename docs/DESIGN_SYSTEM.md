@@ -119,6 +119,7 @@ Check every screen at 375, 768, 1100 and 1440. The page never scrolls sideways. 
 | `.link`, `.link-danger` | preset | Inline text actions ("Ubah", "Hapus", "Belanja lagi"). The underline strengthens on hover |
 | `.icon-btn`, `.send-btn` | preset | Square icon buttons; icon-only buttons carry an `aria-label` |
 | `.field`, `.field-label`, `.option-row`, `.file-picker`, `.stepper`, `.meter` | preset | Form controls. Focus is a primary border plus a 3px ring. `.option-row` makes the whole row the radio's hit area |
+| `QtyStepper` + `.stepper-input` | `apps/customer-web/src/components/QtyStepper.tsx`, preset | Minus, a typed number (numeric keypad, 16px so iOS does not zoom, commits on Enter or blur, clamps to `max` with a toast that names the limit) and plus. Never disable it while a request is in flight: taps update the cart at once through `useCartSync` |
 | `.chip` | preset | Filter chips with `aria-pressed`; selected is solid ink |
 | `Segmented` | `apps/admin-web/src/components/Segmented.tsx` | The only tab control in admin. Click, or arrow keys; no swipe. All items are visible with no horizontal scroll. Shorten labels to fit and put the full name in `title` (also used as the accessible name). Counts sit above the label when the tab is a list filter |
 | `useThumb` | same file | Slides an indicator to the active element on either axis. Used by `Segmented` and the admin rail |
@@ -138,6 +139,7 @@ Check every screen at 375, 768, 1100 and 1440. The page never scrolls sideways. 
 | `MapPicker` | `apps/customer-web/src/features/address/MapPicker.tsx` | The address pin picker. Uses the `map-2m` frame and the `.map-area`, `.map-area-center`, `.map-pick` classes for colour |
 | `.bubble-mine` / `.bubble-other`, `.chat-day` | preset | Chat. Mine is primary, right aligned; others are surface with a border, left aligned |
 | `.sheet-backdrop` / `.sheet-panel` / `.dialog-backdrop` / `.dialog-panel` | preset | Bottom sheets (courier) and centred dialogs. They dim the page, so use them for modal tasks only |
+| `BottomSheet` | `apps/customer-web/src/components/BottomSheet.tsx` | The draggable sheet: springs up on open, follows the finger 1:1 after a 10px slop, rubber-bands when pulled up, and on release projects the finger's velocity to close or spring back. Closes on the round X (`icon-btn rounded-full`, never a "Tutup" text link), the scrim, Escape, or a pick. The whole sheet drags when its content fits; otherwise only `[data-sheet-drag]` |
 | `.toast` | preset | Ink toast with a status dot; errors are solid destructive |
 | `.skeleton` | preset | Loading placeholder with `role="status"` and `aria-busy` |
 
@@ -150,11 +152,11 @@ Follow the skill. These are the rules as 2M applies them:
 1. **Feedback happens on press.** Every button and tappable row responds on `:active`: 0.96 for tabs and nav items, 0.97 for buttons, 0.99 for cards; list rows darken instead of scaling.
 2. **Hover is quiet and physical.** A border darkens to ink, an arrow moves 3px with `settle`, a product icon scales a little. Hover styles sit under `@media (hover: hover)` so a tapped control on a phone does not keep its hover colour.
 3. **Interruptible.** CSS transitions retarget from the current on-screen value, so clicking another tab mid-move redirects the thumb with no jump. The map pin tween reads the marker's live position before every move.
-4. **No bounce by default.** Use `settle` everywhere. Overshoot only belongs to a gesture that carried momentum, and 2M has none yet (the dock is the one existing exception).
+4. **No bounce by default.** Use `settle` everywhere. Overshoot only belongs to a gesture that carried momentum: the dock, and a `BottomSheet` released after a drag (damping 0.8, response 0.3).
 5. **No scroll-driven motion.** Nothing animates because the page scrolled. Entry animations (`animate-rise`, a 0.5rem lift) only on first render of a page section.
 6. **The live map moves gently.** A new courier position tweens over 900ms with an ease-out curve. The view refits only when the subject changes or a pin leaves the frame, so the admin's own panning is never undone by a poll.
 7. **Reduced motion.** The preset reduces every animation and transition to near zero; the map pin jumps instead of tweening and the pulse stops. Never hide content behind an animation that may not run.
-8. **If a gesture is added** (drag-to-dismiss sheets, swipe actions), follow skill sections 2–6: 1:1 tracking with pointer capture, a spring that takes the release velocity, momentum projection to pick the snap point, and rubber-banding at the edges. Use a spring library for that; CSS transitions are not enough.
+8. **If a gesture is added** (drag-to-dismiss sheets, swipe actions), follow skill sections 2–6: 1:1 tracking with pointer capture, a spring that takes the release velocity, momentum projection to pick the snap point, and rubber-banding at the edges. CSS transitions are not enough. `BottomSheet` carries a small spring integrator (damping ratio + response, seeded with the live position and velocity) instead of a library; reuse it before adding one.
 
 ## 6. Materials and depth
 
@@ -186,7 +188,7 @@ Every data view handles four states:
 
 These do not yet meet the standard. Fix them when touching the area:
 
-- **No drag on sheets.** Bottom sheets cannot be dragged down to close.
+- **No drag on courier sheets.** The courier PWA's bottom sheets still cannot be dragged down to close; move them onto a shared `BottomSheet` when touching them.
 - **No dark mode.** The preset declares `darkMode: ["class"]`, but no dark tokens exist. The ink surfaces (rail, dock, `.panel-ink`) are the only dark elements.
 - **Product photos.** Product tiles show a category icon on a tint; there are no product images yet.
 

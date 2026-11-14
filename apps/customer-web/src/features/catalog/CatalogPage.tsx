@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { formatIDR, type Product } from "@2m/shared";
 import { CATALOG_SEARCH_ID } from "../../app/Layout";
 import { useAuth } from "../../lib/auth";
 import { errorMessage } from "../../lib/api";
-import { useBranches, useCart, useCartMutations, useProducts } from "../../lib/queries";
+import { useBranches, useCart, useProducts } from "../../lib/queries";
+import { capMessage, qtyCap, useCartSync, type CapReason } from "../../lib/cart";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { CategoryIcon, categoryTint } from "../../components/category";
-import { IconArrowRight, IconFilter, IconGrid, IconPlus, IconSearch } from "../../components/Icons";
+import { BottomSheet } from "../../components/BottomSheet";
+import { IconArrowRight, IconClose, IconFilter, IconGrid, IconPlus, IconSearch } from "../../components/Icons";
 import { QtyStepper } from "../../components/QtyStepper";
 import { EmptyState, ErrorCard, rise } from "../../components/States";
 
@@ -44,17 +45,17 @@ interface CardProps {
   product: Product;
   index: number;
   qty: number;
-  maxPerSku: number;
-  busy: boolean;
+  cap: { max: number; reason: CapReason };
   onAdd: () => void;
   onSetQty: (qty: number) => void;
+  onClamp: () => void;
 }
 
-function ProductCard({ product: p, index, qty, maxPerSku, busy, onAdd, onSetQty }: CardProps) {
+function ProductCard({ product: p, index, qty, cap, onAdd, onSetQty, onClamp }: CardProps) {
   const out = p.sellable_qty <= 0;
   const low = p.sellable_qty <= STOCK_NOTICE_AT;
-  const limit = Math.min(p.sellable_qty, maxPerSku);
-  const atLimit = qty >= limit;
+  const limit = cap.max;
+  const atLimit = !out && qty >= limit;
 
   return (
     <li className="group flex animate-rise flex-col" style={rise(index)}>
@@ -68,7 +69,7 @@ function ProductCard({ product: p, index, qty, maxPerSku, busy, onAdd, onSetQty 
         <CategoryIcon category={p.category} className="transition-transform duration-300 ease-settle group-hover:scale-110" />
         {(out || atLimit || low) && (
           <span className={cn("pill absolute left-2 top-2", out ? "pill-danger" : atLimit ? "pill-info" : "pill-warning")}>
-            {out ? "Habis" : atLimit ? "Batas tercapai" : `Stok: ${p.sellable_qty}`}
+            {out ? "Habis" : atLimit ? (cap.reason === "weight" ? "Berat penuh" : "Batas tercapai") : `Stok: ${p.sellable_qty}`}
           </span>
         )}
       </div>
@@ -84,13 +85,13 @@ function ProductCard({ product: p, index, qty, maxPerSku, busy, onAdd, onSetQty 
           className="mt-2.5"
           name={p.name}
           qty={qty}
-          canDecrease={!busy}
-          canIncrease={!busy && !atLimit}
-          onDecrease={() => onSetQty(qty - 1)}
-          onIncrease={() => onSetQty(qty + 1)}
+          min={0}
+          max={limit}
+          onChange={onSetQty}
+          onClamp={onClamp}
         />
       ) : (
-        <button type="button" disabled={out || busy} onClick={onAdd} aria-label={`Tambah ${p.name}`} className="btn btn-secondary btn-block mt-2.5">
+        <button type="button" disabled={out || limit <= 0} onClick={onAdd} aria-label={`Tambah ${p.name}`} className="btn btn-secondary btn-block mt-2.5">
           <IconPlus /> Tambah
         </button>
       )}
@@ -110,57 +111,52 @@ function CategorySheet({
   onPick: (c: string | undefined) => void;
   onClose: () => void;
 }) {
-  const panelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
-    panelRef.current?.querySelector<HTMLElement>("[aria-pressed='true']")?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    listRef.current?.querySelector<HTMLElement>("[aria-pressed='true']")?.focus({ preventScroll: true });
     // The chips come back from md up, so the sheet has nothing left to do there.
     const wide = window.matchMedia("(min-width: 768px)");
     const onWide = () => {
       if (wide.matches) onClose();
     };
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", onKey);
     wide.addEventListener("change", onWide);
-    return () => {
-      document.body.style.overflow = overflow;
-      document.removeEventListener("keydown", onKey);
-      wide.removeEventListener("change", onWide);
-      opener?.focus();
-    };
+    return () => wide.removeEventListener("change", onWide);
   }, [onClose]);
 
-  // Portal: the sticky search bar uses backdrop-filter, which would trap a fixed child inside it.
-  return createPortal(
-    <div className="sheet-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="category-sheet-title" className="sheet-panel">
-        <span aria-hidden="true" className="sheet-grabber" />
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 id="category-sheet-title" className="t-title">
-            Kategori
-          </h2>
-          <button type="button" onClick={onClose} className="link text-sm font-semibold">
-            Tutup
-          </button>
-        </div>
-        <ul className="grid grid-cols-2 gap-2">
-          {[undefined, ...categories].map((c) => (
-            <li key={c ?? "all"}>
-              <button type="button" onClick={() => onPick(c)} aria-pressed={value === c} className="chip w-full capitalize">
-                <span className="text-base">{c ? <CategoryIcon category={c} /> : <IconGrid />}</span>
-                <span className="truncate">{c ?? "Semua"}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>,
-    document.body,
+  return (
+    <BottomSheet labelledBy="category-sheet-title" onClose={onClose}>
+      {(close) => (
+        <>
+          <div data-sheet-drag className="flex touch-none items-center justify-between gap-3">
+            <h2 id="category-sheet-title" className="t-title">
+              Kategori
+            </h2>
+            <button type="button" onClick={close} aria-label="Tutup" className="icon-btn size-9 rounded-full text-base">
+              <IconClose />
+            </button>
+          </div>
+          <ul ref={listRef} className="grid grid-cols-2 gap-2">
+            {[undefined, ...categories].map((c) => (
+              <li key={c ?? "all"}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onPick(c);
+                    close();
+                  }}
+                  aria-pressed={value === c}
+                  className="chip w-full capitalize"
+                >
+                  <span className="text-base">{c ? <CategoryIcon category={c} /> : <IconGrid />}</span>
+                  <span className="truncate">{c ?? "Semua"}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </BottomSheet>
   );
 }
 
@@ -176,15 +172,13 @@ export function CatalogPage() {
   const [page, setPage] = useState(1);
   const q = useDebounced(search.trim(), 300);
   const { data, isLoading, isError } = useProducts(branchId, category, q, page);
-  const { add, setQty, remove } = useCartMutations(branchId);
+  const fail = (e: unknown) => toast("error", errorMessage(e));
+  const sync = useCartSync(branchId, fail);
   const branch = useBranches().data?.find((b) => b.id === branchId);
   const cart = useCart(branchId, !!user).data;
   const qtyInCart = new Map(cart?.items.map((i) => [i.product_id, i.qty]));
-  const maxPerSku = cart?.limits.max_qty_per_sku ?? Infinity;
-  const busy = add.isPending || setQty.isPending || remove.isPending;
   const productsRef = useRef<HTMLDivElement>(null);
   const browsing = !category && !search.trim();
-  const fail = (e: unknown) => toast("error", errorMessage(e));
   const closeSheet = useCallback(() => setSheetOpen(false), []);
 
   useEffect(() => setPage(1), [q, category]);
@@ -194,12 +188,12 @@ export function CatalogPage() {
       navigate("/login", { state: { from: location.pathname } });
       return;
     }
-    add.mutate({ product_id: p.id, qty: 1 }, { onSuccess: () => toast("success", `${p.name} ditambahkan`), onError: fail });
+    sync.add(p);
+    toast("success", `${p.name} ditambahkan`);
   }
 
   function changeQty(p: Product, qty: number) {
-    if (qty <= 0) remove.mutate(p.id, { onError: fail });
-    else setQty.mutate({ productId: p.id, qty }, { onError: fail });
+    sync.setQty(p.id, qty);
   }
 
   return (
@@ -275,10 +269,7 @@ export function CatalogPage() {
             <CategorySheet
               categories={data?.categories ?? []}
               value={category}
-              onPick={(c) => {
-                setCategory(c);
-                setSheetOpen(false);
-              }}
+              onPick={setCategory}
               onClose={closeSheet}
             />
           )}
@@ -309,10 +300,12 @@ export function CatalogPage() {
                     product={p}
                     index={i}
                     qty={qtyInCart.get(p.id) ?? 0}
-                    maxPerSku={maxPerSku}
-                    busy={busy}
+                    cap={qtyCap(cart, { product_id: p.id, weight_kg: p.weight_kg, sellable_qty: p.sellable_qty })}
                     onAdd={() => addToCart(p)}
                     onSetQty={(qty) => changeQty(p, qty)}
+                    onClamp={() =>
+                      toast("error", capMessage(cart, p.name, qtyCap(cart, { product_id: p.id, weight_kg: p.weight_kg, sellable_qty: p.sellable_qty })))
+                    }
                   />
                 ))}
               </ul>

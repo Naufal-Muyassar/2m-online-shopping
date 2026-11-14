@@ -78,6 +78,12 @@ export const IconGrid = (p: IconProps) => (
   </Svg>
 );
 
+export const IconClose = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M6 6l12 12M18 6L6 18" />
+  </Svg>
+);
+
 export const IconFilter = (p: IconProps) => (
   <Svg {...p}>
     <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />

@@ -4,7 +4,6 @@ import type {
   AddressInput,
   BranchesResponse,
   Cart,
-  CartAddRequest,
   ChatChannel,
   ChatMessage,
   ChatMessagesResponse,
@@ -50,28 +49,6 @@ export const useCart = (branchId: string, enabled = true) =>
     queryFn: async () => (await api.get<Cart>("/cart", { params: { branch_id: branchId } })).data,
     enabled,
   });
-
-export function useCartMutations(branchId: string) {
-  const qc = useQueryClient();
-  const onSuccess = (cart: Cart) => qc.setQueryData(["cart", branchId], cart);
-  return {
-    add: useMutation({
-      mutationFn: async (input: Omit<CartAddRequest, "branch_id">) =>
-        (await api.post<Cart>("/cart/items", { ...input, branch_id: branchId })).data,
-      onSuccess,
-    }),
-    setQty: useMutation({
-      mutationFn: async (v: { productId: string; qty: number }) =>
-        (await api.patch<Cart>(`/cart/items/${v.productId}`, { branch_id: branchId, qty: v.qty })).data,
-      onSuccess,
-    }),
-    remove: useMutation({
-      mutationFn: async (productId: string) =>
-        (await api.delete<Cart>(`/cart/items/${productId}`, { params: { branch_id: branchId } })).data,
-      onSuccess,
-    }),
-  };
-}
 
 const CHAT_ROOM_POLL_MS = 4_000;
 const CHAT_LIST_POLL_MS = 15_000;
