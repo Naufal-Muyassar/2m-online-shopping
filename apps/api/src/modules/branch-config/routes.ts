@@ -116,6 +116,14 @@ branchConfigRoutes.post(
   }),
 );
 
+branchConfigRoutes.post(
+  "/catalog/image-upload-url",
+  ...superOnly,
+  asyncHandler(async (_req, res) => {
+    res.json(await service.catalogImageUpload());
+  }),
+);
+
 branchConfigRoutes.patch(
   "/catalog/:id",
   ...superOnly,

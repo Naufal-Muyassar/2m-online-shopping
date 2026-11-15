@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PRODUCT_DESCRIPTION_MAX, PRODUCT_IMAGES_MAX, PRODUCT_SPECS_MAX, productSpecSchema } from "./customer";
 
 const uuid = z.string().uuid();
 const branchIdField = { branch_id: uuid.optional() };
@@ -31,6 +32,7 @@ export const adminProductSchema = z.object({
   is_active: z.boolean(),
   // Units new orders can still take: on-hand minus reserved minus buffer, never below 0
   sellable_qty: z.number().int(),
+  image_url: z.string().nullable(),
 });
 export type AdminProduct = z.infer<typeof adminProductSchema>;
 
@@ -88,6 +90,10 @@ export const catalogProductSchema = z.object({
   unit: z.string(),
   category: z.string(),
   weight_kg: z.number(),
+  description: z.string(),
+  specs: z.array(productSpecSchema),
+  // Display order; the first is the cover on product cards
+  images: z.array(z.object({ key: z.string(), url: z.string() })),
   branches: z.array(z.object({ id: uuid, name: z.string() })),
 });
 export type CatalogProduct = z.infer<typeof catalogProductSchema>;
@@ -117,11 +123,19 @@ export const catalogResponseSchema = z.object({
 });
 export type CatalogResponse = z.infer<typeof catalogResponseSchema>;
 
+// Keys come from POST /admin/catalog/image-upload-url.
+export const PRODUCT_IMAGE_KEY = /^catalog\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$/;
 const productDetailFields = {
   name: z.string().trim().min(1).max(120),
   unit: z.string().trim().min(1).max(30),
   category: z.string().trim().toLowerCase().min(1).max(40),
   weight_kg: z.number().positive().max(1000),
+  description: z.string().trim().max(PRODUCT_DESCRIPTION_MAX),
+  specs: z.array(productSpecSchema).max(PRODUCT_SPECS_MAX),
+  images: z
+    .array(z.string().regex(PRODUCT_IMAGE_KEY, "Kunci gambar tidak dikenal"))
+    .max(PRODUCT_IMAGES_MAX)
+    .refine((keys) => new Set(keys).size === keys.length, { message: "Gambar ganda" }),
 };
 
 // POST /admin/catalog (super_admin). The SKU is fixed once created: orders and the central stock system key on it.
@@ -131,22 +145,36 @@ export const createCatalogProductSchema = z.object({
     .trim()
     .toUpperCase()
     .regex(/^[A-Z0-9][A-Z0-9-]{1,39}$/, "SKU hanya huruf, angka dan tanda minus"),
-  ...productDetailFields,
+  name: productDetailFields.name,
+  unit: productDetailFields.unit,
+  category: productDetailFields.category,
+  weight_kg: productDetailFields.weight_kg,
+  description: productDetailFields.description.default(""),
+  specs: productDetailFields.specs.default([]),
+  images: productDetailFields.images.default([]),
 });
 export type CreateCatalogProduct = z.input<typeof createCatalogProductSchema>;
 
 // PATCH /admin/catalog/:id (super_admin): applies to every branch
-const DETAIL_FIELDS = ["name", "unit", "category", "weight_kg"] as const;
+const DETAIL_FIELDS = ["name", "unit", "category", "weight_kg", "description", "specs", "images"] as const;
 export const updateCatalogProductSchema = z
   .object({
     name: productDetailFields.name.optional(),
     unit: productDetailFields.unit.optional(),
     category: productDetailFields.category.optional(),
     weight_kg: productDetailFields.weight_kg.optional(),
+    description: productDetailFields.description.optional(),
+    specs: productDetailFields.specs.optional(),
+    images: productDetailFields.images.optional(),
   })
   .strict()
   .refine(atLeastOne(DETAIL_FIELDS), { message: "Nothing to update" });
 export type UpdateCatalogProduct = z.infer<typeof updateCatalogProductSchema>;
+
+// POST /admin/catalog/image-upload-url (super_admin). PUT the JPEG to upload_url with Content-Type image/jpeg,
+// then save the key in the product's images.
+export const catalogImageUploadResponseSchema = z.object({ upload_url: z.string(), key: z.string(), url: z.string() });
+export type CatalogImageUploadResponse = z.infer<typeof catalogImageUploadResponseSchema>;
 
 export const branchAdminAccountSchema = z.object({
   id: uuid,

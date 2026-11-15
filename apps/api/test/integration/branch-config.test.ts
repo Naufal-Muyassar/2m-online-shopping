@@ -5,9 +5,12 @@ import jwt from "jsonwebtoken";
 import type {
   AdminProduct,
   AdminProductsResponse,
+  CatalogImageUploadResponse,
   CatalogProduct,
   CatalogResponse,
   CreateBranchResponse,
+  ProductDetail,
+  ProductsResponse,
   SuperBranchesResponse,
 } from "@2m/shared";
 import { createApp } from "../../src/app";
@@ -199,7 +202,72 @@ describe("catalogue (super_admin)", () => {
     expect(notSold.products.map((p) => p.id)).toEqual([product.id]);
   });
 
+  it("stores the product page: photos in order, description and specs, shown to customers", async () => {
+    const product = await json<CatalogProduct>(
+      await call("/admin/catalog", {
+        method: "POST",
+        headers: asSuper(),
+        body: {
+          sku: sku(),
+          name: "Beras Uji 5 kg",
+          unit: "karung",
+          category: "beras",
+          weight_kg: 5,
+          description: "  Beras pulen.  ",
+          specs: [{ label: "Asal", value: "Cianjur" }],
+        },
+      }),
+    );
+    expect(product).toMatchObject({ description: "Beras pulen.", specs: [{ label: "Asal", value: "Cianjur" }], images: [] });
+
+    // Two photos uploaded the way the admin does it: a presigned PUT, then the keys saved on the product.
+    const uploads: CatalogImageUploadResponse[] = [];
+    for (let i = 0; i < 2; i++) {
+      const up = await json<CatalogImageUploadResponse>(
+        await call("/admin/catalog/image-upload-url", { method: "POST", headers: asSuper() }),
+      );
+      const put = await fetch(up.upload_url, { method: "PUT", headers: { "Content-Type": "image/jpeg" }, body: Buffer.from([0xff, 0xd8, 0xff, i]) });
+      expect(put.status).toBe(200);
+      uploads.push(up);
+    }
+    const missing = `catalog/${randomUUID()}.jpg`;
+    const notUploaded = await call(`/admin/catalog/${product.id}`, { method: "PATCH", headers: asSuper(), body: { images: [missing] } });
+    expect(notUploaded.status).toBe(422);
+    const badKey = await call(`/admin/catalog/${product.id}`, { method: "PATCH", headers: asSuper(), body: { images: ["proofs/x.jpg"] } });
+    expect(badKey.status).toBe(400);
+
+    const keys = [uploads[1]!.key, uploads[0]!.key];
+    const saved = await json<CatalogProduct>(
+      await call(`/admin/catalog/${product.id}`, { method: "PATCH", headers: asSuper(), body: { images: keys } }),
+    );
+    expect(saved.images).toEqual([
+      { key: uploads[1]!.key, url: uploads[1]!.url },
+      { key: uploads[0]!.key, url: uploads[0]!.url },
+    ]);
+
+    await call("/admin/products", { method: "POST", headers: asAdmin(), body: { product_id: product.id, price: 70_000, sellable_qty: 3 } });
+    const list = await json<ProductsResponse>(await fetch(`${base}/branches/${fx.branchId}/products?q=${encodeURIComponent(product.sku)}`));
+    expect(list.products[0]?.image_url).toBe(uploads[1]!.url);
+    const detail = await json<ProductDetail>(await fetch(`${base}/branches/${fx.branchId}/products/${product.id}`));
+    expect(detail).toMatchObject({
+      id: product.id,
+      description: "Beras pulen.",
+      specs: [{ label: "Asal", value: "Cianjur" }],
+      image_urls: [uploads[1]!.url, uploads[0]!.url],
+      sellable_qty: 3,
+      stock_status: "low",
+    });
+    expect((await fetch(`${base}/branches/${other.branchId}/products/${product.id}`)).status).toBe(404);
+
+    const image = await fetch(`${base}${uploads[0]!.url.replace("/api/v1", "")}`);
+    expect(image.status).toBe(200);
+    expect(image.headers.get("cache-control")).toContain("immutable");
+    expect([...new Uint8Array(await image.arrayBuffer())]).toEqual([0xff, 0xd8, 0xff, 0]);
+    expect((await fetch(`${base}/catalog-images/${randomUUID()}.jpg`)).status).toBe(404);
+  });
+
   it("is closed to branch admins and rejects a bad SKU", async () => {
+    expect((await call("/admin/catalog/image-upload-url", { method: "POST", headers: asAdmin() })).status).toBe(403);
     expect((await call("/admin/catalog", { headers: asAdmin() })).status).toBe(403);
     expect((await call(`/admin/catalog/${productId}`, { method: "PATCH", headers: asAdmin(), body: { name: "x" } })).status).toBe(403);
     const bad = await call("/admin/catalog", { method: "POST", headers: asSuper(), body: { sku: "a b", name: "x", unit: "x", category: "x", weight_kg: 1 } });

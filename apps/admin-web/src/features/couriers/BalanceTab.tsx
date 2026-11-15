@@ -9,6 +9,8 @@ import {
   type CourierWithdrawalResponse,
 } from "@2m/shared";
 import { api, errorMessage } from "../../lib/api";
+import { downloadPdf } from "../../lib/download";
+import { IconFile } from "../../components/Icons";
 import { useAuth } from "../../lib/auth";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
@@ -20,6 +22,37 @@ const LEDGER_KEY = "admin-courier-ledger";
 
 const dateTime = (iso: string) =>
   new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+// Downloads the withdrawal slip PDF; the mutation state drives the button and the message.
+function useSlipDownload(courierId: string) {
+  const { branchId } = useBranch();
+  return useMutation({
+    mutationFn: (entryId: string) =>
+      downloadPdf(`/admin/couriers/${courierId}/withdrawals/${entryId}/slip`, { branch_id: branchId ?? undefined }),
+  });
+}
+
+function SlipStatus({ slip }: { slip: ReturnType<typeof useSlipDownload> }) {
+  if (slip.isPending)
+    return (
+      <p className="text-sm text-muted-foreground" role="status">
+        Membuat slip PDF…
+      </p>
+    );
+  if (slip.isError)
+    return (
+      <p className="alert-box" role="alert">
+        Slip gagal dibuat: {slip.error.message}
+      </p>
+    );
+  if (slip.isSuccess)
+    return (
+      <p className="text-sm text-success" role="status">
+        Slip PDF sudah diunduh.
+      </p>
+    );
+  return null;
+}
 
 function WithdrawDialog({ courier, onClose }: { courier: AdminCourier; onClose: () => void }) {
   const { branchId } = useBranch();
@@ -38,13 +71,37 @@ function WithdrawDialog({ courier, onClose }: { courier: AdminCourier; onClose: 
     },
     onSuccess: (res) => {
       toast("success", `Penarikan ${formatIDR(res.amount)} untuk ${courier.name} tercatat`);
-      onClose();
+      // The slip is the paper trail of the handover, so it is made straight away.
+      slip.mutate(res.id);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-couriers", branchId] });
       void queryClient.invalidateQueries({ queryKey: [LEDGER_KEY, branchId, courier.user_id] });
     },
   });
+  const slip = useSlipDownload(courier.user_id);
+  const done = withdraw.data;
+
+  if (done)
+    return (
+      <Dialog title="Penarikan tercatat">
+        <div className="flex flex-col gap-1 border-y border-border py-3">
+          <p className="t-label">Diserahkan ke {courier.name}</p>
+          <p className="t-figure">{formatIDR(done.amount)}</p>
+          <p className="text-sm text-muted-foreground tabular-nums">Sisa saldo {formatIDR(done.balance)}</p>
+        </div>
+        <SlipStatus slip={slip} />
+        <p className="notice">Cetak slip, minta kurir dan admin menandatanganinya, lalu simpan sebagai arsip cabang.</p>
+        <div className="flex justify-end gap-2">
+          <button className="btn btn-secondary" onClick={() => slip.mutate(done.id)} disabled={slip.isPending}>
+            <IconFile aria-hidden="true" /> {slip.isPending ? "Membuat slip…" : slip.isError ? "Coba lagi" : "Unduh ulang slip"}
+          </button>
+          <button className="btn btn-primary" onClick={onClose}>
+            Selesai
+          </button>
+        </div>
+      </Dialog>
+    );
 
   return (
     <Dialog title={`Catat penarikan ${courier.name}`}>
@@ -114,6 +171,7 @@ function LedgerDialog({ courier, onClose }: { courier: AdminCourier; onClose: ()
     getNextPageParam: (last) => last.next_cursor ?? undefined,
   });
   const entries = ledger.data?.pages.flatMap((p) => p.entries) ?? [];
+  const slip = useSlipDownload(courier.user_id);
 
   return (
     <Dialog title={`Riwayat saldo ${courier.name}`}>
@@ -131,6 +189,18 @@ function LedgerDialog({ courier, onClose }: { courier: AdminCourier; onClose: ()
               <span className="min-w-0">
                 <span className="block break-words font-medium">{entryLabel(e)}</span>
                 <span className="t-label mt-0.5 block tabular-nums">{dateTime(e.created_at)}</span>
+                {e.type === "WITHDRAWAL" && (
+                  <button
+                    type="button"
+                    className="link mt-1 inline-flex items-center gap-1 text-sm disabled:opacity-60"
+                    onClick={() => slip.mutate(e.id)}
+                    disabled={slip.isPending}
+                    aria-label={`Unduh slip penarikan ${dateTime(e.created_at)}`}
+                  >
+                    <IconFile aria-hidden="true" />
+                    {slip.isPending && slip.variables === e.id ? "Membuat slip…" : "Slip PDF"}
+                  </button>
+                )}
               </span>
               <span className={cn("shrink-0 font-extrabold tabular-nums", e.amount > 0 && "text-success")}>
                 {e.amount > 0 ? "+" : "−"}
@@ -139,6 +209,11 @@ function LedgerDialog({ courier, onClose }: { courier: AdminCourier; onClose: ()
             </li>
           ))}
         </ul>
+      )}
+      {slip.isError && (
+        <p className="alert-box" role="alert">
+          Slip gagal dibuat: {slip.error.message}
+        </p>
       )}
       <div className="flex justify-end gap-2">
         {ledger.hasNextPage && (

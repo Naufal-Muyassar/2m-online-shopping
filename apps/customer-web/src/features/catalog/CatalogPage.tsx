@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { formatIDR, type Product } from "@2m/shared";
 import { CATALOG_SEARCH_ID } from "../../app/Layout";
 import { useAuth } from "../../lib/auth";
@@ -43,6 +43,7 @@ function BannerArt({ className }: { className?: string }) {
 
 interface CardProps {
   product: Product;
+  href: string;
   index: number;
   qty: number;
   cap: { max: number; reason: CapReason };
@@ -51,35 +52,49 @@ interface CardProps {
   onClamp: () => void;
 }
 
-function ProductCard({ product: p, index, qty, cap, onAdd, onSetQty, onClamp }: CardProps) {
+function ProductCard({ product: p, href, index, qty, cap, onAdd, onSetQty, onClamp }: CardProps) {
   const out = p.sellable_qty <= 0;
   const low = p.sellable_qty <= STOCK_NOTICE_AT;
   const limit = cap.max;
   const atLimit = !out && qty >= limit;
 
   return (
-    <li className="group flex animate-rise flex-col" style={rise(index)}>
-      <div
-        className={cn(
-          "relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg border border-border text-5xl transition-colors duration-200 group-hover:border-foreground/40",
-          categoryTint(p.category),
-          out && "opacity-55",
-        )}
-      >
-        <CategoryIcon category={p.category} className="transition-transform duration-300 ease-settle group-hover:scale-110" />
-        {(out || atLimit || low) && (
-          <span className={cn("pill absolute left-2 top-2", out ? "pill-danger" : atLimit ? "pill-info" : "pill-warning")}>
-            {out ? "Habis" : atLimit ? (cap.reason === "weight" ? "Berat penuh" : "Batas tercapai") : `Stok: ${p.sellable_qty}`}
-          </span>
-        )}
-      </div>
-      <div className="mt-3 flex flex-1 flex-col">
-        <p className="line-clamp-2 text-sm font-bold leading-snug">{p.name}</p>
-        <p className="t-label mt-1">
-          per {p.unit} · {p.weight_kg} kg
-        </p>
-        <p className="mt-auto pt-2 text-[1.0625rem] font-extrabold tabular-nums tracking-tight">{formatIDR(p.price)}</p>
-      </div>
+    <li className="flex animate-rise flex-col" style={rise(index)}>
+      {/* The photo and the text open the product page; the cart controls below stay separate. */}
+      <Link to={href} state={{ fromCatalog: true }} className="product-card-link group flex flex-1 flex-col">
+        <div
+          className={cn(
+            "relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg border border-border text-5xl transition-colors duration-200 group-hover:border-foreground/40",
+            !p.image_url && categoryTint(p.category),
+            p.image_url && "bg-muted",
+            out && "opacity-55",
+          )}
+        >
+          {p.image_url ? (
+            <img
+              src={p.image_url}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="size-full object-cover transition-transform duration-300 ease-settle group-hover:scale-[1.04]"
+            />
+          ) : (
+            <CategoryIcon category={p.category} className="transition-transform duration-300 ease-settle group-hover:scale-110" />
+          )}
+          {(out || atLimit || low) && (
+            <span className={cn("pill absolute left-2 top-2", out ? "pill-danger" : atLimit ? "pill-info" : "pill-warning")}>
+              {out ? "Habis" : atLimit ? (cap.reason === "weight" ? "Berat penuh" : "Batas tercapai") : `Stok: ${p.sellable_qty}`}
+            </span>
+          )}
+        </div>
+        <div className="mt-3 flex flex-1 flex-col">
+          <p className="line-clamp-2 text-sm font-bold leading-snug decoration-1 underline-offset-2 group-hover:underline">{p.name}</p>
+          <p className="t-label mt-1">
+            per {p.unit} · {p.weight_kg} kg
+          </p>
+          <p className="mt-auto pt-2 text-[1.0625rem] font-extrabold tabular-nums tracking-tight">{formatIDR(p.price)}</p>
+        </div>
+      </Link>
       {qty > 0 ? (
         <QtyStepper
           className="mt-2.5"
@@ -166,12 +181,63 @@ export function CatalogPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<string | undefined>();
+  // Filters live in the URL, so going back from a product page lands on the same category, search and page.
+  const [params, setParams] = useSearchParams();
+  const category = params.get("kategori") ?? undefined;
+  const urlQ = params.get("q") ?? "";
+  const page = Math.max(1, Number(params.get("hal")) || 1);
+  const [search, setSearch] = useState(urlQ);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [page, setPage] = useState(1);
   const q = useDebounced(search.trim(), 300);
   const { data, isLoading, isError } = useProducts(branchId, category, q, page);
+
+  const setFilters = useCallback(
+    (next: { kategori?: string | null; q?: string; hal?: number }) =>
+      setParams(
+        (prev) => {
+          const out = new URLSearchParams(prev);
+          const put = (key: string, value: string | null | undefined) => (value ? out.set(key, value) : out.delete(key));
+          if ("kategori" in next) put("kategori", next.kategori);
+          if ("q" in next) put("q", next.q);
+          if ("hal" in next) put("hal", next.hal && next.hal > 1 ? String(next.hal) : null);
+          return out;
+        },
+        { replace: true },
+      ),
+    [setParams],
+  );
+  const setCategory = (c: string | undefined) => setFilters({ kategori: c ?? null, hal: 1 });
+  const setPage = (n: number) => setFilters({ hal: n });
+
+  // A new search starts at page 1. Compared with the URL so returning to the page does not reset it.
+  useEffect(() => {
+    if (q !== urlQ) setFilters({ q, hal: 1 });
+  }, [q, urlQ, setFilters]);
+
+  // Back from a product page: return to where the shopper was in the grid.
+  const scrollKey = `2m.catalog-scroll:${location.key}`;
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current || !data) return;
+    restored.current = true;
+    let y: string | null = null;
+    try {
+      y = sessionStorage.getItem(scrollKey);
+    } catch {
+      // storage blocked: start at the top
+    }
+    if (y) window.scrollTo({ top: Number(y) });
+  }, [data, scrollKey]);
+  useEffect(
+    () => () => {
+      try {
+        sessionStorage.setItem(scrollKey, String(window.scrollY));
+      } catch {
+        // storage blocked: nothing to restore later
+      }
+    },
+    [scrollKey],
+  );
   const fail = (e: unknown) => toast("error", errorMessage(e));
   const sync = useCartSync(branchId, fail);
   const branch = useBranches().data?.find((b) => b.id === branchId);
@@ -180,8 +246,6 @@ export function CatalogPage() {
   const productsRef = useRef<HTMLDivElement>(null);
   const browsing = !category && !search.trim();
   const closeSheet = useCallback(() => setSheetOpen(false), []);
-
-  useEffect(() => setPage(1), [q, category]);
 
   function addToCart(p: Product) {
     if (!user) {
@@ -298,6 +362,7 @@ export function CatalogPage() {
                   <ProductCard
                     key={p.id}
                     product={p}
+                    href={`/b/${branchId}/p/${p.id}`}
                     index={i}
                     qty={qtyInCart.get(p.id) ?? 0}
                     cap={qtyCap(cart, { product_id: p.id, weight_kg: p.weight_kg, sellable_qty: p.sellable_qty })}

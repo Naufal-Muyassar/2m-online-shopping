@@ -27,6 +27,7 @@ const CODE_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: "Nomor HP atau kata sandi salah.",
   COURIER_BUSY: "Status tidak bisa diubah saat sedang mengantar.",
   PROOF_REQUIRED: "Foto bukti pengiriman wajib diunggah.",
+  WITHDRAWAL_NOT_FOUND: "Slip penarikan tidak ditemukan. Muat ulang riwayat saldo.",
   INVALID_TRANSITION: "Status pesanan sudah berubah. Muat ulang halaman.",
   INVALID_STATE: "Status pesanan sudah berubah. Muat ulang halaman.",
   JOB_TAKEN: "Order sudah diambil kurir lain",

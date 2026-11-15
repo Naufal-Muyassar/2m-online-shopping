@@ -7,7 +7,19 @@ import { Select } from "../../components/Select";
 import { api, errorMessage } from "../../lib/api";
 import { useToast } from "../../lib/toast";
 import { useAllBranches } from "./BranchProvider";
-import { PRODUCTS_KEY, weightLabel } from "./ProductsSection";
+import { PRODUCTS_KEY, ProductThumb, weightLabel } from "./ProductsSection";
+import {
+  ProductDescription,
+  ProductPhotos,
+  ProductSpecs,
+  photosFrom,
+  photosPayload,
+  specsFrom,
+  specsIncomplete,
+  specsPayload,
+  type PhotoItem,
+  type SpecDraft,
+} from "./ProductContentFields";
 
 const CATALOG_KEY = "admin-catalog";
 const SKU = /^[A-Z0-9][A-Z0-9-]{1,39}$/;
@@ -24,10 +36,23 @@ function CatalogDialog({ product, categories, onClose }: { product?: CatalogProd
   const [unit, setUnit] = useState(product?.unit ?? "");
   const [category, setCategory] = useState(product?.category ?? "");
   const [weight, setWeight] = useState(product ? String(product.weight_kg).replace(".", ",") : "");
+  const [photos, setPhotos] = useState<PhotoItem[]>(() => photosFrom(product));
+  const [description, setDescription] = useState(product?.description ?? "");
+  const [specs, setSpecs] = useState<SpecDraft[]>(() => specsFrom(product));
 
   const skuValue = sku.trim().toUpperCase();
   const weightKg = parseWeight(weight);
-  const invalid = (!product && !SKU.test(skuValue)) || !name.trim() || !unit.trim() || !category.trim() || !(weightKg > 0);
+  const uploading = photos.some((p) => p.state === "uploading");
+  const invalid =
+    (!product && !SKU.test(skuValue)) ||
+    !name.trim() ||
+    !unit.trim() ||
+    !category.trim() ||
+    !(weightKg > 0) ||
+    specsIncomplete(specs) ||
+    photos.some((p) => p.state === "error");
+  const imageKeys = photosPayload(photos);
+  const specRows = specsPayload(specs);
 
   const changes: UpdateCatalogProduct = {};
   if (product) {
@@ -35,13 +60,26 @@ function CatalogDialog({ product, categories, onClose }: { product?: CatalogProd
     if (unit.trim() !== product.unit) changes.unit = unit.trim();
     if (category.trim().toLowerCase() !== product.category) changes.category = category.trim().toLowerCase();
     if (weightKg !== product.weight_kg) changes.weight_kg = weightKg;
+    if (description.trim() !== product.description) changes.description = description.trim();
+    if (JSON.stringify(specRows) !== JSON.stringify(product.specs)) changes.specs = specRows;
+    if (JSON.stringify(imageKeys) !== JSON.stringify(product.images.map((i) => i.key))) changes.images = imageKeys;
   }
   const dirty = !product || Object.keys(changes).length > 0;
+  const canSave = dirty && !invalid && !uploading;
 
   const save = useMutation({
     mutationFn: async () => {
       if (product) return (await api.patch<CatalogProduct>(`/admin/catalog/${product.id}`, changes)).data;
-      const body: CreateCatalogProduct = { sku: skuValue, name: name.trim(), unit: unit.trim(), category, weight_kg: weightKg };
+      const body: CreateCatalogProduct = {
+        sku: skuValue,
+        name: name.trim(),
+        unit: unit.trim(),
+        category,
+        weight_kg: weightKg,
+        description: description.trim(),
+        specs: specRows,
+        images: imageKeys,
+      };
       return (await api.post<CatalogProduct>("/admin/catalog", body)).data;
     },
     onSuccess: (p) => {
@@ -61,7 +99,7 @@ function CatalogDialog({ product, categories, onClose }: { product?: CatalogProd
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault();
-          if (dirty && !invalid) save.mutate();
+          if (canSave) save.mutate();
         }}
       >
         {product ? (
@@ -127,16 +165,32 @@ function CatalogDialog({ product, categories, onClose }: { product?: CatalogProd
             <option key={c} value={c} />
           ))}
         </datalist>
+        <section className="flex flex-col gap-5 border-t border-border pt-4" aria-labelledby="product-page-heading">
+          <div>
+            <h3 id="product-page-heading" className="font-bold">
+              Halaman produk
+            </h3>
+            <p className="text-sm text-muted-foreground">Yang dilihat pelanggan saat membuka produk ini, sama di semua cabang.</p>
+          </div>
+          <ProductPhotos photos={photos} onChange={setPhotos} disabled={busy} />
+          <ProductDescription value={description} onChange={setDescription} disabled={busy} />
+          <ProductSpecs rows={specs} onChange={setSpecs} disabled={busy} />
+        </section>
         {save.isError && (
           <p className="alert-box" role="alert">
             {errorMessage(save.error)}
           </p>
         )}
-        <div className="flex justify-end gap-2">
+        <div className="dialog-footer">
+          {uploading && (
+            <p className="mr-auto self-center text-sm text-muted-foreground" role="status">
+              Menunggu foto selesai diunggah…
+            </p>
+          )}
           <button type="button" className="btn btn-secondary" onClick={onClose} disabled={busy}>
             Batal
           </button>
-          <button type="submit" className="btn btn-primary" disabled={busy || !dirty || invalid}>
+          <button type="submit" className="btn btn-primary" disabled={busy || !canSave}>
             {busy ? "Menyimpan…" : product ? "Simpan" : "Buat SKU"}
           </button>
         </div>
@@ -261,9 +315,15 @@ export function CatalogSection() {
               {rows.map((p) => (
                 <tr key={p.id}>
                   <td data-primary>
-                    <span className="block font-bold">{p.name}</span>
-                    <span className="t-label mt-0.5 block tabular-nums">
-                      {p.sku} · {p.unit}
+                    <span className="flex items-center gap-3">
+                      <ProductThumb src={p.images[0]?.url ?? null} />
+                      <span className="min-w-0">
+                        <span className="block font-bold">{p.name}</span>
+                        <span className="t-label mt-0.5 block tabular-nums">
+                          {p.sku} · {p.unit}
+                          {p.images.length === 0 && " · belum ada foto"}
+                        </span>
+                      </span>
                     </span>
                   </td>
                   <td data-label="Kategori" className="capitalize">

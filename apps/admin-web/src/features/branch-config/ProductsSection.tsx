@@ -11,7 +11,7 @@ import {
   type CatalogResponse,
 } from "@2m/shared";
 import { Dialog } from "../../components/Dialog";
-import { IconAlert, IconChevronRight, IconSearch } from "../../components/Icons";
+import { IconAlert, IconChevronRight, IconImage, IconSearch } from "../../components/Icons";
 import { Select } from "../../components/Select";
 import { api, errorMessage } from "../../lib/api";
 import { cn } from "../../lib/utils";
@@ -96,6 +96,15 @@ function BranchFields({
         Tampilkan di katalog pelanggan
       </label>
     </>
+  );
+}
+
+// The cover photo, or a quiet placeholder until the catalogue has one.
+export function ProductThumb({ src }: { src: string | null }) {
+  return (
+    <span className="photo-tile flex size-11 shrink-0 items-center justify-center text-lg text-muted-foreground" aria-hidden="true">
+      {src ? <img src={src} alt="" loading="lazy" /> : <IconImage />}
+    </span>
   );
 }
 
@@ -493,9 +502,14 @@ export function ProductsSection() {
                 return (
                   <tr key={p.id}>
                     <td data-primary>
-                      <span className="block font-bold">{p.name}</span>
-                      <span className="t-label mt-0.5 block tabular-nums">
-                        {p.sku} · {p.unit}
+                      <span className="flex items-center gap-3">
+                        <ProductThumb src={p.image_url} />
+                        <span className="min-w-0">
+                          <span className="block font-bold">{p.name}</span>
+                          <span className="t-label mt-0.5 block tabular-nums">
+                            {p.sku} · {p.unit}
+                          </span>
+                        </span>
                       </span>
                     </td>
                     <td data-label="Kategori" className="capitalize">

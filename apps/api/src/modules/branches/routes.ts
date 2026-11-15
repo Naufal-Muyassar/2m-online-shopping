@@ -1,6 +1,13 @@
 import { Router } from "express";
 import { z } from "zod";
-import { productsQuerySchema, type Branch, type BranchesResponse, type ProductsResponse } from "@2m/shared";
+import {
+  productDetailParamsSchema,
+  productsQuerySchema,
+  type Branch,
+  type BranchesResponse,
+  type ProductDetail,
+  type ProductsResponse,
+} from "@2m/shared";
 import { pool } from "../../shared/db";
 import { AppError } from "../../shared/errors";
 import { asyncHandler, validate } from "../../shared/http";
@@ -48,6 +55,19 @@ branchesRoutes.get(
       page_size: catalog.PAGE_SIZE,
       has_more: hasMore,
     };
+    res.json(body);
+  }),
+);
+
+branchesRoutes.get(
+  "/:id/products/:productId",
+  validate(productDetailParamsSchema, "params"),
+  asyncHandler(async (req, res) => {
+    const branchId = req.params.id as string;
+    if (!(await catalog.branchIsActive(pool, branchId))) throw new AppError(404, "BRANCH_NOT_FOUND", "Branch not found");
+    const row = await catalog.getProduct(pool, branchId, req.params.productId as string);
+    if (!row) throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found in this branch");
+    const body: ProductDetail = { ...row, stock_status: stockStatusOf(row.sellable_qty) };
     res.json(body);
   }),
 );

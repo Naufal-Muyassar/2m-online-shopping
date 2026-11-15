@@ -1,9 +1,11 @@
 import { Link, Navigate } from "react-router-dom";
-import { FaArrowDown, FaArrowLeft, FaArrowUp, FaWallet } from "react-icons/fa";
+import { useMutation } from "@tanstack/react-query";
+import { FaArrowDown, FaArrowLeft, FaArrowUp, FaFilePdf, FaWallet } from "react-icons/fa";
 import { formatIDR, type CourierLedgerEntry } from "@2m/shared";
 import { EmptyState, ErrorCard, LoadingBlock } from "@/components/ui/feedback";
 import { useSession } from "@/features/session/session";
 import { errorMessage } from "@/lib/api";
+import { downloadPdf } from "@/lib/download";
 import { cn } from "@/lib/utils";
 import { BalanceAmount } from "./BalanceAmount";
 import { useBalanceHistory } from "./hooks";
@@ -14,6 +16,28 @@ const dateTime = (iso: string) =>
 function entryTitle(entry: CourierLedgerEntry): string {
   if (entry.type === "WITHDRAWAL") return "Tarik tunai di toko";
   return entry.order_status === "FAILED" ? "Upah gagal kirim" : "Upah pengantaran";
+}
+
+function SlipButton({ entryId }: { entryId: string }) {
+  const slip = useMutation({ mutationFn: () => downloadPdf(`/courier/balance/withdrawals/${entryId}/slip`) });
+  return (
+    <>
+      <button
+        type="button"
+        className="link mt-1 inline-flex items-center gap-1.5 text-sm disabled:opacity-60"
+        disabled={slip.isPending}
+        onClick={() => slip.mutate()}
+      >
+        <FaFilePdf aria-hidden="true" />
+        {slip.isPending ? "Membuat slip…" : "Slip penarikan"}
+      </button>
+      {slip.isError && (
+        <p className="mt-1 text-sm text-destructive" role="alert">
+          {slip.error.message}
+        </p>
+      )}
+    </>
+  );
 }
 
 function EntryRow({ entry }: { entry: CourierLedgerEntry }) {
@@ -33,6 +57,7 @@ function EntryRow({ entry }: { entry: CourierLedgerEntry }) {
         <p className="font-bold">{entryTitle(entry)}</p>
         {detail && <p className="t-label mt-0.5 truncate">{detail}</p>}
         <p className="t-label mt-0.5 tabular-nums">{dateTime(entry.created_at)}</p>
+        {entry.type === "WITHDRAWAL" && <SlipButton entryId={entry.id} />}
       </div>
       <span className={cn("shrink-0 font-extrabold tabular-nums tracking-tight", earning && "text-success")}>
         {earning ? "+" : "−"}
