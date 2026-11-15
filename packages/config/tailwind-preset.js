@@ -42,6 +42,8 @@ const tokens = {
   "--rail": "214 56% 13%",
   "--rail-foreground": "38 41% 95%",
   "--rail-muted": "214 22% 70%",
+  // Success read on an ink surface (toast dot, courier status dot); --success is too dark there.
+  "--success-on-ink": "148 52% 58%",
   "--tap-target": "2.75rem",
   "--nav-height": "3.75rem",
   "--header-height": "4rem",
@@ -751,7 +753,7 @@ function designSystem({ addBase, addComponents }) {
       animation: `rise 240ms ${ease.slow} both`,
     },
     ".toast::before": { content: '""', flexShrink: "0", width: "0.5rem", height: "0.5rem", borderRadius: "999px" },
-    ".toast-success::before": { backgroundColor: "hsl(148 52% 58%)" },
+    ".toast-success::before": { backgroundColor: c("success-on-ink") },
     ".toast-error": { backgroundColor: c("destructive"), color: c("destructive-foreground") },
     ".toast-error::before": { backgroundColor: "currentColor" },
     ".skeleton": {
@@ -1091,6 +1093,26 @@ function designSystem({ addBase, addComponents }) {
       animation: "live-ring 1.8s ease-out infinite",
     },
     ".live-btn": { gap: "0.5rem" },
+    // Courier work status on the ink panel: green and breathing when ready, sand when delivering, a hollow ring when offline.
+    ".status-dot": {
+      position: "relative",
+      flexShrink: "0",
+      width: "0.5rem",
+      height: "0.5rem",
+      borderRadius: "999px",
+      backgroundColor: c("rail-muted"),
+    },
+    ".status-dot[data-status='IDLE']": { backgroundColor: c("success-on-ink") },
+    ".status-dot[data-status='IDLE']::after": {
+      content: '""',
+      position: "absolute",
+      inset: "0",
+      borderRadius: "inherit",
+      backgroundColor: "inherit",
+      animation: "live-ring 1.8s ease-out infinite",
+    },
+    ".status-dot[data-status='DELIVERING']": { backgroundColor: c("rail-foreground") },
+    ".status-dot[data-status='OFFLINE']": { backgroundColor: "transparent", boxShadow: `inset 0 0 0 1.5px ${c("rail-muted")}` },
     // A standing warning above a list, with its own actions (for example products to restock).
     ".stock-warning": {
       display: "flex",

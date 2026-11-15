@@ -13,17 +13,23 @@ import { OrderCard } from "./OrderCard";
 import { LoggedOutDashboard } from "./LoggedOutDashboard";
 import { JobList } from "./JobList";
 
-const STATUS_PILL: Record<string, { label: string; className: string }> = {
-  IDLE: { label: "Siap", className: "pill-success" },
-  DELIVERING: { label: "Sedang mengantar", className: "pill-primary" },
-  OFFLINE: { label: "Offline", className: "" },
+const STATUS_TITLE: Record<string, string> = {
+  IDLE: "Siap menerima order",
+  DELIVERING: "Sedang mengantar",
+  OFFLINE: "Anda offline",
 };
 
-const STATUS_PANEL: Record<string, { title: string; hint: string }> = {
-  IDLE: { title: "Anda siap menerima order", hint: "Ambil order yang tersedia di bawah." },
-  DELIVERING: { title: "Anda sedang mengantar", hint: "Selesaikan pesanan dulu sebelum berhenti bekerja." },
-  OFFLINE: { title: "Anda offline", hint: "Mulai bekerja untuk melihat order yang tersedia." },
-};
+// One line under the title: what the status means right now, with a count when there is one.
+function statusHint(status: string, jobCount: number | undefined, activeCount: number): string {
+  if (status === "IDLE") {
+    if (jobCount === undefined) return "Ambil order yang tersedia di bawah";
+    return jobCount > 0 ? `${jobCount} order menunggu di bawah` : "Belum ada order masuk";
+  }
+  if (status === "DELIVERING") {
+    return activeCount > 0 ? `Selesaikan ${activeCount} pesanan dulu sebelum berhenti` : "Selesaikan pesanan dulu sebelum berhenti";
+  }
+  return "Mulai bekerja agar order masuk";
+}
 
 function greeting(hour: number): string {
   if (hour < 11) return "Selamat pagi";
@@ -121,8 +127,6 @@ export function HomePage() {
 
   if (!user) return <LoggedOutDashboard />;
 
-  const pill = status ? STATUS_PILL[status] : undefined;
-  const panel = status ? STATUS_PANEL[status] : undefined;
   const active = orders.data?.active ?? [];
   const firstActive = active[0];
   const jobCount = jobs.data?.jobs.length ?? 0;
@@ -137,14 +141,20 @@ export function HomePage() {
           <p className="t-label">{greeting(new Date().getHours())}</p>
           <h1 className="truncate font-extrabold capitalize tracking-tight">{user.name}</h1>
         </div>
-        <span className={`pill pill-dot ${pill?.className ?? ""}`}>{pill?.label ?? "…"}</span>
       </header>
 
       <main className="app-main">
-        <section className="panel-ink flex animate-rise flex-col gap-5" aria-label="Status kerja">
-          <div>
-            <p className="t-headline">{panel?.title ?? "Memuat status…"}</p>
-            <p className="mt-2 text-sm text-rail-muted">{panel?.hint}</p>
+        <section className="panel-ink flex animate-rise flex-col gap-4 p-4" aria-label="Status kerja" aria-live="polite">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2.5">
+              {status && <span className="status-dot" data-status={status} aria-hidden="true" />}
+              <span className="t-title truncate font-extrabold">{status ? (STATUS_TITLE[status] ?? status) : "Memuat status…"}</span>
+            </p>
+            {status && (
+              <p className="mt-1 pl-[1.125rem] text-sm text-rail-muted">
+                {statusHint(status, jobs.data ? jobCount : undefined, active.length)}
+              </p>
+            )}
           </div>
           {status && !delivering && (
             <button
@@ -155,6 +165,12 @@ export function HomePage() {
             >
               {setStatus.isPending ? "Memproses…" : idle ? "Berhenti bekerja" : "Mulai bekerja"}
             </button>
+          )}
+          {delivering && firstActive && (
+            <Link to={`/orders/${firstActive.id}`} className="btn btn-lg btn-block btn-invert-outline">
+              Lihat pesanan aktif
+              <FaArrowRight aria-hidden="true" className="text-sm" />
+            </Link>
           )}
         </section>
         {setStatus.isError && <p role="alert" className="alert-box">{errorMessage(setStatus.error)}</p>}

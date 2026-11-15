@@ -26,6 +26,7 @@ All colours are HSL triplets on `:root`, used through Tailwind (`bg-primary`, `t
 | Hairline | `--border`, `--input` | 1px borders; `--input` is the stronger one for controls and dashed frames |
 | Primary | `--primary` (ink blue #1E3A5F), `--primary-pressed`, `--primary-surface` | The one accent: primary buttons, links, avatars, the courier pin |
 | Rail | `--rail`, `--rail-foreground`, `--rail-muted` | The heaviest surface: admin rail, docks, `.panel-ink`, toasts, auth brand panels |
+| Success on ink | `--success-on-ink` | Green that reads on rail: the success toast dot and the courier `.status-dot` |
 | Promo | `--promo` (terracotta) | A signal, never a general accent: the destination pin, the unread count badge, promotions |
 | Status | `success`, `warning`, `info`, `destructive`, each with a `-surface` tint | Status pills, alerts, notices |
 
@@ -100,6 +101,8 @@ Check every screen at 375, 768, 1100 and 1440. The page never scrolls sideways. 
 
 - One centred column (`--content-max-width` 34rem), with a sticky header and a floating ink dock. From 768px the column sits on a `--muted` page with side hairlines, so it reads as a deliberate sheet.
 - Home leads with the ink status panel and its action, then the balance row, the four-tile `Layanan` grid (one frame, shared hairlines) and the job list.
+  - The status panel is compact so the list starts on the first screen of a phone: a `.status-dot` and a one-line `.t-title` ("Siap menerima order", "Sedang mengantar", "Anda offline"), one hint line with a count, then one full-width 3.5rem button ("Berhenti bekerja", "Mulai bekerja", or "Lihat pesanan aktif" while delivering).
+  - The header shows only the avatar, greeting and name; the panel is the one place the work status appears.
 - Actions use `Button` (full width, 3.5rem). Destructive actions sit last and use `variant="destructive"`.
 - The Chat tab is a list: the branch admin first, then the customer chats that are still open. Back in a chat room returns to the page it was opened from (the list, an order, Home); a room opened directly falls back to its order, else to the Chat tab.
 - The order detail shows the two-step progress rule, the delivery map (your position, the destination, a dashed line), then the receiver card.
@@ -133,6 +136,7 @@ Check every screen at 375, 768, 1100 and 1440. The page never scrolls sideways. 
 | `.card`, `.card-link`, `.card-footer` | preset | A flat bordered surface for a region of the page. Do not nest cards more than two deep |
 | `.list`, `.list-row`, `.row-arrow` | preset | Rows that share one frame and hairline dividers. Prefer this to a stack of separate cards. The arrow nudges on hover |
 | `.panel-ink` | preset | Solid ink block. One per screen at most |
+| `.status-dot` | preset | Courier work status on ink, set by `data-status`: `IDLE` green with the `live-ring` pulse, `DELIVERING` sand, `OFFLINE` a hollow ring. `aria-hidden`; the title next to it carries the status in words |
 | `.section-head` | preset | The editorial rule above a section |
 | `.data-table` | preset | Admin tables; stacks under 768px |
 | `Dialog` | `apps/admin-web/src/components/Dialog.tsx` | Admin modal. Rendered through a portal on `<body>`, because `backdrop-filter` on the order panel would otherwise trap a fixed child inside it. `wide` (`.dialog-panel-wide`, 40rem) is for a dialog that holds a map or a two-column form |
