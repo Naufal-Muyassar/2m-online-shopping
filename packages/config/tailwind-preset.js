@@ -1068,6 +1068,29 @@ function designSystem({ addBase, addComponents }) {
     },
     ".calendar-day:active:not(:disabled)": { transform: "scale(0.9)" },
     ".calendar-day:disabled": { opacity: "0.28", cursor: "not-allowed" },
+    // "Live" marker: a green dot with a soft ring that keeps breathing, for actions that return to live data.
+    "@keyframes live-ring": {
+      "0%": { transform: "scale(1)", opacity: "0.55" },
+      "80%, 100%": { transform: "scale(2.6)", opacity: "0" },
+    },
+    ".live-dot": {
+      position: "relative",
+      flexShrink: "0",
+      width: "0.5rem",
+      height: "0.5rem",
+      borderRadius: "999px",
+      backgroundColor: c("success"),
+      transition: `transform 220ms ${ease.settle}`,
+    },
+    ".live-dot::after": {
+      content: '""',
+      position: "absolute",
+      inset: "0",
+      borderRadius: "inherit",
+      backgroundColor: c("success"),
+      animation: "live-ring 1.8s ease-out infinite",
+    },
+    ".live-btn": { gap: "0.5rem" },
     // A standing warning above a list, with its own actions (for example products to restock).
     ".stock-warning": {
       display: "flex",
@@ -1098,6 +1121,7 @@ function designSystem({ addBase, addComponents }) {
       ".select-trigger[aria-expanded='true']:hover .select-chevron": { transform: "rotate(180deg)" },
       ".select-trigger:hover:not(:disabled) .select-icon": { color: c("foreground") },
       ".calendar-nav:hover:not(:disabled)": { backgroundColor: c("muted") },
+      ".live-btn:hover .live-dot": { transform: "scale(1.25)" },
       ".calendar-day:hover:not(:disabled):not([aria-pressed='true'])": { backgroundColor: c("muted"), transform: "scale(1.06)" },
     },
   });

@@ -9,7 +9,7 @@ import {
   type ChatOpenRequest,
   type MetaConfigResponse,
 } from "@2m/shared";
-import { DatePicker, formatDateLabel, toIsoDate } from "../../components/DatePicker";
+import { DatePicker, toIsoDate } from "../../components/DatePicker";
 import { Dialog } from "../../components/Dialog";
 import { Select } from "../../components/Select";
 import { Segmented, useSwapX } from "../../components/Segmented";
@@ -602,12 +602,21 @@ export function LiveBoard({ search }: { search: string }) {
           <h1 className="t-headline">Tracking order</h1>
           <DatePicker label="Tanggal order" value={date} onChange={changeDate} max={toIsoDate(new Date())} placeholder="Live, semua order aktif" className="w-full" />
           {date && (
-            <p className="-my-1 flex items-center justify-between gap-3 text-sm text-muted-foreground" aria-live="polite">
-              <span className="min-w-0">{isFetching ? "Memuat…" : `${data?.orders.length ?? 0} order dibuat ${formatDateLabel(date)}`}</span>
-              <button type="button" className="link -my-2 shrink-0" onClick={() => changeDate(null)}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="min-w-0 text-sm text-muted-foreground" aria-live="polite">
+                {isFetching ? (
+                  "Memuat…"
+                ) : (
+                  <>
+                    <span className="font-extrabold tabular-nums text-foreground">{data?.orders.length ?? 0} order</span> di tanggal ini
+                  </>
+                )}
+              </p>
+              <button type="button" className="btn btn-secondary btn-sm live-btn shrink-0" onClick={() => changeDate(null)}>
+                <span aria-hidden="true" className="live-dot" />
                 Kembali ke live
               </button>
-            </p>
+            </div>
           )}
         </div>
         <Segmented
