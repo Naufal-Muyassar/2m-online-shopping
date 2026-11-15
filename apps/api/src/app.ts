@@ -6,6 +6,7 @@ import { authRoutes } from "./modules/auth/routes";
 import { ordersRoutes } from "./modules/orders/routes";
 import { courierRoutes } from "./modules/courier/routes";
 import { adminRoutes } from "./modules/admin/routes";
+import { branchConfigRoutes } from "./modules/branch-config/routes";
 import { eventsRoutes } from "./modules/events/routes";
 import { branchesRoutes } from "./modules/branches/routes";
 import { cartRoutes } from "./modules/cart/routes";
@@ -35,6 +36,7 @@ export function createApp() {
   v1.use("/orders", ordersRoutes);
   v1.use("/courier", courierRoutes);
   v1.use("/admin", adminRoutes);
+  v1.use("/admin", branchConfigRoutes);
   v1.use("/events", eventsRoutes);
   v1.use("/branches", branchesRoutes);
   v1.use("/cart", cartRoutes);

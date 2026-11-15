@@ -919,6 +919,8 @@ function designSystem({ addBase, addComponents }) {
       boxShadow: `0 24px 56px ${a("shadow-tint", 0.28)}`,
       animation: `pop 220ms ${ease.settle} both`,
     },
+    // For a dialog that holds a map or a two-column form.
+    ".dialog-panel-wide": { maxWidth: "40rem" },
   });
 }
 

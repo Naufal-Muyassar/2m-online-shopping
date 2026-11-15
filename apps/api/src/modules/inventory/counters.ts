@@ -144,6 +144,31 @@ export async function refresh(branchId: string, productId: string): Promise<void
   });
 }
 
+// Sets what new orders can take to `target`: the snapshot becomes target + buffer + reserved, so units
+// already held by orders stay theirs. Runs in the caller's transaction under the exclusive rebuild lock,
+// so no checkout reserves between reading the reservations and writing the counter. A release that lands
+// later adds its units back on both sides, which keeps Redis and Postgres equal.
+export async function setSellable(tx: Tx, branchId: string, productId: string, target: number): Promise<number> {
+  await tx.query("SELECT pg_advisory_xact_lock($1)", [REBUILD_LOCK_ID]);
+  await tx.query(
+    `INSERT INTO stock_snapshots (branch_id, product_id, qty)
+     SELECT bp.branch_id, bp.product_id, $3::int + bp.stock_buffer + COALESCE(r.held, 0)
+     FROM branch_products bp${repo.SELLABLE_JOINS}
+     WHERE bp.branch_id = $1 AND bp.product_id = $2
+     ON CONFLICT (branch_id, product_id) DO UPDATE SET qty = EXCLUDED.qty, updated_at = now()`,
+    [branchId, productId, target],
+  );
+  const [row] = await repo.computeSellable(tx, { branchId, productIds: [productId] });
+  const sellable = row?.sellable ?? 0;
+  try {
+    await getRedis().set(counterKey(branchId, productId), sellable);
+  } catch (err) {
+    logger.error({ err }, "stock counters unavailable");
+    throw new AppError(503, "STOCK_UNAVAILABLE", "Stock check is temporarily unavailable, please try again");
+  }
+  return sellable;
+}
+
 export async function readCounter(branchId: string, productId: string): Promise<number | null> {
   const v = await getRedis().get(counterKey(branchId, productId));
   return v === null ? null : Number(v);

@@ -25,6 +25,15 @@ export const api = createApiClient({
 const CODE_MESSAGES: Record<string, string> = {
   INSUFFICIENT_BALANCE: "Saldo kurir tidak cukup. Periksa saldo terbaru lalu coba lagi.",
   IDEMPOTENCY_CONFLICT: "Penarikan ini sudah tercatat dengan jumlah lain. Periksa riwayat saldo kurir.",
+  ACCOUNT_EXISTS: "No. HP atau email sudah dipakai akun lain.",
+  PRODUCT_NOT_FOUND: "Produk ini tidak ada di cabang ini. Muat ulang daftar produk.",
+  BRANCH_NOT_FOUND: "Cabang tidak ditemukan. Muat ulang halaman.",
+  TEMPLATE_INCOMPLETE: "Cabang contoh belum punya tarif ongkir atau batas pesanan. Pilih cabang lain.",
+  STOCK_UNAVAILABLE: "Stok sedang tidak bisa diperbarui. Coba lagi sebentar lagi.",
+  VALIDATION_ERROR: "Isian belum valid. Periksa lagi kolom yang ditandai.",
+  FORBIDDEN: "Akun ini tidak punya akses untuk tindakan itu.",
+  PRODUCT_ALREADY_IN_BRANCH: "Produk ini sudah dijual di cabang ini. Cari di daftar produk untuk mengubah harga atau stoknya.",
+  SKU_EXISTS: "SKU itu sudah ada di katalog. Pakai SKU lain atau ubah produk yang sudah ada.",
 };
 
 export function errorMessage(err: unknown): string {

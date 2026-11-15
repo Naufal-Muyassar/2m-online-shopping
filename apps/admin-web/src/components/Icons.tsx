@@ -81,6 +81,12 @@ export const IconSearch = (p: IconProps) => (
   </Svg>
 );
 
+export const IconChevronRight = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M9.5 6l6 6-6 6" />
+  </Svg>
+);
+
 export const IconSend = (p: IconProps) => (
   <Svg {...p}>
     <path d="M21 3L10.5 13.5M21 3l-6.5 18-4-7.5L3 9.5z" />

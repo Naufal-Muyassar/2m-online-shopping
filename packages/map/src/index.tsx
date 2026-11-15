@@ -180,3 +180,4 @@ export function MapView({
 
   return <div ref={el} className={`map-2m ${className}`} role="application" aria-label={ariaLabel} />;
 }
+export { MapPicker, type LatLng } from "./MapPicker";

@@ -93,6 +93,7 @@ Check every screen at 375, 768, 1100 and 1440. The page never scrolls sideways. 
   - The order list keeps a 6px inset inside its scroll box so the 4px late ring on a selected card is never clipped.
   - Below `xl` the panel stacks under the map; below `lg` the list is capped in height so the map stays reachable.
 - **Kurir and Saldo:** a `.data-table` in a card. Each row starts with an avatar, statuses are pills with Indonesian labels. Under 768px every row becomes a labelled block (`data-label`, `data-primary`, `data-actions` on the cells).
+- **Config:** a `Segmented` control (Produk, Lokasi, and Katalog and Cabang for super_admin) above the section. Produk, Katalog and Cabang are `.data-table`s with a row action that opens a `Dialog`. "Tambah produk" is a two-step dialog: a searchable `.list` of catalogue products, then the price and stock form with a "Kembali" step back. Lokasi puts the `MapPicker` (the service circle follows the pin) beside a form card, stacking under `lg`.
 
 ### Courier PWA (phone first)
 
@@ -129,14 +130,14 @@ Check every screen at 375, 768, 1100 and 1440. The page never scrolls sideways. 
 | `.panel-ink` | preset | Solid ink block. One per screen at most |
 | `.section-head` | preset | The editorial rule above a section |
 | `.data-table` | preset | Admin tables; stacks under 768px |
-| `Dialog` | `apps/admin-web/src/components/Dialog.tsx` | Admin modal. Rendered through a portal on `<body>`, because `backdrop-filter` on the order panel would otherwise trap a fixed child inside it |
+| `Dialog` | `apps/admin-web/src/components/Dialog.tsx` | Admin modal. Rendered through a portal on `<body>`, because `backdrop-filter` on the order panel would otherwise trap a fixed child inside it. `wide` (`.dialog-panel-wide`, 40rem) is for a dialog that holds a map or a two-column form |
 | `.material` / `.material-chip` | preset | Translucent floating layers: the panel over the map, the status chip on the map. Never put one translucent layer on another. Solid fallbacks exist for reduced transparency and increased contrast |
 | `.pill`, `.pill-dot` | preset | Status. Use the colour table above. One pill per row at most |
 | `.avatar` | preset | First letter on a flat primary tint. Add `grayscale` when the person is offline |
 | `.empty-state` | preset | Dashed box with a sentence that says what will appear here and when. Centre it in the empty area (`my-auto`) |
 | `ErrorBoundary` | `apps/admin-web/src/components/ErrorBoundary.tsx` | Wraps each admin page, keyed by the tab. A render error shows a message and "Coba lagi"; the sidebar stays |
 | `MapView` | `packages/map` (`@2m/map`) | The live map. `className` is required because Tailwind does not scan the package. Pins: `courier` (ink circle with a truck, `live` adds a pulse), `destination` (terracotta drop), `branch` (store tile). Pin labels go through `textContent`. Pass `fitKey` to refit when the subject changes and `fitPadding` to keep pins clear of floating UI. Markers must be memoised |
-| `MapPicker` | `apps/customer-web/src/features/address/MapPicker.tsx` | The address pin picker. Uses the `map-2m` frame and the `.map-area`, `.map-area-center`, `.map-pick` classes for colour |
+| `MapPicker` | `packages/map` (`@2m/map`) | Tap to place a pin. `area` draws the service circle: fixed on the customer address form, following the pin in admin Config (`fitArea` refits to it). Uses the `map-2m` frame and the `.map-area`, `.map-area-center`, `.map-pick` classes for colour. `className` is required |
 | `.bubble-mine` / `.bubble-other`, `.chat-day` | preset | Chat. Mine is primary, right aligned; others are surface with a border, left aligned |
 | `.sheet-backdrop` / `.sheet-panel` / `.dialog-backdrop` / `.dialog-panel` | preset | Bottom sheets (courier) and centred dialogs. They dim the page, so use them for modal tasks only |
 | `BottomSheet` | `apps/customer-web/src/components/BottomSheet.tsx` | The draggable sheet: springs up on open, follows the finger 1:1 after a 10px slop, rubber-bands when pulled up, and on release projects the finger's velocity to close or spring back. Closes on the round X (`icon-btn rounded-full`, never a "Tutup" text link), the scrim, Escape, or a pick. The whole sheet drags when its content fits; otherwise only `[data-sheet-drag]` |

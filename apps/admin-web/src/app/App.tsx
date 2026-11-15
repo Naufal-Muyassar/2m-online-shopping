@@ -6,6 +6,7 @@ import { useAuth } from "../lib/auth";
 import { cn } from "../lib/utils";
 import { LoginPage } from "../features/auth/LoginPage";
 import { BranchProvider, useBranch } from "../features/branch-config/BranchProvider";
+import { ConfigPage } from "../features/branch-config/ConfigPage";
 import { useUnreadChats } from "../features/chat/hooks";
 import { MessagesPage, type InboxChannel } from "../features/chat/MessagesPage";
 import { BalanceTab } from "../features/couriers/BalanceTab";
@@ -21,7 +22,7 @@ const TABS: { id: TabId; label: string; Icon: ComponentType<SVGProps<SVGSVGEleme
   { id: "messages", label: "Pesan", Icon: IconChat },
   { id: "short-pick", label: "Short Pick", Icon: IconClipboard, soon: true },
   { id: "cash", label: "Kas COD", Icon: IconCash, soon: true },
-  { id: "config", label: "Config", Icon: IconSettings, soon: true },
+  { id: "config", label: "Config", Icon: IconSettings },
 ];
 
 function Shell() {
@@ -106,7 +107,7 @@ function Shell() {
               >
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.name}
+                    {b.is_active ? b.name : `${b.name} (nonaktif)`}
                   </option>
                 ))}
               </select>
@@ -125,6 +126,7 @@ function Shell() {
             {tab === "board" && <LiveBoard search={search} />}
             {tab === "couriers" && <CouriersTab onOpenChat={openCourierChat} />}
             {tab === "balance" && <BalanceTab />}
+            {tab === "config" && <ConfigPage />}
             {tab === "messages" && (
               <MessagesPage
                 channel={inbox}
