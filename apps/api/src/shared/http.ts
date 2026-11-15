@@ -23,3 +23,11 @@ export function asyncHandler(
     fn(req, res, next).catch(next);
   };
 }
+
+// Inline so the browser can preview it; the filename is used when the user saves it.
+export function sendPdf(res: Response, file: { filename: string; pdf: Buffer }): void {
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `inline; filename="${file.filename}"`);
+  res.setHeader("Cache-Control", "private, no-store");
+  res.send(file.pdf);
+}

@@ -37,8 +37,30 @@ export const productSchema = z.object({
   price: z.number().int(),
   sellable_qty: z.number().int().min(0),
   stock_status: z.enum(STOCK_STATUSES),
+  // The cover photo (first catalogue image), null until super_admin adds one
+  image_url: z.string().nullable(),
 });
 export type Product = z.infer<typeof productSchema>;
+
+// Product page content, shared by every branch and set in the super_admin catalogue.
+export const PRODUCT_IMAGES_MAX = 8;
+export const PRODUCT_SPECS_MAX = 20;
+export const PRODUCT_DESCRIPTION_MAX = 2000;
+export const productSpecSchema = z.object({
+  label: z.string().trim().min(1).max(40),
+  value: z.string().trim().min(1).max(200),
+});
+export type ProductSpec = z.infer<typeof productSpecSchema>;
+
+// GET /branches/:id/products/:productId
+export const productDetailSchema = productSchema.extend({
+  description: z.string(),
+  specs: z.array(productSpecSchema),
+  // Display order; the first is the cover
+  image_urls: z.array(z.string()),
+});
+export type ProductDetail = z.infer<typeof productDetailSchema>;
+export const productDetailParamsSchema = z.object({ id: uuid, productId: uuid });
 
 export const productsResponseSchema = z.object({
   products: z.array(productSchema),

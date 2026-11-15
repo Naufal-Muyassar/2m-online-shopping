@@ -4,32 +4,69 @@
     {
       "name": "api-local",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["local:api"],
+      "runtimeArgs": [
+        "local:api"
+      ],
       "port": 3000
     },
     {
       "name": "admin-web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "admin-web", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "admin-web",
+        "dev"
+      ],
       "port": 5173
     },
     {
       "name": "courier-pwa",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "courier-pwa", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "courier-pwa",
+        "dev"
+      ],
       "port": 5172
     },
     {
       "name": "courier-pwa-preview",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "courier-pwa", "exec", "vite", "preview", "--port", "4172", "--strictPort"],
+      "runtimeArgs": [
+        "--filter",
+        "courier-pwa",
+        "exec",
+        "vite",
+        "preview",
+        "--port",
+        "4172",
+        "--strictPort"
+      ],
       "port": 4172
     },
     {
       "name": "customer-web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "customer-web", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "customer-web",
+        "dev"
+      ],
       "port": 5171
+    },
+    {
+      "name": "customer-web-alt",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "customer-web",
+        "exec",
+        "vite",
+        "--port",
+        "5181",
+        "--strictPort"
+      ],
+      "port": 5181
     }
   ]
 }

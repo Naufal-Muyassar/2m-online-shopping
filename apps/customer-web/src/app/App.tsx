@@ -6,6 +6,7 @@ import { ChatRoomPage } from "../features/chat/ChatRoomPage";
 import { AddressPage } from "../features/address/AddressPage";
 import { BranchPicker } from "../features/catalog/BranchPicker";
 import { CatalogPage } from "../features/catalog/CatalogPage";
+import { ProductPage } from "../features/catalog/ProductPage";
 import { CartPage } from "../features/cart/CartPage";
 import { CheckoutPage } from "../features/checkout/CheckoutPage";
 import { OrderStatusPage } from "../features/orders/OrderStatusPage";
@@ -22,6 +23,7 @@ export function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<BranchPicker />} />
         <Route path="/b/:branchId" element={<CatalogPage />} />
+        <Route path="/b/:branchId/p/:productId" element={<ProductPage />} />
         <Route element={<RequireAuth />}>
           <Route path="/mock-pay/:invoiceId" element={<MockPayPage />} />
           <Route path="/b/:branchId/cart" element={<CartPage />} />

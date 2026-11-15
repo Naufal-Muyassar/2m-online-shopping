@@ -37,6 +37,9 @@ const CODE_MESSAGES: Record<string, string> = {
   ORDER_NOT_FOUND: "Order tidak ditemukan di cabang ini.",
   ADMIN_NOT_FOUND: "Akun admin tidak ditemukan. Muat ulang daftar cabang.",
   SKU_EXISTS: "SKU itu sudah ada di katalog. Pakai SKU lain atau ubah produk yang sudah ada.",
+  IMAGE_NOT_UPLOADED: "Ada foto yang belum selesai diunggah. Hapus foto itu lalu unggah lagi.",
+  WITHDRAWAL_NOT_FOUND: "Penarikan tidak ditemukan di cabang ini. Muat ulang riwayat saldo.",
+  COURIER_NOT_FOUND: "Kurir tidak ditemukan di cabang ini. Muat ulang daftar kurir.",
 };
 
 export function errorMessage(err: unknown): string {

@@ -19,8 +19,9 @@ import {
   type CourierLedgerQuery,
   type CourierWithdrawalRequest,
   type ForcePaidRequest,
+  withdrawalSlipParamsSchema,
 } from "@2m/shared";
-import { asyncHandler, validate } from "../../shared/http";
+import { asyncHandler, sendPdf, validate } from "../../shared/http";
 import { authenticate, branchScope, requireRole } from "../auth/middleware";
 import * as earnings from "../earnings/service";
 import * as service from "./service";
@@ -98,6 +99,17 @@ adminRoutes.post(
         idempotencyKey: body.idempotency_key,
       }),
     );
+  }),
+);
+
+adminRoutes.get(
+  "/couriers/:id/withdrawals/:entryId/slip",
+  authenticate,
+  requireRole("branch_admin", "super_admin"),
+  validate(withdrawalSlipParamsSchema, "params"),
+  validate(adminBranchQuerySchema, "query"),
+  asyncHandler(async (req, res) => {
+    sendPdf(res, await earnings.branchWithdrawalSlip(req.params.id as string, req.params.entryId as string, branchScope(req)));
   }),
 );
 

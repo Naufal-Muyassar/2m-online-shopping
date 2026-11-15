@@ -8,8 +8,10 @@ import type {
   UpdateBranchAdmin,
   AdminProductUpdate,
   BranchAdminAccount,
+  CatalogImageUploadResponse,
   CatalogProduct,
   CatalogResponse,
+  ProductSpec,
   NewBranchAdmin,
   Role,
   SuperBranch,
@@ -18,6 +20,7 @@ import type {
 import { audit } from "../../shared/audit";
 import { pool, withTransaction, type Tx } from "../../shared/db";
 import { AppError } from "../../shared/errors";
+import { catalogImageKey, catalogImageUrl, objectExists, presignPut } from "../../shared/storage";
 import * as counters from "../inventory/counters";
 import * as repo from "./repo";
 
@@ -114,10 +117,33 @@ export async function listCatalog(opts: {
   return { products: rows, categories, page: opts.page, page_size: repo.ADMIN_PAGE_SIZE, has_more: hasMore };
 }
 
+// The browser PUTs the photo straight to storage; the key is saved on the product afterwards.
+export async function catalogImageUpload(): Promise<CatalogImageUploadResponse> {
+  const key = catalogImageKey();
+  return { upload_url: await presignPut(key), key, url: catalogImageUrl(key) };
+}
+
+// A key the product does not already have must point at an uploaded object, or the page would show a broken image.
+async function assertUploaded(keys: readonly string[], existing: readonly string[] = []): Promise<void> {
+  const fresh = keys.filter((k) => !existing.includes(k));
+  const found = await Promise.all(fresh.map(objectExists));
+  if (found.some((ok) => !ok)) throw new AppError(422, "IMAGE_NOT_UPLOADED", "An image has not finished uploading");
+}
+
 export async function createCatalogProduct(
   actor: Actor,
-  body: { sku: string; name: string; unit: string; category: string; weight_kg: number },
+  body: {
+    sku: string;
+    name: string;
+    unit: string;
+    category: string;
+    weight_kg: number;
+    description: string;
+    specs: ProductSpec[];
+    images: string[];
+  },
 ): Promise<CatalogProduct> {
+  await assertUploaded(body.images);
   return withTransaction(async (tx) => {
     let id: string;
     try {
@@ -145,6 +171,7 @@ export async function updateCatalogProduct(actor: Actor, productId: string, body
   return withTransaction(async (tx) => {
     const before = await repo.getCatalogProduct(tx, productId);
     if (!before) throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found in the catalogue");
+    if (body.images) await assertUploaded(body.images, before.images.map((i) => i.key));
     await repo.updateCatalogProduct(tx, productId, body);
     const after = (await repo.getCatalogProduct(tx, productId))!;
     await audit(tx, {

@@ -53,7 +53,7 @@ export function Layout() {
   if (inChatRoom) return <Outlet />;
 
   const catalogTo = branchId ? `/b/${branchId}` : "/";
-  const tabs: Tab[] = [{ key: "catalog", to: catalogTo, label: "Katalog", icon: <IconStore />, active: pathname === catalogTo }];
+  const tabs: Tab[] = [{ key: "catalog", to: catalogTo, label: "Katalog", icon: <IconStore />, active: pathname === catalogTo || pathname.startsWith(`${catalogTo}/p/`) }];
   if (user) {
     if (branchId) {
       tabs.push({

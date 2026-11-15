@@ -4,6 +4,7 @@ import { audit } from "../../shared/audit";
 import { AppError } from "../../shared/errors";
 import { getCourier } from "../courier/repo";
 import * as repo from "./repo";
+import { renderWithdrawalSlip, slipNumber } from "./slip";
 
 export async function courierBalance(courierId: string): Promise<CourierBalance> {
   return { balance: await repo.getBalance(pool, courierId) };
@@ -50,7 +51,7 @@ export async function recordWithdrawal(input: {
       throw new AppError(409, "INSUFFICIENT_BALANCE", "Amount exceeds the courier's balance", { balance });
     }
 
-    const entry = await repo.insertWithdrawal(tx, input);
+    const entry = await repo.insertWithdrawal(tx, { ...input, balanceAfter: balance - input.amount });
     await audit(tx, {
       actorId: input.adminId,
       actorRole: "branch_admin",
@@ -63,4 +64,28 @@ export async function recordWithdrawal(input: {
     });
     return { id: entry.id, amount: input.amount, balance: balance - input.amount, created_at: entry.created_at.toISOString() };
   });
+}
+
+export interface SlipFile {
+  filename: string;
+  pdf: Buffer;
+}
+
+async function slipFile(row: repo.WithdrawalSlipRow): Promise<SlipFile> {
+  return { filename: `slip-penarikan-${slipNumber(row)}.pdf`, pdf: await renderWithdrawalSlip(row) };
+}
+
+// Admin side: the withdrawal must belong to a courier of this branch.
+export async function branchWithdrawalSlip(courierId: string, entryId: string, branchId: string): Promise<SlipFile> {
+  const row = await repo.getWithdrawalSlip(pool, entryId);
+  if (!row || row.courier_id !== courierId || row.branch_id !== branchId) {
+    throw new AppError(404, "WITHDRAWAL_NOT_FOUND", "Withdrawal not found");
+  }
+  return slipFile(row);
+}
+
+export async function courierWithdrawalSlip(courierId: string, entryId: string): Promise<SlipFile> {
+  const row = await repo.getWithdrawalSlip(pool, entryId);
+  if (!row || row.courier_id !== courierId) throw new AppError(404, "WITHDRAWAL_NOT_FOUND", "Withdrawal not found");
+  return slipFile(row);
 }

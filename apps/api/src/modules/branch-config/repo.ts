@@ -1,8 +1,18 @@
 import type { Pool } from "pg";
-import type { AdminBranch, AdminProduct, AdminProductState, BranchAdminAccount, CatalogProduct, SuperBranch } from "@2m/shared";
+import type {
+  AdminBranch,
+  AdminProduct,
+  AdminProductState,
+  BranchAdminAccount,
+  CatalogProduct,
+  ProductSpec,
+  SuperBranch,
+  UpdateCatalogProduct,
+} from "@2m/shared";
 import type { Tx } from "../../shared/db";
 import { LOW_STOCK_AT } from "../catalog/stock";
 import { SELLABLE_EXPR, SELLABLE_JOINS } from "../inventory/repo";
+import { catalogImageUrl, coverUrlSql } from "../../shared/storage";
 
 type Db = Pool | Tx;
 
@@ -12,7 +22,7 @@ const escapeLike = (s: string): string => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 
 const PRODUCT_SELECT = `
   SELECT p.id, p.sku, p.name, p.unit, p.category, p.weight_kg::float8 AS weight_kg, bp.price, bp.is_active,
-         GREATEST(${SELLABLE_EXPR}, 0) AS sellable_qty
+         GREATEST(${SELLABLE_EXPR}, 0) AS sellable_qty, ${coverUrlSql("p")} AS image_url
   FROM branch_products bp JOIN products p ON p.id = bp.product_id${SELLABLE_JOINS}`;
 
 // One definition of the admin's stock states, shared by the filter and the summary.
@@ -96,12 +106,20 @@ export async function lockBranchProduct(tx: Tx, branchId: string, productId: str
 }
 
 const CATALOG_SELECT = `
-  SELECT p.id, p.sku, p.name, p.unit, p.category, p.weight_kg::float8 AS weight_kg,
+  SELECT p.id, p.sku, p.name, p.unit, p.category, p.weight_kg::float8 AS weight_kg, p.description, p.specs,
+         p.images,
          COALESCE(
            (SELECT json_agg(json_build_object('id', b.id, 'name', b.name) ORDER BY b.name)
             FROM branch_products bp JOIN branches b ON b.id = bp.branch_id WHERE bp.product_id = p.id),
            '[]'::json) AS branches
   FROM products p`;
+
+// products.images holds keys; the API hands out {key, url} pairs.
+type CatalogRow = Omit<CatalogProduct, "images"> & { images: string[] };
+const toCatalogProduct = (r: CatalogRow): CatalogProduct => ({
+  ...r,
+  images: r.images.map((key) => ({ key, url: catalogImageUrl(key) })),
+});
 
 export async function listCatalog(
   db: Db,
@@ -119,28 +137,38 @@ export async function listCatalog(
     where.push(opts.availability === "sold" ? sold : `NOT ${sold}`);
   }
   params.push(ADMIN_PAGE_SIZE + 1, (opts.page - 1) * ADMIN_PAGE_SIZE);
-  const res = await db.query<CatalogProduct>(
+  const res = await db.query<CatalogRow>(
     `${CATALOG_SELECT}
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
      ORDER BY p.category, p.name
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
-  return { rows: res.rows.slice(0, ADMIN_PAGE_SIZE), hasMore: res.rows.length > ADMIN_PAGE_SIZE };
+  return { rows: res.rows.slice(0, ADMIN_PAGE_SIZE).map(toCatalogProduct), hasMore: res.rows.length > ADMIN_PAGE_SIZE };
 }
 
 export async function getCatalogProduct(db: Db, productId: string): Promise<CatalogProduct | null> {
-  const res = await db.query<CatalogProduct>(`${CATALOG_SELECT} WHERE p.id = $1`, [productId]);
-  return res.rows[0] ?? null;
+  const res = await db.query<CatalogRow>(`${CATALOG_SELECT} WHERE p.id = $1`, [productId]);
+  return res.rows[0] ? toCatalogProduct(res.rows[0]) : null;
 }
 
 export async function insertCatalogProduct(
   tx: Tx,
-  f: { sku: string; name: string; unit: string; category: string; weight_kg: number },
+  f: {
+    sku: string;
+    name: string;
+    unit: string;
+    category: string;
+    weight_kg: number;
+    description: string;
+    specs: ProductSpec[];
+    images: string[];
+  },
 ): Promise<string> {
   const res = await tx.query<{ id: string }>(
-    `INSERT INTO products (sku, name, unit, category, weight_kg) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-    [f.sku, f.name, f.unit, f.category, f.weight_kg],
+    `INSERT INTO products (sku, name, unit, category, weight_kg, description, specs, images)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+    [f.sku, f.name, f.unit, f.category, f.weight_kg, f.description, JSON.stringify(f.specs), f.images],
   );
   return res.rows[0]!.id;
 }
@@ -148,13 +176,23 @@ export async function insertCatalogProduct(
 export async function updateCatalogProduct(
   tx: Tx,
   productId: string,
-  f: { name?: string; unit?: string; category?: string; weight_kg?: number },
+  f: UpdateCatalogProduct,
 ): Promise<void> {
   await tx.query(
     `UPDATE products SET name = COALESCE($2, name), unit = COALESCE($3, unit), category = COALESCE($4, category),
-            weight_kg = COALESCE($5, weight_kg)
+            weight_kg = COALESCE($5, weight_kg), description = COALESCE($6, description),
+            specs = COALESCE($7::jsonb, specs), images = COALESCE($8::text[], images)
      WHERE id = $1`,
-    [productId, f.name ?? null, f.unit ?? null, f.category ?? null, f.weight_kg ?? null],
+    [
+      productId,
+      f.name ?? null,
+      f.unit ?? null,
+      f.category ?? null,
+      f.weight_kg ?? null,
+      f.description ?? null,
+      f.specs ? JSON.stringify(f.specs) : null,
+      f.images ?? null,
+    ],
   );
 }
 

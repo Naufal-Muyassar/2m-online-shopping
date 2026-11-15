@@ -18,9 +18,11 @@ import type {
   OrderListResponse,
   PriceBreakdown,
   CalculatePriceRequest,
+  ProductDetail,
   ProductsResponse,
   TrackingResponse,
 } from "@2m/shared";
+import { isAxiosError } from "axios";
 import { api } from "./api";
 import { TERMINAL_STATUSES } from "@2m/shared";
 
@@ -42,6 +44,23 @@ export const useProducts = (branchId: string, category: string | undefined, q: s
         .data,
     placeholderData: (prev) => prev,
   });
+
+// Opens instantly from a catalogue card: the list row stands in until the description and photos arrive.
+export function useProduct(branchId: string, productId: string) {
+  const qc = useQueryClient();
+  return useQuery({
+    queryKey: ["product", branchId, productId],
+    queryFn: async () => (await api.get<ProductDetail>(`/branches/${branchId}/products/${productId}`)).data,
+    placeholderData: () => {
+      for (const [, page] of qc.getQueriesData<ProductsResponse>({ queryKey: ["products", branchId] })) {
+        const row = page?.products.find((p) => p.id === productId);
+        if (row) return { ...row, description: "", specs: [], image_urls: row.image_url ? [row.image_url] : [] };
+      }
+      return undefined;
+    },
+    retry: (count, err) => !(isAxiosError(err) && err.response?.status === 404) && count < 2,
+  });
+}
 
 export const useCart = (branchId: string, enabled = true) =>
   useQuery({

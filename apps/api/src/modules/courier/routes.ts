@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   courierClaimRequestSchema,
+  courierWithdrawalSlipParamsSchema,
   courierItemParamsSchema,
   courierLedgerQuerySchema,
   courierOrderStatusRequestSchema,
@@ -19,7 +20,7 @@ import {
   type PingsRequest,
   type ProofRegisterRequest,
 } from "@2m/shared";
-import { asyncHandler, validate } from "../../shared/http";
+import { asyncHandler, sendPdf, validate } from "../../shared/http";
 import { authenticate, requireRole } from "../auth/middleware";
 import * as earnings from "../earnings/service";
 import * as service from "./service";
@@ -48,6 +49,14 @@ courierRoutes.get(
   asyncHandler(async (req, res) => {
     const { cursor, limit } = req.query as unknown as CourierLedgerQuery;
     res.json(await earnings.courierHistory(req.auth!.sub, { cursor, limit }));
+  }),
+);
+
+courierRoutes.get(
+  "/balance/withdrawals/:entryId/slip",
+  validate(courierWithdrawalSlipParamsSchema, "params"),
+  asyncHandler(async (req, res) => {
+    sendPdf(res, await earnings.courierWithdrawalSlip(req.auth!.sub, req.params.entryId as string));
   }),
 );
 

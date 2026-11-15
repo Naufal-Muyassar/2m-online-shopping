@@ -253,3 +253,9 @@ export const IconFlour = (p: IconProps) => (
     <path d="M12 11c-1.5 1.5-1.5 3 0 4.5 1.5-1.5 1.5-3 0-4.5z" />
   </Svg>
 );
+
+export const IconForward = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M9 6l6 6-6 6" />
+  </Svg>
+);

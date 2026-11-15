@@ -317,6 +317,39 @@ describe("HTTP access", () => {
     expect((await withdrawAs(headers)).status).toBe(403);
   });
 
+  it("serves a withdrawal slip PDF to the branch, super_admin and the courier, and nobody else", async () => {
+    const admin = bearer(fx.users.branch_admin, "branch_admin", fx.branchId);
+    const recorded = (await (await withdrawAs(admin, { amount: 2500, idempotency_key: randomUUID() })).json()) as {
+      id: string;
+      balance: number;
+    };
+    const slipUrl = `${base}/admin/couriers/${fx.courierId}/withdrawals/${recorded.id}/slip`;
+
+    const res = await fetch(slipUrl, { headers: admin });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("application/pdf");
+    expect(res.headers.get("content-disposition")).toMatch(/filename="slip-penarikan-PNR-\d{6}-[0-9A-F]{6}\.pdf"/);
+    expect(Buffer.from(await res.arrayBuffer()).subarray(0, 5).toString()).toBe("%PDF-");
+
+    const stored = await pool.query<{ balance_after: number }>(
+      "SELECT balance_after FROM courier_ledger_entries WHERE id = $1",
+      [recorded.id],
+    );
+    expect(stored.rows[0]?.balance_after).toBe(recorded.balance);
+
+    const asSuper = await fetch(`${slipUrl}?branch_id=${fx.branchId}`, { headers: bearer(fx.users.super_admin, "super_admin", null) });
+    expect(asSuper.status).toBe(200);
+    const own = await fetch(`${base}/courier/balance/withdrawals/${recorded.id}/slip`, { headers: bearer(fx.courierId, "courier", null) });
+    expect(own.status).toBe(200);
+
+    const otherAdmin = await fetch(slipUrl, { headers: bearer(other.users.branch_admin, "branch_admin", other.branchId) });
+    expect(otherAdmin.status).toBe(404);
+    const otherCourier = await fetch(`${base}/courier/balance/withdrawals/${recorded.id}/slip`, {
+      headers: bearer(other.courierId, "courier", null),
+    });
+    expect(otherCourier.status).toBe(404);
+  });
+
   it("refuses the courier, another branch's admin, and bad amounts", async () => {
     expect((await withdrawAs(bearer(fx.courierId, "courier", null))).status).toBe(403);
     expect((await withdrawAs(bearer(other.users.branch_admin, "branch_admin", other.branchId))).status).toBe(404);

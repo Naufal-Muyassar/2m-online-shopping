@@ -84,13 +84,51 @@ export async function findWithdrawal(tx: Tx, courierId: string, idempotencyKey: 
 
 export async function insertWithdrawal(
   tx: Tx,
-  w: { courierId: string; branchId: string; amount: number; adminId: string; idempotencyKey: string },
+  w: { courierId: string; branchId: string; amount: number; adminId: string; idempotencyKey: string; balanceAfter: number },
 ): Promise<WithdrawalRow> {
   const res = await tx.query<WithdrawalRow>(
-    `INSERT INTO courier_ledger_entries (courier_id, branch_id, type, amount, recorded_by, idempotency_key)
-     VALUES ($1, $2, 'WITHDRAWAL', $3, $4, $5)
+    `INSERT INTO courier_ledger_entries (courier_id, branch_id, type, amount, recorded_by, idempotency_key, balance_after)
+     VALUES ($1, $2, 'WITHDRAWAL', $3, $4, $5, $6)
      RETURNING id, amount, created_at`,
-    [w.courierId, w.branchId, -w.amount, w.adminId, w.idempotencyKey],
+    [w.courierId, w.branchId, -w.amount, w.adminId, w.idempotencyKey, w.balanceAfter],
   );
   return res.rows[0]!;
+}
+
+export interface WithdrawalSlipRow {
+  id: string;
+  courier_id: string;
+  branch_id: string;
+  amount: number;
+  balance_after: number;
+  created_at: Date;
+  courier_name: string;
+  courier_phone: string;
+  partner_name: string;
+  branch_name: string;
+  branch_timezone: string;
+  recorded_by_name: string;
+}
+
+// Everything printed on a withdrawal slip. Older withdrawals have no stored balance_after, so it is summed
+// from the ledger up to and including the entry.
+export async function getWithdrawalSlip(db: Db, entryId: string): Promise<WithdrawalSlipRow | null> {
+  const res = await db.query<WithdrawalSlipRow>(
+    `SELECT l.id, l.courier_id, l.branch_id, -l.amount AS amount, l.created_at,
+            COALESCE(l.balance_after, (
+              SELECT COALESCE(SUM(x.amount), 0)::int FROM courier_ledger_entries x
+              WHERE x.courier_id = l.courier_id AND (x.created_at, x.id) <= (l.created_at, l.id)
+            )) AS balance_after,
+            cu.name AS courier_name, cu.phone AS courier_phone, cp.name AS partner_name,
+            b.name AS branch_name, b.timezone AS branch_timezone, ru.name AS recorded_by_name
+     FROM courier_ledger_entries l
+     JOIN users cu ON cu.id = l.courier_id
+     JOIN couriers c ON c.user_id = l.courier_id
+     JOIN courier_partners cp ON cp.id = c.partner_id
+     JOIN branches b ON b.id = l.branch_id
+     JOIN users ru ON ru.id = l.recorded_by
+     WHERE l.id = $1 AND l.type = 'WITHDRAWAL'`,
+    [entryId],
+  );
+  return res.rows[0] ?? null;
 }

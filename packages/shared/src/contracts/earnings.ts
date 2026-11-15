@@ -10,6 +10,10 @@ export type CourierBalance = z.infer<typeof courierBalanceSchema>;
 
 export const courierIdParamsSchema = z.object({ id: uuid });
 
+// GET /admin/couriers/:id/withdrawals/:entryId/slip and GET /courier/balance/withdrawals/:entryId/slip: application/pdf
+export const withdrawalSlipParamsSchema = z.object({ id: uuid, entryId: uuid });
+export const courierWithdrawalSlipParamsSchema = z.object({ entryId: uuid });
+
 // GET /courier/balance/history and GET /admin/couriers/:id/ledger (newest first).
 // branch_id is only read for super_admin on the admin route.
 export const courierLedgerQuerySchema = orderListQuerySchema.extend({ branch_id: uuid.optional() });

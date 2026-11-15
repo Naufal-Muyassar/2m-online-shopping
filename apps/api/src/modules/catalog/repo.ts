@@ -1,7 +1,8 @@
 import type { Pool } from "pg";
-import type { Branch } from "@2m/shared";
+import type { Branch, ProductSpec } from "@2m/shared";
 import type { Tx } from "../../shared/db";
 import { SELLABLE_EXPR, SELLABLE_JOINS } from "../inventory/repo";
+import { coverUrlSql, imageUrlsSql } from "../../shared/storage";
 
 type Db = Pool | Tx;
 
@@ -16,6 +17,13 @@ export interface ProductRow {
   weight_kg: number;
   price: number;
   sellable_qty: number;
+  image_url: string | null;
+}
+
+export interface ProductDetailRow extends ProductRow {
+  description: string;
+  specs: ProductSpec[];
+  image_urls: string[];
 }
 
 export async function listActiveBranches(db: Db): Promise<Branch[]> {
@@ -58,7 +66,7 @@ export async function listProducts(
   params.push(PAGE_SIZE + 1, (opts.page - 1) * PAGE_SIZE);
   const res = await db.query<ProductRow>(
     `SELECT p.id, p.sku, p.name, p.unit, p.category, p.weight_kg::float8 AS weight_kg, bp.price,
-            GREATEST(${SELLABLE_EXPR}, 0) AS sellable_qty
+            GREATEST(${SELLABLE_EXPR}, 0) AS sellable_qty, ${coverUrlSql("p")} AS image_url
      FROM branch_products bp JOIN products p ON p.id = bp.product_id${SELLABLE_JOINS}
      WHERE ${where}
      ORDER BY bp.display_order, p.name
@@ -66,6 +74,19 @@ export async function listProducts(
     params,
   );
   return { rows: res.rows.slice(0, PAGE_SIZE), hasMore: res.rows.length > PAGE_SIZE };
+}
+
+// One product as the branch's customers see it; null when the branch does not sell it or hides it.
+export async function getProduct(db: Db, branchId: string, productId: string): Promise<ProductDetailRow | null> {
+  const res = await db.query<ProductDetailRow>(
+    `SELECT p.id, p.sku, p.name, p.unit, p.category, p.weight_kg::float8 AS weight_kg, bp.price,
+            GREATEST(${SELLABLE_EXPR}, 0) AS sellable_qty, ${coverUrlSql("p")} AS image_url,
+            p.description, p.specs, ${imageUrlsSql("p")} AS image_urls
+     FROM branch_products bp JOIN products p ON p.id = bp.product_id${SELLABLE_JOINS}
+     WHERE bp.branch_id = $1 AND bp.product_id = $2 AND bp.is_active`,
+    [branchId, productId],
+  );
+  return res.rows[0] ?? null;
 }
 
 export async function listCategories(db: Db, branchId: string): Promise<string[]> {
