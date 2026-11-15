@@ -2,6 +2,10 @@ import { Router } from "express";
 import {
   adminAssignRequestSchema,
   adminBranchQuerySchema,
+  adminCancelRequestSchema,
+  adminOrdersQuerySchema,
+  type AdminCancelRequest,
+  type AdminOrdersQuery,
   adminReleaseRequestSchema,
   adminTransitionRequestSchema,
   courierIdParamsSchema,
@@ -27,9 +31,30 @@ adminRoutes.get(
   "/orders",
   authenticate,
   requireRole("branch_admin", "super_admin"),
-  validate(adminBranchQuerySchema, "query"),
+  validate(adminOrdersQuerySchema, "query"),
   asyncHandler(async (req, res) => {
-    res.json(await service.boardOrders(branchScope(req)));
+    const { date } = req.query as unknown as AdminOrdersQuery;
+    res.json(await service.boardOrders(branchScope(req), date));
+  }),
+);
+
+adminRoutes.post(
+  "/orders/:id/cancel",
+  authenticate,
+  requireRole("branch_admin", "super_admin"),
+  validate(orderIdParamsSchema, "params"),
+  validate(adminCancelRequestSchema),
+  asyncHandler(async (req, res) => {
+    const body = req.body as AdminCancelRequest;
+    res.json(
+      await service.cancelOrder({
+        orderId: req.params.id as string,
+        reason: body.reason,
+        actor: { id: req.auth!.sub, role: req.auth!.role as "branch_admin" | "super_admin" },
+        branchId: branchScope(req),
+        idempotencyKey: body.idempotency_key,
+      }),
+    );
   }),
 );
 

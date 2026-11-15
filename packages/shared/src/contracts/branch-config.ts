@@ -6,9 +6,15 @@ const atLeastOne = (fields: readonly string[]) => (body: Record<string, unknown>
   fields.some((f) => body[f] !== undefined);
 
 // GET /admin/products (branch_admin, super_admin with branch_id): every product of the branch, hidden ones too
+// Stock state as the admin sees it. hidden wins over the stock states; low is 1 to LOW_STOCK_AT units.
+export const ADMIN_PRODUCT_STATES = ["available", "low", "out", "hidden"] as const;
+export type AdminProductState = (typeof ADMIN_PRODUCT_STATES)[number];
+
 export const adminProductsQuerySchema = z.object({
   ...branchIdField,
   q: z.string().trim().min(1).max(100).optional(),
+  category: z.string().trim().min(1).max(40).optional(),
+  state: z.enum(ADMIN_PRODUCT_STATES).optional(),
   page: z.coerce.number().int().min(1).default(1),
 });
 export type AdminProductsQuery = z.infer<typeof adminProductsQuerySchema>;
@@ -30,7 +36,16 @@ export type AdminProduct = z.infer<typeof adminProductSchema>;
 
 export const adminProductsResponseSchema = z.object({
   products: z.array(adminProductSchema),
+  // Categories this branch sells, for the filter
   categories: z.array(z.string()),
+  // Counts over the whole branch, ignoring the filters, so the stock warning is always complete
+  summary: z.object({
+    total: z.number().int(),
+    available: z.number().int(),
+    low: z.number().int(),
+    out: z.number().int(),
+    hidden: z.number().int(),
+  }),
   page: z.number().int(),
   page_size: z.number().int(),
   has_more: z.boolean(),
@@ -204,6 +219,25 @@ export const createBranchRequestSchema = z.object({
 export type CreateBranchRequest = z.input<typeof createBranchRequestSchema>;
 export const createBranchResponseSchema = z.object({ branch: superBranchSchema });
 export type CreateBranchResponse = z.infer<typeof createBranchResponseSchema>;
+
+// PATCH /admin/branch-admins/:id (super_admin). A new password, a deactivation or a move to another
+// branch signs the admin out everywhere.
+const ADMIN_FIELDS = ["name", "phone", "email", "password", "is_active", "move_to_branch_id"] as const;
+export const updateBranchAdminSchema = z
+  .object({
+    name: newBranchAdminSchema.shape.name.optional(),
+    phone: newBranchAdminSchema.shape.phone.optional(),
+    // null removes the email
+    email: z.string().trim().toLowerCase().email().max(120).nullable().optional(),
+    password: newBranchAdminSchema.shape.password.optional(),
+    is_active: z.boolean().optional(),
+    move_to_branch_id: uuid.optional(),
+  })
+  .strict()
+  .refine(atLeastOne(ADMIN_FIELDS), { message: "Nothing to update" });
+export type UpdateBranchAdmin = z.infer<typeof updateBranchAdminSchema>;
+export const updateBranchAdminResponseSchema = z.object({ admin: branchAdminAccountSchema, branch_id: uuid });
+export type UpdateBranchAdminResponse = z.infer<typeof updateBranchAdminResponseSchema>;
 
 // POST /admin/branches/:id/admins (super_admin)
 export const createBranchAdminResponseSchema = z.object({ admin: branchAdminAccountSchema });

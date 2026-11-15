@@ -4,6 +4,25 @@ import { COURIER_STATUSES, ORDER_STATUSES } from "../constants";
 // super_admin names the branch explicitly; branch_admin's comes from the token
 export const adminBranchQuerySchema = z.object({ branch_id: z.string().uuid().optional() });
 
+// GET /admin/orders. Without date: the live board. With date: every order created that day in the
+// branch's timezone, whatever its status.
+export const adminOrdersQuerySchema = adminBranchQuerySchema.extend({
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+});
+export type AdminOrdersQuery = z.infer<typeof adminOrdersQuerySchema>;
+
+// POST /admin/orders/:id/cancel. branch_admin may cancel PAID and ACCEPTED orders; super_admin also
+// PICKING and READY (the transition table decides). Reserved stock goes back to the branch.
+export const adminCancelRequestSchema = z.object({
+  branch_id: z.string().uuid().optional(),
+  reason: z.string().trim().min(3).max(200),
+  idempotency_key: z.string().uuid().optional(),
+});
+export type AdminCancelRequest = z.infer<typeof adminCancelRequestSchema>;
+
 // GET /branches (public; also feeds the super_admin branch switcher)
 export const branchesResponseSchema = z.object({
   branches: z.array(

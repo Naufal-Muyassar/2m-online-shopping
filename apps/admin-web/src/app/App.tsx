@@ -1,5 +1,6 @@
 import { useRef, useState, type ComponentType, type SVGProps } from "react";
-import { IconBoard, IconCash, IconChat, IconClipboard, IconSearch, IconSettings, IconTruck, IconWallet } from "../components/Icons";
+import { IconBoard, IconCash, IconChat, IconClipboard, IconSearch, IconSettings, IconStore, IconTruck, IconWallet } from "../components/Icons";
+import { Select } from "../components/Select";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { useThumb } from "../components/Segmented";
 import { useAuth } from "../lib/auth";
@@ -95,22 +96,19 @@ function Shell() {
           )}
           <div className="ml-auto flex min-w-0 items-center gap-3 text-sm">
             {user?.role === "super_admin" && (
-              <select
-                className="field w-auto min-w-0 max-w-[11rem] font-semibold sm:max-w-none"
+              <Select
+                label="Cabang"
+                icon={<IconStore />}
+                align="end"
+                className="max-w-[12rem] sm:max-w-[16rem]"
                 value={branchId ?? ""}
-                onChange={(e) => {
+                options={branches.map((b) => ({ value: b.id, label: b.name, hint: b.is_active ? undefined : "Nonaktif" }))}
+                onChange={(id) => {
                   setThreadId(null);
                   setCourierId(null);
-                  setBranchId(e.target.value);
+                  setBranchId(id);
                 }}
-                aria-label="Cabang"
-              >
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.is_active ? b.name : `${b.name} (nonaktif)`}
-                  </option>
-                ))}
-              </select>
+              />
             )}
             <span className="avatar" aria-hidden="true">
               {user?.name?.charAt(0)}

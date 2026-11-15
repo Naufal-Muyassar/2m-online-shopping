@@ -33,6 +33,9 @@ const CODE_MESSAGES: Record<string, string> = {
   VALIDATION_ERROR: "Isian belum valid. Periksa lagi kolom yang ditandai.",
   FORBIDDEN: "Akun ini tidak punya akses untuk tindakan itu.",
   PRODUCT_ALREADY_IN_BRANCH: "Produk ini sudah dijual di cabang ini. Cari di daftar produk untuk mengubah harga atau stoknya.",
+  INVALID_TRANSITION: "Status order sudah berubah, jadi tindakan ini tidak bisa lagi. Muat ulang daftar order.",
+  ORDER_NOT_FOUND: "Order tidak ditemukan di cabang ini.",
+  ADMIN_NOT_FOUND: "Akun admin tidak ditemukan. Muat ulang daftar cabang.",
   SKU_EXISTS: "SKU itu sudah ada di katalog. Pakai SKU lain atau ubah produk yang sudah ada.",
 };
 

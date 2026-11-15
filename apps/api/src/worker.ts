@@ -6,6 +6,7 @@ import { startReconcileLoop } from "./modules/payments/service";
 import {
   commitOrder,
   rebuildCounters,
+  releaseCancelled,
   releaseOrder,
   startSweeperLoop,
 } from "./modules/inventory/service";
@@ -17,7 +18,8 @@ const SWEEP_INTERVAL_MS = 60_000;
 registerHandler("STATUS_CHANGED", async (event) => {
   logger.debug({ event_id: event.id, seq: event.seq, payload: event.payload }, "STATUS_CHANGED");
   const { to } = event.payload as { to?: string };
-  if (to === "CANCELLED" || to === "FAILED") await releaseOrder(event.aggregate_id);
+  if (to === "CANCELLED") await releaseCancelled(event.aggregate_id);
+  else if (to === "FAILED") await releaseOrder(event.aggregate_id);
 });
 
 registerHandler("PAYMENT_SUCCESS", async (event) => {

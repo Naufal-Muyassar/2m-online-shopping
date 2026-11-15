@@ -5,13 +5,16 @@ import {
   type AddBranchProductRequest,
   type AdminProduct,
   type AdminProductsResponse,
+  type AdminProductState,
   type AdminProductUpdate,
   type CatalogProduct,
   type CatalogResponse,
 } from "@2m/shared";
 import { Dialog } from "../../components/Dialog";
-import { IconChevronRight, IconSearch } from "../../components/Icons";
+import { IconAlert, IconChevronRight, IconSearch } from "../../components/Icons";
+import { Select } from "../../components/Select";
 import { api, errorMessage } from "../../lib/api";
+import { cn } from "../../lib/utils";
 import { useAuth } from "../../lib/auth";
 import { useToast } from "../../lib/toast";
 import { useBranch } from "./BranchProvider";
@@ -317,18 +320,61 @@ function AddProductDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+const STATE_CHIPS: { id: AdminProductState | "all"; label: string; dot?: string }[] = [
+  { id: "all", label: "Semua" },
+  { id: "available", label: "Dijual", dot: "bg-success" },
+  { id: "low", label: "Menipis", dot: "bg-warning" },
+  { id: "out", label: "Habis", dot: "bg-destructive" },
+  { id: "hidden", label: "Disembunyikan", dot: "bg-muted-foreground" },
+];
+
+// Shown above the list whenever something needs restocking, whatever the filters are.
+function StockWarning({ summary, onShow }: { summary: AdminProductsResponse["summary"]; onShow: (s: AdminProductState) => void }) {
+  if (summary.low === 0 && summary.out === 0) return null;
+  const parts = [summary.out > 0 && `${summary.out} habis`, summary.low > 0 && `${summary.low} menipis`].filter(Boolean);
+  return (
+    <div className="stock-warning animate-rise" role="status">
+      <IconAlert className="mt-0.5 shrink-0 text-xl" />
+      <div className="min-w-0 flex-1 basis-[calc(100%-3rem)] sm:basis-64">
+        <p className="font-bold">Perlu restock: {parts.join(" dan ")}</p>
+        <p className="text-sm">Produk habis tidak bisa dipesan pelanggan. Menipis berarti sisa {LOW_STOCK_AT} unit atau kurang.</p>
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-2 max-sm:pl-8">
+        {summary.out > 0 && (
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => onShow("out")}>
+            Lihat habis
+          </button>
+        )}
+        {summary.low > 0 && (
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => onShow("low")}>
+            Lihat menipis
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function ProductsSection() {
   const { branchId } = useBranch();
   const [search, setSearch] = useState("");
   const q = useDeferredValue(search.trim());
+  const [state, setState] = useState<AdminProductState | "all">("all");
+  const [category, setCategory] = useState("");
   const [open, setOpen] = useState<{ dialog: "edit"; id: string } | { dialog: "add" } | null>(null);
 
   const products = useInfiniteQuery({
-    queryKey: [PRODUCTS_KEY, branchId, q],
+    queryKey: [PRODUCTS_KEY, branchId, q, state, category],
     queryFn: async ({ pageParam }) =>
       (
         await api.get<AdminProductsResponse>("/admin/products", {
-          params: { branch_id: branchId, q: q || undefined, page: pageParam },
+          params: {
+            branch_id: branchId,
+            q: q || undefined,
+            state: state === "all" ? undefined : state,
+            category: category || undefined,
+            page: pageParam,
+          },
         })
       ).data,
     initialPageParam: 1,
@@ -336,12 +382,26 @@ export function ProductsSection() {
     placeholderData: keepPreviousData,
   });
   const rows = products.data?.pages.flatMap((p) => p.products) ?? [];
+  const first = products.data?.pages[0];
+  const summary = first?.summary;
+  const categories = first?.categories ?? [];
   const editing = open?.dialog === "edit" ? rows.find((p) => p.id === open.id) : undefined;
+  const filtered = q !== "" || state !== "all" || category !== "";
+  const countOf = (id: AdminProductState | "all") => (summary ? (id === "all" ? summary.total : summary[id]) : undefined);
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
+      {summary && (
+        <StockWarning
+          summary={summary}
+          onShow={(s) => {
+            setState(s);
+            setCategory("");
+          }}
+        />
+      )}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="relative w-full lg:max-w-sm">
           <IconSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-muted-foreground" />
           <input
             type="search"
@@ -352,9 +412,45 @@ export function ProductsSection() {
             className="field pl-10"
           />
         </div>
-        <button className="btn btn-primary self-start sm:self-auto" onClick={() => setOpen({ dialog: "add" })}>
+        <Select
+          label="Kategori"
+          className="w-full sm:w-56"
+          active={category !== ""}
+          value={category}
+          onChange={setCategory}
+          options={[{ value: "", label: "Semua kategori" }, ...categories.map((c) => ({ value: c, label: c.charAt(0).toUpperCase() + c.slice(1) }))]}
+        />
+        <button className="btn btn-primary self-start lg:ml-auto lg:self-auto" onClick={() => setOpen({ dialog: "add" })}>
           Tambah produk
         </button>
+      </div>
+      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0" role="group" aria-label="Filter status stok">
+        {STATE_CHIPS.map((chip) => (
+          <button
+            key={chip.id}
+            type="button"
+            className="chip"
+            aria-pressed={state === chip.id}
+            onClick={() => setState(chip.id)}
+          >
+            {chip.dot && <span aria-hidden="true" className={cn("size-2 rounded-full", chip.dot)} />}
+            {chip.label}
+            {countOf(chip.id) !== undefined && <span className="tabular-nums opacity-70">{countOf(chip.id)}</span>}
+          </button>
+        ))}
+        {filtered && (
+          <button
+            type="button"
+            className="link shrink-0 px-1 text-sm"
+            onClick={() => {
+              setSearch("");
+              setState("all");
+              setCategory("");
+            }}
+          >
+            Hapus filter
+          </button>
+        )}
       </div>
 
       {products.isLoading && (
@@ -372,8 +468,8 @@ export function ProductsSection() {
       {products.isSuccess && rows.length === 0 && (
         <div className="empty-state">
           <p>
-            {q
-              ? `Tidak ada produk yang cocok dengan “${q}”.`
+            {filtered
+              ? "Tidak ada produk yang cocok dengan filter ini."
               : "Cabang ini belum menjual produk. Pakai Tambah produk untuk memilih dari katalog."}
           </p>
         </div>

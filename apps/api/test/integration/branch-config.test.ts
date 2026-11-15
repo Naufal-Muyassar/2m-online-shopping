@@ -137,10 +137,14 @@ describe("products", () => {
 describe("adding catalogue products to a branch", () => {
   it("lists only products the branch does not sell, then adds one with price and stock", async () => {
     const foreign = await addProduct(other.branchId);
-    const available = await json<CatalogResponse>(await call("/admin/products/available", { headers: asAdmin() }));
-    const ids = available.products.map((p) => p.id);
-    expect(ids).toContain(foreign);
-    expect(ids).not.toContain(productId);
+    // Searched by SKU: the list is paged and a shared test database holds many products.
+    const search = async (id: string) => {
+      const { sku } = (await pool.query(`SELECT sku FROM products WHERE id = $1`, [id])).rows[0] as { sku: string };
+      const res = await call(`/admin/products/available?q=${sku}`, { headers: asAdmin() });
+      return (await json<CatalogResponse>(res)).products.map((p) => p.id);
+    };
+    expect(await search(foreign)).toContain(foreign);
+    expect(await search(productId)).not.toContain(productId);
 
     const res = await call("/admin/products", {
       method: "POST",

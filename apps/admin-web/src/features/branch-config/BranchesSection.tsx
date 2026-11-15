@@ -2,13 +2,18 @@ import { useState, type ChangeEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   AdminBranch,
+  BranchAdminAccount,
   CreateBranchAdminResponse,
   CreateBranchRequest,
   CreateBranchResponse,
   NewBranchAdmin,
   SuperBranch,
+  UpdateBranchAdmin,
+  UpdateBranchAdminResponse,
 } from "@2m/shared";
 import { Dialog } from "../../components/Dialog";
+import { IconStore } from "../../components/Icons";
+import { Select } from "../../components/Select";
 import { api, errorMessage } from "../../lib/api";
 import { useToast } from "../../lib/toast";
 import { BRANCH_CONTEXT_KEY, useAllBranches, useBranch } from "./BranchProvider";
@@ -135,17 +140,19 @@ function NewBranchDialog({ branches, onClose }: { branches: SuperBranch[]; onClo
         />
         <p className="-mt-2 text-sm text-muted-foreground">Klik peta untuk menaruh titik cabang.</p>
         <LocationInputs point={point} radiusKm={radiusKm} onPoint={setPoint} onRadius={setRadiusKm} disabled={busy} />
-        <label className="field-label flex flex-col gap-1.5">
-          Salin produk, harga dan tarif ongkir dari
-          <select className="field" value={templateId} onChange={(e) => setTemplateId(e.target.value)} disabled={busy}>
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name} ({b.product_count} produk)
-              </option>
-            ))}
-          </select>
+        <div className="field-label flex flex-col gap-1.5">
+          <span>Salin produk, harga dan tarif ongkir dari</span>
+          <Select
+            label="Cabang contoh"
+            icon={<IconStore />}
+            className="w-full"
+            value={templateId}
+            onChange={setTemplateId}
+            disabled={busy}
+            options={branches.map((b) => ({ value: b.id, label: b.name, hint: `${b.product_count} produk` }))}
+          />
           <span className="text-sm font-normal">Stok cabang baru mulai dari 0; admin cabang yang mengisinya.</span>
-        </label>
+        </div>
 
         <div className="section-head">
           <h3 className="font-bold">Akun admin cabang</h3>
@@ -268,13 +275,167 @@ function ToggleDialog({ branch, onClose }: { branch: SuperBranch; onClose: () =>
   );
 }
 
-type Open = { dialog: "new" } | { dialog: "admin" | "toggle"; branchId: string } | null;
+// Name, login, email, password, status and branch of one admin account.
+function EditAdminDialog({
+  admin,
+  branch,
+  branches,
+  onClose,
+}: {
+  admin: BranchAdminAccount;
+  branch: SuperBranch;
+  branches: SuperBranch[];
+  onClose: () => void;
+}) {
+  const toast = useToast();
+  const invalidate = useInvalidateBranches();
+  const [name, setName] = useState(admin.name);
+  const [phone, setPhone] = useState(admin.phone);
+  const [email, setEmail] = useState(admin.email ?? "");
+  const [password, setPassword] = useState("");
+  const [active, setActive] = useState(admin.is_active);
+  const [branchId, setBranchId] = useState(branch.id);
+
+  const changes: UpdateBranchAdmin = {};
+  if (name.trim() !== admin.name) changes.name = name.trim();
+  if (phone.trim() !== admin.phone) changes.phone = phone.trim();
+  if (email.trim() !== (admin.email ?? "")) changes.email = email.trim() === "" ? null : email.trim();
+  if (password !== "") changes.password = password;
+  if (active !== admin.is_active) changes.is_active = active;
+  if (branchId !== branch.id) changes.move_to_branch_id = branchId;
+
+  const errors = {
+    name: !name.trim(),
+    phone: !PHONE.test(phone.trim()),
+    email: email.trim() !== "" && !EMAIL.test(email.trim()),
+    password: password !== "" && password.length < 8,
+  };
+  const invalid = Object.values(errors).some(Boolean);
+  const dirty = Object.keys(changes).length > 0;
+  const signsOut = changes.password !== undefined || changes.is_active === false || changes.move_to_branch_id !== undefined;
+
+  const save = useMutation({
+    mutationFn: async () => (await api.patch<UpdateBranchAdminResponse>(`/admin/branch-admins/${admin.id}`, changes)).data,
+    onSuccess: ({ admin: a }) => {
+      toast("success", signsOut ? `Akun ${a.name} disimpan dan dikeluarkan dari semua perangkat` : `Akun ${a.name} disimpan`);
+      onClose();
+    },
+    onSettled: invalidate,
+  });
+  const busy = save.isPending;
+
+  return (
+    <Dialog title={`Ubah akun ${admin.name}`} wide>
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (dirty && !invalid) save.mutate();
+        }}
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="field-label flex flex-col gap-1.5">
+            Nama admin
+            <input className="field" maxLength={80} value={name} onChange={(e) => setName(e.target.value)} disabled={busy} aria-invalid={errors.name} />
+          </label>
+          <label className="field-label flex flex-col gap-1.5">
+            No. HP (untuk login)
+            <input
+              className="field tabular-nums"
+              inputMode="tel"
+              maxLength={17}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              disabled={busy}
+              aria-invalid={errors.phone}
+            />
+          </label>
+          <label className="field-label flex flex-col gap-1.5">
+            Email (opsional)
+            <input
+              className="field"
+              type="email"
+              maxLength={120}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={busy}
+              aria-invalid={errors.email}
+            />
+          </label>
+          <label className="field-label flex flex-col gap-1.5">
+            Password baru
+            <input
+              className="field"
+              type="password"
+              autoComplete="new-password"
+              maxLength={100}
+              placeholder="Kosongkan kalau tidak diganti"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={busy}
+              aria-invalid={errors.password}
+            />
+            <span className="text-sm font-normal">Minimal 8 karakter.</span>
+          </label>
+        </div>
+        <div className="field-label flex flex-col gap-1.5">
+          <span>Cabang</span>
+          <Select
+            label="Cabang admin"
+            icon={<IconStore />}
+            className="w-full"
+            value={branchId}
+            onChange={setBranchId}
+            disabled={busy}
+            options={branches.map((b) => ({ value: b.id, label: b.name, hint: b.is_active ? undefined : "Nonaktif" }))}
+          />
+        </div>
+        <label className="option-row" data-selected={active}>
+          <input
+            type="checkbox"
+            className="size-5 shrink-0 accent-primary"
+            checked={active}
+            onChange={(e) => setActive(e.target.checked)}
+            disabled={busy}
+          />
+          <span>
+            Akun aktif
+            <span className="block text-sm font-normal text-muted-foreground">Akun nonaktif tidak bisa login.</span>
+          </span>
+        </label>
+        {signsOut && (
+          <p className="notice">Admin akan keluar dari semua perangkat dan perlu login lagi{changes.password ? " dengan password baru" : ""}.</p>
+        )}
+        {save.isError && (
+          <p className="alert-box" role="alert">
+            {errorMessage(save.error)}
+          </p>
+        )}
+        <div className="flex justify-end gap-2">
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={busy}>
+            Batal
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={busy || !dirty || invalid}>
+            {busy ? "Menyimpan…" : "Simpan"}
+          </button>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
+
+type Open =
+  | { dialog: "new" }
+  | { dialog: "admin" | "toggle"; branchId: string }
+  | { dialog: "edit-admin"; branchId: string; adminId: string }
+  | null;
 
 export function BranchesSection() {
   const branches = useAllBranches();
   const [open, setOpen] = useState<Open>(null);
   const rows = branches.data ?? [];
   const selected = open && open.dialog !== "new" ? rows.find((b) => b.id === open.branchId) : undefined;
+  const editingAdmin = open?.dialog === "edit-admin" ? selected?.admins.find((a) => a.id === open.adminId) : undefined;
   const close = () => setOpen(null);
 
   return (
@@ -328,11 +489,21 @@ export function BranchesSection() {
                     {b.admins.length === 0 ? (
                       <span className="text-muted-foreground">Belum ada</span>
                     ) : (
-                      <ul className="flex flex-col gap-0.5">
+                      <ul className="flex flex-col gap-1">
                         {b.admins.map((a) => (
-                          <li key={a.id} className="min-w-0">
-                            <span className="font-medium">{a.name}</span>{" "}
+                          <li key={a.id} className="flex min-w-0 flex-wrap items-center gap-x-2 md:justify-start">
+                            <span className={a.is_active ? "font-medium" : "font-medium text-muted-foreground line-through"}>
+                              {a.name}
+                            </span>
                             <span className="t-label tabular-nums">{a.phone}</span>
+                            <button
+                              type="button"
+                              className="link -my-2 text-sm"
+                              aria-label={`Ubah akun ${a.name}`}
+                              onClick={() => setOpen({ dialog: "edit-admin", branchId: b.id, adminId: a.id })}
+                            >
+                              Ubah
+                            </button>
                           </li>
                         ))}
                       </ul>
@@ -360,6 +531,9 @@ export function BranchesSection() {
       {open?.dialog === "new" && <NewBranchDialog branches={rows} onClose={close} />}
       {selected && open?.dialog === "admin" && <NewAdminDialog branch={selected} onClose={close} />}
       {selected && open?.dialog === "toggle" && <ToggleDialog branch={selected} onClose={close} />}
+      {selected && open?.dialog === "edit-admin" && editingAdmin && (
+        <EditAdminDialog admin={editingAdmin} branch={selected} branches={rows} onClose={close} />
+      )}
     </div>
   );
 }

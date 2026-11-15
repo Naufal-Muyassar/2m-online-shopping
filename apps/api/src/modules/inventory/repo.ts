@@ -75,6 +75,17 @@ export async function releaseActive(db: Db, orderId: string): Promise<StockItem[
   return toItems(res.rows);
 }
 
+// A cancelled order never leaves the branch, so units already sold to it (COMMITTED) come back as well.
+export async function releaseHeld(db: Db, orderId: string): Promise<StockItem[]> {
+  const res = await db.query(
+    `UPDATE stock_reservations SET status = 'RELEASED', updated_at = now()
+     WHERE order_id = $1 AND status IN ('ACTIVE', 'COMMITTED')
+     RETURNING branch_id, product_id, qty`,
+    [orderId],
+  );
+  return toItems(res.rows);
+}
+
 export async function releaseExpired(db: Db, limit: number): Promise<StockItem[]> {
   const res = await db.query(
     `WITH due AS (

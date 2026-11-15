@@ -22,6 +22,9 @@ import {
   type CreateBranchResponse,
   type NewBranchAdmin,
   type SuperBranchesResponse,
+  updateBranchAdminSchema,
+  type UpdateBranchAdmin,
+  type UpdateBranchAdminResponse,
 } from "@2m/shared";
 import { asyncHandler, validate } from "../../shared/http";
 import { authenticate, branchScope, requireRole } from "../auth/middleware";
@@ -41,7 +44,14 @@ branchConfigRoutes.get(
   validate(adminProductsQuerySchema, "query"),
   asyncHandler(async (req, res) => {
     const query = req.query as unknown as AdminProductsQuery;
-    res.json(await service.listProducts(branchScope(req), { q: query.q, page: query.page }));
+    res.json(
+      await service.listProducts(branchScope(req), {
+        q: query.q,
+        category: query.category,
+        state: query.state,
+        page: query.page,
+      }),
+    );
   }),
 );
 
@@ -165,5 +175,20 @@ branchConfigRoutes.post(
       admin: await service.createBranchAdmin(actorOf(req), req.params.id as string, req.body as NewBranchAdmin),
     };
     res.status(201).json(body);
+  }),
+);
+
+branchConfigRoutes.patch(
+  "/branch-admins/:id",
+  ...superOnly,
+  validate(idParams, "params"),
+  validate(updateBranchAdminSchema),
+  asyncHandler(async (req, res) => {
+    const body: UpdateBranchAdminResponse = await service.updateBranchAdmin(
+      actorOf(req),
+      req.params.id as string,
+      req.body as UpdateBranchAdmin,
+    );
+    res.json(body);
   }),
 );

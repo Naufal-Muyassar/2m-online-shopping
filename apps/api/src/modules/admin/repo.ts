@@ -18,8 +18,14 @@ interface AdminOrderRow {
   lng: number;
 }
 
-// Non-terminal orders, terminal ones from the last 24h, and failed orders still waiting for return confirmation.
-export async function listBoardOrders(db: Pool, branchId: string): Promise<AdminOrder[]> {
+// Without a date: non-terminal orders, terminal ones from the last 24h, and failed orders still waiting
+// for return confirmation. With a date (YYYY-MM-DD): every order created that day in the branch's timezone.
+const LIVE_FILTER = `(o.status NOT IN ('DELIVERED','FAILED','CANCELLED')
+            OR o.return_pending
+            OR o.updated_at >= now() - interval '24 hours')`;
+const DATE_FILTER = `(o.created_at AT TIME ZONE (SELECT b.timezone FROM branches b WHERE b.id = o.branch_id))::date = $2::date`;
+
+export async function listBoardOrders(db: Pool, branchId: string, date?: string): Promise<AdminOrder[]> {
   const res = await db.query<AdminOrderRow>(
     `SELECT o.id, o.code, o.status, o.grand_total, o.return_pending, o.created_at, o.ready_at,
             (SELECT max(t.server_ts) FROM order_state_transitions t WHERE t.order_id = o.id) AS last_transition_at,
@@ -29,11 +35,9 @@ export async function listBoardOrders(db: Pool, branchId: string): Promise<Admin
      JOIN addresses a ON a.id = o.address_id
      LEFT JOIN users u ON u.id = o.assigned_courier_id
      WHERE o.branch_id = $1
-       AND (o.status NOT IN ('DELIVERED','FAILED','CANCELLED')
-            OR o.return_pending
-            OR o.updated_at >= now() - interval '24 hours')
+       AND ${date ? DATE_FILTER : LIVE_FILTER}
      ORDER BY o.created_at ASC`,
-    [branchId],
+    date ? [branchId, date] : [branchId],
   );
   const items = await db.query<{ order_id: string; name: string; qty: number }>(
     `SELECT order_id, name, qty FROM order_items WHERE order_id = ANY($1::uuid[]) ORDER BY name`,

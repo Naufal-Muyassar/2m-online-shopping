@@ -7,8 +7,29 @@ import { transition } from "../orders/service";
 import { setCourierStatus } from "../courier/repo";
 import * as repo from "./repo";
 
-export async function boardOrders(branchId: string) {
-  return { orders: await repo.listBoardOrders(pool, branchId) };
+export async function boardOrders(branchId: string, date?: string) {
+  return { orders: await repo.listBoardOrders(pool, branchId, date) };
+}
+
+// The transition table decides which statuses each role may cancel; the worker gives the stock back.
+export async function cancelOrder(input: {
+  orderId: string;
+  reason: string;
+  actor: { id: string; role: "branch_admin" | "super_admin" };
+  branchId: string;
+  idempotencyKey?: string;
+}) {
+  if ((await getOrderBranch(pool, input.orderId)) !== input.branchId) {
+    throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
+  }
+  return withTransaction((tx) =>
+    transition(tx, {
+      orderId: input.orderId,
+      to: "CANCELLED",
+      actor: input.actor,
+      meta: { reason: input.reason, idempotency_key: input.idempotencyKey },
+    }),
+  );
 }
 
 export async function branchCouriers(branchId: string) {

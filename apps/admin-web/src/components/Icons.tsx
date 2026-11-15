@@ -81,6 +81,45 @@ export const IconSearch = (p: IconProps) => (
   </Svg>
 );
 
+export const IconChevronDown = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M6 9.5l6 6 6-6" />
+  </Svg>
+);
+
+export const IconChevronLeft = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M14.5 6l-6 6 6 6" />
+  </Svg>
+);
+
+export const IconCheck = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </Svg>
+);
+
+export const IconCalendar = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+    <path d="M3.5 10h17M8 3v4M16 3v4" />
+  </Svg>
+);
+
+export const IconStore = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 10v9.5h16V10M3 9.5 5 4h14l2 5.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0Z" />
+    <path d="M10 19.5v-5h4v5" />
+  </Svg>
+);
+
+export const IconAlert = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 4 2.8 19.5h18.4z" />
+    <path d="M12 10v4.5M12 17.2v.1" />
+  </Svg>
+);
+
 export const IconChevronRight = (p: IconProps) => (
   <Svg {...p}>
     <path d="M9.5 6l6 6-6 6" />

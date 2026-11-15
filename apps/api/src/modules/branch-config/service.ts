@@ -4,6 +4,8 @@ import type {
   AdminBranchUpdate,
   AdminProduct,
   AdminProductsResponse,
+  AdminProductState,
+  UpdateBranchAdmin,
   AdminProductUpdate,
   BranchAdminAccount,
   CatalogProduct,
@@ -27,12 +29,16 @@ export interface Actor {
 const productNotFound = () => new AppError(404, "PRODUCT_NOT_FOUND", "Product not found in this branch");
 const branchNotFound = () => new AppError(404, "BRANCH_NOT_FOUND", "Branch not found");
 
-export async function listProducts(branchId: string, opts: { q?: string; page: number }): Promise<AdminProductsResponse> {
-  const [{ rows, hasMore }, categories] = await Promise.all([
+export async function listProducts(
+  branchId: string,
+  opts: { q?: string; category?: string; state?: AdminProductState; page: number },
+): Promise<AdminProductsResponse> {
+  const [{ rows, hasMore }, categories, summary] = await Promise.all([
     repo.listBranchProducts(pool, branchId, opts),
-    repo.listAllCategories(pool),
+    repo.listBranchCategories(pool, branchId),
+    repo.branchProductSummary(pool, branchId),
   ]);
-  return { products: rows, categories, page: opts.page, page_size: repo.ADMIN_PAGE_SIZE, has_more: hasMore };
+  return { products: rows, categories, summary, page: opts.page, page_size: repo.ADMIN_PAGE_SIZE, has_more: hasMore };
 }
 
 export async function updateProduct(
@@ -259,6 +265,52 @@ export async function createBranch(
     });
     await insertAdmin(tx, actor, id, input.admin);
     return (await repo.listAllBranches(tx, id))[0]!;
+  });
+}
+
+export async function updateBranchAdmin(
+  actor: Actor,
+  userId: string,
+  body: UpdateBranchAdmin,
+): Promise<{ admin: BranchAdminAccount; branch_id: string }> {
+  return withTransaction(async (tx) => {
+    const before = await repo.lockBranchAdmin(tx, userId);
+    if (!before) throw new AppError(404, "ADMIN_NOT_FOUND", "Branch admin not found");
+    if (body.move_to_branch_id && !(await repo.getBranch(tx, body.move_to_branch_id))) throw branchNotFound();
+
+    let after: Awaited<ReturnType<typeof repo.updateBranchAdmin>>;
+    try {
+      after = await repo.updateBranchAdmin(tx, userId, {
+        name: body.name,
+        phone: body.phone,
+        email: body.email,
+        passwordHash: body.password ? await bcrypt.hash(body.password, 10) : undefined,
+        isActive: body.is_active,
+        branchId: body.move_to_branch_id,
+      });
+    } catch (err) {
+      if ((err as { code?: string }).code === "23505") {
+        throw new AppError(409, "ACCOUNT_EXISTS", "Phone number or email is already registered");
+      }
+      throw err;
+    }
+    // The access token carries the branch, so a move must end the old sessions too.
+    const signOut = body.password !== undefined || after.is_active === false || after.branch_id !== before.branch_id;
+    if (signOut) await repo.revokeUserSessions(tx, userId);
+
+    // Never the password, not even hashed.
+    await audit(tx, {
+      actorId: actor.id,
+      actorRole: actor.role,
+      branchId: after.branch_id,
+      action: "BRANCH_ADMIN_UPDATED",
+      entityType: "user",
+      entityId: userId,
+      before,
+      after: { ...after, password_changed: body.password !== undefined, signed_out: signOut },
+    });
+    const { branch_id, ...admin } = after;
+    return { admin, branch_id };
   });
 }
 

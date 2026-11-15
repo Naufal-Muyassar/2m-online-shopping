@@ -2,7 +2,8 @@ import { useDeferredValue, useState } from "react";
 import { keepPreviousData, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CatalogProduct, CatalogResponse, CreateCatalogProduct, UpdateCatalogProduct } from "@2m/shared";
 import { Dialog } from "../../components/Dialog";
-import { IconSearch } from "../../components/Icons";
+import { IconSearch, IconStore } from "../../components/Icons";
+import { Select } from "../../components/Select";
 import { api, errorMessage } from "../../lib/api";
 import { useToast } from "../../lib/toast";
 import { useAllBranches } from "./BranchProvider";
@@ -189,24 +190,29 @@ export function CatalogSection() {
           />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex">
-          <select className="field lg:w-56" value={filterBranch} onChange={(e) => setFilterBranch(e.target.value)} aria-label="Filter cabang">
-            <option value="">Semua cabang</option>
-            {(branches.data ?? []).map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
+          <Select
+            label="Filter cabang"
+            icon={<IconStore />}
+            className="lg:w-56"
+            active={filterBranch !== ""}
+            value={filterBranch}
+            onChange={setFilterBranch}
+            options={[
+              { value: "", label: "Semua cabang" },
+              ...(branches.data ?? []).map((b) => ({ value: b.id, label: b.name, hint: `${b.product_count} produk` })),
+            ]}
+          />
           {filterBranch && (
-            <select
-              className="field lg:w-48"
+            <Select<Availability>
+              label="Status di cabang"
+              className="lg:w-52"
               value={availability}
-              onChange={(e) => setAvailability(e.target.value as Availability)}
-              aria-label="Status di cabang"
-            >
-              <option value="sold">Dijual di cabang ini</option>
-              <option value="not_sold">Belum dijual</option>
-            </select>
+              onChange={setAvailability}
+              options={[
+                { value: "sold", label: "Dijual di cabang ini" },
+                { value: "not_sold", label: "Belum dijual" },
+              ]}
+            />
           )}
         </div>
         <button className="btn btn-primary self-start lg:ml-auto lg:self-auto" onClick={() => setOpen({ dialog: "new" })}>

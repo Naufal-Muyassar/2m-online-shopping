@@ -1,6 +1,7 @@
 import type { Pool } from "pg";
-import type { AdminBranch, AdminProduct, BranchAdminAccount, CatalogProduct, SuperBranch } from "@2m/shared";
+import type { AdminBranch, AdminProduct, AdminProductState, BranchAdminAccount, CatalogProduct, SuperBranch } from "@2m/shared";
 import type { Tx } from "../../shared/db";
+import { LOW_STOCK_AT } from "../catalog/stock";
 import { SELLABLE_EXPR, SELLABLE_JOINS } from "../inventory/repo";
 
 type Db = Pool | Tx;
@@ -14,10 +15,18 @@ const PRODUCT_SELECT = `
          GREATEST(${SELLABLE_EXPR}, 0) AS sellable_qty
   FROM branch_products bp JOIN products p ON p.id = bp.product_id${SELLABLE_JOINS}`;
 
+// One definition of the admin's stock states, shared by the filter and the summary.
+const STATE_SQL: Record<AdminProductState, string> = {
+  hidden: "NOT bp.is_active",
+  out: `bp.is_active AND ${SELLABLE_EXPR} <= 0`,
+  low: `bp.is_active AND ${SELLABLE_EXPR} BETWEEN 1 AND ${LOW_STOCK_AT}`,
+  available: `bp.is_active AND ${SELLABLE_EXPR} > ${LOW_STOCK_AT}`,
+};
+
 export async function listBranchProducts(
   db: Db,
   branchId: string,
-  opts: { q?: string; page: number },
+  opts: { q?: string; category?: string; state?: AdminProductState; page: number },
 ): Promise<{ rows: AdminProduct[]; hasMore: boolean }> {
   const params: unknown[] = [branchId];
   let where = "bp.branch_id = $1";
@@ -25,6 +34,11 @@ export async function listBranchProducts(
     params.push(`%${escapeLike(opts.q)}%`);
     where += ` AND (p.name ILIKE $${params.length} OR p.sku ILIKE $${params.length})`;
   }
+  if (opts.category) {
+    params.push(opts.category);
+    where += ` AND p.category = $${params.length}`;
+  }
+  if (opts.state) where += ` AND ${STATE_SQL[opts.state]}`;
   params.push(ADMIN_PAGE_SIZE + 1, (opts.page - 1) * ADMIN_PAGE_SIZE);
   const res = await db.query<AdminProduct>(
     `${PRODUCT_SELECT}
@@ -42,6 +56,29 @@ export async function getBranchProduct(db: Db, branchId: string, productId: stri
     productId,
   ]);
   return res.rows[0] ?? null;
+}
+
+export async function branchProductSummary(db: Db, branchId: string): Promise<Record<AdminProductState | "total", number>> {
+  const res = await db.query<Record<AdminProductState | "total", number>>(
+    `SELECT count(*)::int AS total,
+            count(*) FILTER (WHERE ${STATE_SQL.available})::int AS available,
+            count(*) FILTER (WHERE ${STATE_SQL.low})::int AS low,
+            count(*) FILTER (WHERE ${STATE_SQL.out})::int AS out,
+            count(*) FILTER (WHERE ${STATE_SQL.hidden})::int AS hidden
+     FROM branch_products bp${SELLABLE_JOINS}
+     WHERE bp.branch_id = $1`,
+    [branchId],
+  );
+  return res.rows[0]!;
+}
+
+export async function listBranchCategories(db: Db, branchId: string): Promise<string[]> {
+  const res = await db.query<{ category: string }>(
+    `SELECT DISTINCT p.category FROM branch_products bp JOIN products p ON p.id = bp.product_id
+     WHERE bp.branch_id = $1 ORDER BY p.category`,
+    [branchId],
+  );
+  return res.rows.map((r) => r.category);
 }
 
 // Every category in the shared catalogue, so an edit can reuse one instead of inventing a spelling.
@@ -218,6 +255,45 @@ export const copyPricingConfig = (tx: Tx, newId: string, templateId: string) =>
 export const copyLimits = (tx: Tx, newId: string, templateId: string) => copyRows(tx, "branch_limits", newId, templateId);
 // Prices, visibility, order and buffer come along; stock does not (no snapshot row means no stock).
 export const copyProducts = (tx: Tx, newId: string, templateId: string) => copyRows(tx, "branch_products", newId, templateId);
+
+export async function lockBranchAdmin(tx: Tx, userId: string): Promise<(BranchAdminAccount & { branch_id: string }) | null> {
+  const res = await tx.query<BranchAdminAccount & { branch_id: string }>(
+    `SELECT id, name, phone, email, is_active, branch_id FROM users WHERE id = $1 AND role = 'branch_admin' FOR UPDATE`,
+    [userId],
+  );
+  return res.rows[0] ?? null;
+}
+
+// undefined leaves a field alone; email null clears it.
+export async function updateBranchAdmin(
+  tx: Tx,
+  userId: string,
+  f: { name?: string; phone?: string; email?: string | null; passwordHash?: string; isActive?: boolean; branchId?: string },
+): Promise<BranchAdminAccount & { branch_id: string }> {
+  const res = await tx.query<BranchAdminAccount & { branch_id: string }>(
+    `UPDATE users SET name = COALESCE($2, name), phone = COALESCE($3, phone),
+            email = CASE WHEN $4::boolean THEN $5 ELSE email END,
+            password_hash = COALESCE($6, password_hash), is_active = COALESCE($7, is_active),
+            branch_id = COALESCE($8, branch_id), updated_at = now()
+     WHERE id = $1
+     RETURNING id, name, phone, email, is_active, branch_id`,
+    [
+      userId,
+      f.name ?? null,
+      f.phone ?? null,
+      f.email !== undefined,
+      f.email ?? null,
+      f.passwordHash ?? null,
+      f.isActive ?? null,
+      f.branchId ?? null,
+    ],
+  );
+  return res.rows[0]!;
+}
+
+export async function revokeUserSessions(tx: Tx, userId: string): Promise<void> {
+  await tx.query(`UPDATE sessions SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL`, [userId]);
+}
 
 export async function insertBranchAdmin(
   tx: Tx,

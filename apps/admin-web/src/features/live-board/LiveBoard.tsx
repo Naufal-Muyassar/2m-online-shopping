@@ -1,5 +1,5 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   TERMINAL_STATUSES,
   formatIDR,
@@ -9,7 +9,9 @@ import {
   type ChatOpenRequest,
   type MetaConfigResponse,
 } from "@2m/shared";
+import { DatePicker, formatDateLabel, toIsoDate } from "../../components/DatePicker";
 import { Dialog } from "../../components/Dialog";
+import { Select } from "../../components/Select";
 import { Segmented, useSwapX } from "../../components/Segmented";
 import { api, errorMessage } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -80,22 +82,20 @@ function AssignDialog({ order, onClose }: { order: AdminOrder; onClose: () => vo
 
   return (
     <Dialog title={`Tugaskan ${order.code}`}>
-      <label className="field-label flex flex-col gap-1.5">
-        Kurir (IDLE)
-        <select
-          className="field"
+      <div className="field-label flex flex-col gap-1.5">
+        <span>Kurir (IDLE)</span>
+        <Select
+          label="Kurir"
+          className="w-full"
           value={target}
-          onChange={(e) => setTarget(e.target.value)}
+          onChange={setTarget}
           disabled={couriers.isLoading}
-        >
-          <option value="">Pilih kurir…</option>
-          {idle.map((c) => (
-            <option key={c.user_id} value={c.user_id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
+          options={[
+            { value: "", label: "Pilih kurir…", disabled: true },
+            ...idle.map((c) => ({ value: c.user_id, label: c.name, hint: c.partner_name })),
+          ]}
+        />
+      </div>
       {couriers.isError && (
         <p className="alert-box" role="alert">
           {errorMessage(couriers.error)}
@@ -171,6 +171,83 @@ function ReleaseDialog({ order, onClose }: { order: AdminOrder; onClose: () => v
   );
 }
 
+const CANCEL_REASONS = ["Stok habis", "Permintaan pelanggan", "Alamat di luar jangkauan", "Pembayaran bermasalah"];
+
+// Which statuses each role may cancel; mirrors the server's transition table.
+const CANCELLABLE: Record<string, readonly AdminOrder["status"][]> = {
+  branch_admin: ["PAID", "ACCEPTED"],
+  super_admin: ["PAID", "ACCEPTED", "PICKING", "READY"],
+};
+
+function CancelDialog({ order, onClose }: { order: AdminOrder; onClose: () => void }) {
+  const { branchId } = useBranch();
+  const toast = useToast();
+  const refresh = useRefreshBoard();
+  const [reason, setReason] = useState("");
+  // One key per dialog, so a retry after a lost response cannot cancel twice.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const valid = reason.trim().length >= 3;
+
+  const cancel = useMutation({
+    mutationFn: async () =>
+      api.post(`/admin/orders/${order.id}/cancel`, { reason: reason.trim(), branch_id: branchId, idempotency_key: idempotencyKey }),
+    onSuccess: () => {
+      toast("success", `${order.code} dibatalkan. Stoknya kembali ke cabang.`);
+      refresh();
+      onClose();
+    },
+  });
+
+  return (
+    <Dialog title={`Batalkan ${order.code}?`}>
+      <p className="text-sm text-muted-foreground">
+        Pelanggan melihat order ini sebagai Dibatalkan beserta alasannya, dan barangnya kembali bisa dijual
+        {order.assigned_courier ? `. ${order.assigned_courier.name} kembali siap menerima order` : ""}.
+      </p>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Alasan cepat">
+        {CANCEL_REASONS.map((r) => (
+          <button
+            key={r}
+            type="button"
+            className="chip"
+            aria-pressed={reason === r}
+            onClick={() => setReason(r)}
+            disabled={cancel.isPending}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+      <label className="field-label flex flex-col gap-1.5">
+        Alasan
+        <textarea
+          className="field"
+          rows={2}
+          maxLength={200}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          disabled={cancel.isPending}
+          placeholder="Tulis alasan atau pilih di atas"
+        />
+      </label>
+      <p className="notice">Uang yang sudah dibayar pelanggan belum dikembalikan otomatis. Proses refund-nya secara manual.</p>
+      {cancel.isError && (
+        <p className="alert-box" role="alert">
+          {errorMessage(cancel.error)}
+        </p>
+      )}
+      <div className="flex justify-end gap-2">
+        <button className="btn btn-secondary" onClick={onClose} disabled={cancel.isPending}>
+          Kembali
+        </button>
+        <button className="btn btn-danger" onClick={() => cancel.mutate()} disabled={cancel.isPending || !valid}>
+          {cancel.isPending ? "Membatalkan…" : "Batalkan order"}
+        </button>
+      </div>
+    </Dialog>
+  );
+}
+
 function slaState(order: AdminOrder) {
   const age = ageMinutes(order.last_transition_at ?? order.created_at, Date.now());
   const column = BOARD_COLUMNS.find((c) => c === order.status);
@@ -181,8 +258,9 @@ function OrderActions({ order }: { order: AdminOrder }) {
   const { user } = useAuth();
   const toast = useToast();
   const refresh = useRefreshBoard();
-  const [dialog, setDialog] = useState<"assign" | "release" | null>(null);
+  const [dialog, setDialog] = useState<"assign" | "release" | "cancel" | null>(null);
   const isBranchAdmin = user?.role === "branch_admin";
+  const canCancel = (CANCELLABLE[user?.role ?? ""] ?? []).includes(order.status);
 
   const accept = useMutation({
     mutationFn: async () =>
@@ -211,6 +289,11 @@ function OrderActions({ order }: { order: AdminOrder }) {
           Lepas kurir
         </button>
       )}
+      {canCancel && (
+        <button className="btn btn-danger-quiet btn-block" onClick={() => setDialog("cancel")}>
+          Batalkan order
+        </button>
+      )}
       {accept.isError && (
         <p className="alert-box" role="alert">
           {errorMessage(accept.error)}
@@ -218,6 +301,7 @@ function OrderActions({ order }: { order: AdminOrder }) {
       )}
       {dialog === "assign" && <AssignDialog order={order} onClose={() => setDialog(null)} />}
       {dialog === "release" && <ReleaseDialog order={order} onClose={() => setDialog(null)} />}
+      {dialog === "cancel" && <CancelDialog order={order} onClose={() => setDialog(null)} />}
     </>
   );
 }
@@ -447,16 +531,38 @@ export function LiveBoard({ search }: { search: string }) {
   const { branchId, branchName, branches } = useBranch();
   const [tab, setTab] = useState<ListTab>("PAID");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // null is the live board; a date shows every order created that day.
+  const [date, setDate] = useState<string | null>(null);
   const [panelWidth, setPanelWidth] = usePanelWidth();
   const couriers = useBranchCouriers(MAP_POLL_MS);
   const swapX = useSwapX(TAB_ORDER.indexOf(tab));
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: [BOARD_KEY, branchId],
+  const pickTab = useRef(false);
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    queryKey: [BOARD_KEY, branchId, date],
     enabled: !!branchId,
     refetchInterval: BOARD_POLL_MS,
+    placeholderData: keepPreviousData,
     queryFn: async () =>
-      (await api.get<AdminOrdersResponse>("/admin/orders", { params: { branch_id: branchId } })).data,
+      (await api.get<AdminOrdersResponse>("/admin/orders", { params: { branch_id: branchId, date: date ?? undefined } })).data,
   });
+
+  // After a date change, land on the first status that has orders that day instead of an empty tab.
+  useEffect(() => {
+    if (!pickTab.current || isFetching || !data) return;
+    pickTab.current = false;
+    const has = (t: ListTab) =>
+      data.orders.some((o) => (t === "DONE" ? TERMINAL_STATUSES.includes(o.status) : o.status === t));
+    if (!has(tab)) {
+      const first = TAB_ORDER.find((t) => has(t) && (t !== "PENDING_PAYMENT" || user?.role === "super_admin"));
+      if (first) setTab(first);
+    }
+  }, [data, isFetching, tab, user?.role]);
+
+  const changeDate = (next: string | null) => {
+    pickTab.current = true;
+    setSelectedId(null);
+    setDate(next);
+  };
 
   if (!branchId) return <p className="p-4 text-sm text-muted-foreground md:p-6">Pilih cabang…</p>;
   if (isLoading)
@@ -492,7 +598,18 @@ export function LiveBoard({ search }: { search: string }) {
   return (
     <div className="grid grid-cols-1 gap-4 p-4 md:p-6 lg:h-[calc(100dvh-4rem)] lg:grid-cols-[24rem_minmax(0,1fr)]">
       <section className="card flex min-h-0 flex-col gap-4 max-lg:max-h-[38rem]">
-        <h1 className="t-headline">Tracking order</h1>
+        <div className="flex flex-col gap-3">
+          <h1 className="t-headline">Tracking order</h1>
+          <DatePicker label="Tanggal order" value={date} onChange={changeDate} max={toIsoDate(new Date())} placeholder="Live, semua order aktif" className="w-full" />
+          {date && (
+            <p className="-my-1 flex items-center justify-between gap-3 text-sm text-muted-foreground" aria-live="polite">
+              <span className="min-w-0">{isFetching ? "Memuat…" : `${data?.orders.length ?? 0} order dibuat ${formatDateLabel(date)}`}</span>
+              <button type="button" className="link -my-2 shrink-0" onClick={() => changeDate(null)}>
+                Kembali ke live
+              </button>
+            </p>
+          )}
+        </div>
         <Segmented
           label="Status order"
           value={tab}
@@ -519,7 +636,13 @@ export function LiveBoard({ search }: { search: string }) {
           ))}
           {items.length === 0 && (
             <li className="empty-state my-auto">
-              <p>{search.trim() ? "Tidak ada order yang cocok." : EMPTY_TEXT[tab]}</p>
+              <p>
+                {search.trim()
+                  ? "Tidak ada order yang cocok."
+                  : date
+                    ? "Tidak ada order dengan status ini di tanggal tersebut."
+                    : EMPTY_TEXT[tab]}
+              </p>
             </li>
           )}
         </ul>

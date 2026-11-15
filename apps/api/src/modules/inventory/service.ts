@@ -77,6 +77,15 @@ export async function releaseOrder(orderId: string): Promise<number> {
   return released.length;
 }
 
+// CANCELLED: everything the order held goes back on sale, paid or not. Idempotent: a redelivered event
+// finds nothing left to release.
+export async function releaseCancelled(orderId: string): Promise<number> {
+  const released = await repo.releaseHeld(pool, orderId);
+  await counters.restore(released);
+  if (released.length > 0) logger.info({ order_id: orderId, lines: released.length }, "stock of a cancelled order released");
+  return released.length;
+}
+
 // PAYMENT_SUCCESS: the reserved stock is now sold. The provider call is keyed so redelivery is harmless.
 export async function commitOrder(orderId: string): Promise<void> {
   const { committed, releasedBeforePayment } = await repo.commitActive(pool, orderId);
