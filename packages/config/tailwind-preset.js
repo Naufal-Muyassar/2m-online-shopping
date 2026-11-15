@@ -283,6 +283,59 @@ function designSystem({ addBase, addComponents }) {
       border: "1px solid hsl(0 0% 100% / 0.6)",
       boxShadow: `0 8px 24px ${a("shadow-tint", 0.16)}`,
     },
+    // A pill-shaped control floating on the map ("Layar penuh", "Kembali"). Pair with .material-chip.
+    ".map-chip-btn": {
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "0.5rem",
+      height: "var(--tap-target)",
+      paddingInline: "1rem",
+      borderRadius: "999px",
+      fontSize: "0.875rem",
+      fontWeight: "600",
+      color: c("foreground"),
+      transition: `transform 100ms ease-out, border-color 160ms ease`,
+    },
+    ".map-chip-btn:active": { transform: "scale(0.96)" },
+    ".map-chip-icon": { width: "var(--tap-target)", paddingInline: "0" },
+    // Customer tracking in fullscreen: the map fills the screen, the info panel floats over it.
+    ".map-fullscreen": {
+      position: "fixed",
+      inset: "0",
+      zIndex: "800",
+      isolation: "isolate",
+      backgroundColor: c("background"),
+      animation: "fade-in 200ms ease both",
+    },
+    ".map-fullscreen-bar": {
+      position: "absolute",
+      zIndex: "10",
+      top: "calc(0.75rem + env(safe-area-inset-top))",
+      left: "0.75rem",
+      display: "flex",
+      gap: "0.5rem",
+    },
+    ".map-fullscreen-panel": {
+      position: "absolute",
+      zIndex: "10",
+      left: "0.75rem",
+      right: "0.75rem",
+      bottom: "calc(0.75rem + env(safe-area-inset-bottom))",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.875rem",
+      maxHeight: "calc(100dvh - 6rem)",
+      overflowY: "auto",
+      padding: "1rem",
+      borderRadius: "1.25rem",
+      animation: `rise 420ms ${ease.slow} both`,
+    },
+    // Phones: the panel covers the bottom, so pinch replaces the zoom buttons and the attribution moves up.
+    "@media (max-width: 767px)": {
+      ".map-fullscreen .leaflet-control-zoom": { display: "none" },
+      ".map-fullscreen .leaflet-bottom.leaflet-right": { top: "calc(0.75rem + env(safe-area-inset-top))", bottom: "auto" },
+    },
     "@media (prefers-reduced-transparency: reduce)": {
       ".material, .material-chip": { backgroundColor: c("surface"), backdropFilter: "none", WebkitBackdropFilter: "none" },
     },
@@ -292,6 +345,8 @@ function designSystem({ addBase, addComponents }) {
     "@media (min-width: 768px)": {
       ".card": { padding: "1.25rem" },
       ".app-main": { paddingBlock: "1.75rem" },
+      ".map-fullscreen-bar": { top: "1rem", left: "1rem" },
+      ".map-fullscreen-panel": { top: "1rem", right: "1rem", bottom: "auto", left: "auto", width: "23rem", maxHeight: "calc(100dvh - 2rem)", padding: "1.25rem" },
     },
   });
 
