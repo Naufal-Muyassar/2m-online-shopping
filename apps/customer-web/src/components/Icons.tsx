@@ -104,6 +104,20 @@ export const IconBack = (p: IconProps) => (
   </Svg>
 );
 
+export const IconExpand = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5" />
+  </Svg>
+);
+
+export const IconLocate = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="6.5" />
+    <circle cx="12" cy="12" r="2" />
+    <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
+  </Svg>
+);
+
 export const IconPackage = (p: IconProps) => (
   <Svg {...p}>
     <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />

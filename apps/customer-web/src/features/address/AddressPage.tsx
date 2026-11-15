@@ -223,6 +223,36 @@ function AddressForm({
   );
 }
 
+// The aside on the list: where it goes and what is in the cart, so the wide screen has the same summary as checkout.
+function CartSummary({ branchId, selected }: { branchId: string; selected: Address | null }) {
+  const { data: cart } = useCart(branchId);
+  const count = cart?.items.reduce((n, i) => n + i.qty, 0) ?? 0;
+  return (
+    <section className="card animate-rise space-y-3 text-sm" style={rise(1)} aria-live="polite">
+      <div>
+        <p className="t-label">Dikirim ke</p>
+        {selected ? (
+          <>
+            <p className="mt-1 font-extrabold tracking-tight">{selected.label}</p>
+            <p className="mt-0.5 line-clamp-2 text-muted-foreground">{selected.street}</p>
+          </>
+        ) : (
+          <p className="mt-1 text-muted-foreground">Belum ada alamat yang dipilih.</p>
+        )}
+      </div>
+      {cart && (
+        <div className="card-footer space-y-1.5">
+          <div className="flex justify-between gap-3">
+            <span>Subtotal ({count} barang)</span>
+            <span className="font-semibold tabular-nums">{formatIDR(cart.subtotal)}</span>
+          </div>
+          <p className="t-label">Ongkir dihitung di langkah berikutnya.</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function AddressPage() {
   const { branchId = "" } = useParams();
   const toast = useToast();
@@ -239,12 +269,6 @@ export function AddressPage() {
   return (
     <main className="app-main">
       <h1 className="t-headline">Alamat pengantaran</h1>
-      {isLoading && (
-        <div className="page-narrow space-y-3" aria-busy="true" aria-label="Memuat">
-          <div className="skeleton h-24" />
-          <div className="skeleton h-24" />
-        </div>
-      )}
       {form ? (
         <AddressForm
           branch={branch}
@@ -255,70 +279,82 @@ export function AddressPage() {
           }}
         />
       ) : (
-        <div className="page-narrow flex flex-col gap-4">
-          {addresses && addresses.length > 0 && (
-            <ul className="list">
-              {addresses.map((a, i) => (
-                <li
-                  key={a.id}
-                  className={cn("flex animate-rise flex-wrap items-start gap-x-2 gap-y-1 p-3 transition-colors duration-200 sm:flex-nowrap sm:p-4", selected?.id === a.id && "bg-primary-surface/60")}
-                  style={rise(i)}
-                >
-                  <label className="-m-1.5 flex size-11 shrink-0 cursor-pointer items-center justify-center">
-                    <input
-                      type="radio"
-                      name="address"
-                      checked={selected?.id === a.id}
-                      onChange={() => setAddressId(a.id)}
-                      className="size-5 accent-primary"
-                      aria-label={`Pilih ${a.label}`}
-                    />
-                  </label>
-                  <div className="min-w-0 flex-1 basis-[calc(100%-3.5rem)] pt-1 text-sm sm:basis-0">
-                    <p className="text-base font-extrabold tracking-tight">{a.label}</p>
-                    <p className="mt-1">{a.street}</p>
-                    <p className="mt-0.5 text-muted-foreground">
-                      {a.receiver_name} · {a.receiver_phone}
-                    </p>
-                  </div>
-                  <div className="ml-11 flex shrink-0 gap-4 sm:ml-0">
-                    <button onClick={() => setForm({ editing: a })} className="link text-sm">
-                      Ubah
-                    </button>
-                    <button
-                      onClick={() =>
-                        remove.mutate(a.id, {
-                          onSuccess: () => selected?.id === a.id && setAddressId(null),
-                          onError: (e) => toast("error", errorMessage(e)),
-                        })
-                      }
-                      className="link link-danger text-sm"
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-          {addresses && addresses.length === 0 && (
-            <EmptyState icon={<IconPin />} title="Belum ada alamat.">
-              <p className="text-sm">Tambah alamat untuk melanjutkan.</p>
-            </EmptyState>
-          )}
-          <button onClick={() => setForm({ editing: null })} className="btn btn-secondary btn-block border-dashed">
-            + Tambah alamat
-          </button>
-          {selected ? (
-            <Link to={`/b/${branchId}/checkout`} className="btn btn-primary btn-lg btn-block group">
-              Lanjut ke pembayaran
-              <IconArrowRight className="transition-transform duration-200 ease-settle group-hover:translate-x-0.5" />
-            </Link>
-          ) : (
-            <button disabled className="btn btn-primary btn-lg btn-block">
-              Pilih alamat dulu
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
+          <div className="flex min-w-0 flex-col gap-4">
+            {isLoading && (
+              <div className="space-y-3" aria-busy="true" aria-label="Memuat">
+                <div className="skeleton h-24" />
+                <div className="skeleton h-24" />
+              </div>
+            )}
+            {addresses && addresses.length > 0 && (
+              <ul className="list">
+                {addresses.map((a, i) => (
+                  <li
+                    key={a.id}
+                    className={cn("flex animate-rise flex-wrap items-start gap-x-2 gap-y-1 p-3 transition-colors duration-200 sm:flex-nowrap sm:p-4", selected?.id === a.id && "bg-primary-surface/60")}
+                    style={rise(i)}
+                  >
+                    <label className="-m-1.5 flex size-11 shrink-0 cursor-pointer items-center justify-center">
+                      <input
+                        type="radio"
+                        name="address"
+                        checked={selected?.id === a.id}
+                        onChange={() => setAddressId(a.id)}
+                        className="size-5 accent-primary"
+                        aria-label={`Pilih ${a.label}`}
+                      />
+                    </label>
+                    <div className="min-w-0 flex-1 basis-[calc(100%-3.5rem)] pt-1 text-sm sm:basis-0">
+                      <p className="text-base font-extrabold tracking-tight">{a.label}</p>
+                      <p className="mt-1">{a.street}</p>
+                      <p className="mt-0.5 text-muted-foreground">
+                        {a.receiver_name} · {a.receiver_phone}
+                      </p>
+                    </div>
+                    <div className="ml-11 flex shrink-0 gap-4 sm:ml-0">
+                      <button onClick={() => setForm({ editing: a })} className="link text-sm">
+                        Ubah
+                      </button>
+                      <button
+                        onClick={() =>
+                          remove.mutate(a.id, {
+                            onSuccess: () => selected?.id === a.id && setAddressId(null),
+                            onError: (e) => toast("error", errorMessage(e)),
+                          })
+                        }
+                        className="link link-danger text-sm"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {addresses && addresses.length === 0 && (
+              <EmptyState icon={<IconPin />} title="Belum ada alamat.">
+                <p className="text-sm">Tambah alamat untuk melanjutkan.</p>
+              </EmptyState>
+            )}
+            <button onClick={() => setForm({ editing: null })} className="btn btn-secondary btn-block border-dashed">
+              + Tambah alamat
             </button>
-          )}
+          </div>
+
+          <aside className="flex flex-col gap-3 lg:sticky lg:top-24">
+            <CartSummary branchId={branchId} selected={selected} />
+            {selected ? (
+              <Link to={`/b/${branchId}/checkout`} className="btn btn-primary btn-lg btn-block group">
+                Lanjut ke pembayaran
+                <IconArrowRight className="transition-transform duration-200 ease-settle group-hover:translate-x-0.5" />
+              </Link>
+            ) : (
+              <button disabled className="btn btn-primary btn-lg btn-block">
+                Pilih alamat dulu
+              </button>
+            )}
+          </aside>
         </div>
       )}
     </main>

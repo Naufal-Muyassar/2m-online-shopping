@@ -1,13 +1,12 @@
 import { useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { CUSTOMER_STATUS_LABELS, CUSTOMER_TIMELINE, formatIDR, type OrderStatus } from "@2m/shared";
-import { errorMessage } from "../../lib/api";
-import { useChatThreads, useOpenChat, useOrder } from "../../lib/queries";
-import { useToast } from "../../lib/toast";
+import { useOrder } from "../../lib/queries";
 import { cn } from "../../lib/utils";
-import { IconChat, IconReceipt, IconStore } from "../../components/Icons";
+import { IconReceipt, IconStore } from "../../components/Icons";
 import { ErrorCard, PageSkeleton } from "../../components/States";
 import { StatusPill } from "../../components/StatusPill";
+import { CourierChatButton } from "./CourierChatButton";
 import { TrackingCard } from "./TrackingCard";
 
 const LABEL = CUSTOMER_STATUS_LABELS;
@@ -17,31 +16,6 @@ const STEP_OF: Partial<Record<OrderStatus, OrderStatus>> = { READY: "PICKING", A
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-
-function CourierChatButton({ orderId, courierName }: { orderId: string; courierName: string }) {
-  const navigate = useNavigate();
-  const toast = useToast();
-  const open = useOpenChat();
-  const unread = useChatThreads("customer_courier").data?.find((t) => t.order_id === orderId)?.unread_count ?? 0;
-
-  return (
-    <button
-      type="button"
-      disabled={open.isPending}
-      onClick={() =>
-        open.mutate(
-          { channel: "customer_courier", order_id: orderId },
-          { onSuccess: (t) => navigate(`/chat/${t.id}`), onError: (e) => toast("error", errorMessage(e)) },
-        )
-      }
-      className="btn btn-secondary w-full sm:w-auto sm:self-start"
-    >
-      <IconChat className="text-lg" />
-      Chat {courierName}
-      {unread > 0 && <span className="count-badge static">{unread}</span>}
-    </button>
-  );
-}
 
 function MoneyRow({ label, value }: { label: string; value: string }) {
   return (
@@ -93,19 +67,32 @@ export function OrderStatusPage() {
 
   return (
     <main className="app-main">
-      <header className="flex flex-col gap-3">
-        <p className="t-label">Pesanan · {order.branch_name}</p>
-        <h1 className="t-headline tabular-nums">{order.code}</h1>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <StatusPill status={order.status} />
-          {courier && <span className="text-sm text-muted-foreground">Kurir: {courier.first_name}</span>}
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+        <div className="flex min-w-0 flex-col gap-3">
+          <p className="t-label">Pesanan · {order.branch_name}</p>
+          <h1 className="t-headline tabular-nums">{order.code}</h1>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <StatusPill status={order.status} />
+            {courier && <span className="text-sm text-muted-foreground">Kurir: {courier.first_name}</span>}
+          </div>
         </div>
-        {courier && <CourierChatButton orderId={order.id} courierName={courier.first_name} />}
-        {failure && <p className="alert-box">{failure}</p>}
+        {courier && <CourierChatButton orderId={order.id} label={`Chat ${courier.first_name}`} className="w-full shrink-0 sm:w-auto" />}
       </header>
+      {failure && <p className="alert-box">{failure}</p>}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-8">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)] lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div className="flex min-w-0 flex-col gap-5">
+          {/* While the courier is on the way the map is the one thing that matters, so it leads. */}
+          {data.tracking_available && (
+            <TrackingCard
+              orderId={order.id}
+              orderCode={order.code}
+              status={order.status}
+              courierName={courier?.first_name ?? null}
+              destination={{ label: address.label, street: address.street }}
+            />
+          )}
+
           <ol className="card animate-rise" aria-label="Status pesanan">
             {steps.map((s, i) => {
               const at = reachedAt.get(s);
@@ -143,8 +130,6 @@ export function OrderStatusPage() {
             </div>
           )}
 
-          {data.tracking_available && <TrackingCard orderId={order.id} />}
-
           {proof && (
             <section className="card animate-rise space-y-3 text-sm">
               <h2 className="t-title">Bukti pengantaran</h2>
@@ -166,32 +151,27 @@ export function OrderStatusPage() {
           )}
         </div>
 
-        <div className="flex min-w-0 flex-col gap-5">
+        <aside className="flex min-w-0 flex-col gap-5">
           <section className="card animate-rise text-sm">
-            <h2 className="t-title mb-3">Barang</h2>
-            <table className="w-full">
-              <thead className="text-left">
-                <tr className="border-b border-foreground">
-                  <th className="t-label pb-2">Nama</th>
-                  <th className="t-label pb-2 text-right">Jumlah</th>
-                  <th className="t-label hidden pb-2 text-right sm:table-cell">Harga</th>
-                  <th className="t-label pb-2 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {items.map((i, idx) => (
-                  <tr key={idx} className="align-top">
-                    <td className="py-2 pr-2 font-medium">{i.name}</td>
-                    <td className="whitespace-nowrap py-2 pl-2 text-right tabular-nums">
-                      {i.qty} {i.unit}
-                    </td>
-                    <td className="hidden whitespace-nowrap py-2 pl-2 text-right tabular-nums sm:table-cell">{formatIDR(i.unit_price)}</td>
-                    <td className="whitespace-nowrap py-2 pl-2 text-right font-semibold tabular-nums">{formatIDR(i.line_total)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="card-footer space-y-1.5">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="t-title">Ringkasan belanja</h2>
+              <span className="t-label tabular-nums">{items.length} produk</span>
+            </div>
+            {/* Name on its own line, quantity × price under it: a four-column table was cramped in a side column. */}
+            <ul className="mt-3 divide-y divide-border border-y border-border">
+              {items.map((i, idx) => (
+                <li key={idx} className="flex items-start justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold">{i.name}</p>
+                    <p className="mt-0.5 text-muted-foreground tabular-nums">
+                      {i.qty} {i.unit} × {formatIDR(i.unit_price)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 font-bold tabular-nums">{formatIDR(i.line_total)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3 space-y-1.5">
               <MoneyRow label="Subtotal" value={formatIDR(pricing.subtotal)} />
               <MoneyRow
                 label={`Ongkir${pricing.route_distance_km != null ? ` (${pricing.route_distance_km} km)` : ""}`}
@@ -206,25 +186,39 @@ export function OrderStatusPage() {
             </div>
           </section>
 
-          <section className="card animate-rise space-y-1.5 text-sm">
-            <h2 className="t-title mb-2">Alamat pengiriman</h2>
-            <p className="font-semibold">
-              {address.receiver_name} · {address.receiver_phone}
-            </p>
-            <p className="text-muted-foreground">
-              {address.label}: {address.street}
-              {address.rt_rw && `, RT/RW ${address.rt_rw}`}
-              {address.unit && `, ${address.unit}`}
-            </p>
-            {address.courier_note && <p className="note-rail !mt-3 text-muted-foreground">Catatan: {address.courier_note}</p>}
+          <section className="card animate-rise text-sm">
+            <h2 className="t-title">Pengiriman</h2>
+            <dl className="mt-3 space-y-3">
+              <div>
+                <dt className="t-label">Penerima</dt>
+                <dd className="mt-0.5 font-semibold">
+                  {address.receiver_name} · <span className="tabular-nums">{address.receiver_phone}</span>
+                </dd>
+              </div>
+              <div>
+                <dt className="t-label">Alamat · {address.label}</dt>
+                <dd className="mt-0.5 text-muted-foreground">
+                  {address.street}
+                  {address.rt_rw && `, RT/RW ${address.rt_rw}`}
+                  {address.unit && `, ${address.unit}`}
+                </dd>
+              </div>
+              {address.courier_note && (
+                <div>
+                  <dt className="t-label">Catatan untuk kurir</dt>
+                  <dd className="note-rail mt-1 text-muted-foreground">{address.courier_note}</dd>
+                </div>
+              )}
+            </dl>
+            <dl className="card-footer flex items-baseline justify-between gap-3">
+              <div>
+                <dt className="t-label">Pembayaran</dt>
+                <dd className="mt-0.5 font-semibold">{payment.method ?? "-"}</dd>
+              </div>
+              {payment.paid_at && <dd className="t-label text-right tabular-nums">Dibayar {fmtTime(payment.paid_at)}</dd>}
+            </dl>
           </section>
-
-          <section className="card animate-rise space-y-1.5 text-sm">
-            <h2 className="t-title mb-2">Pembayaran</h2>
-            <p className="font-semibold">{payment.method ?? "-"}</p>
-            {payment.paid_at && <p className="text-muted-foreground">Dibayar {fmtTime(payment.paid_at)}</p>}
-          </section>
-        </div>
+        </aside>
       </div>
 
       {/* Two equal keys on a phone, a right-aligned pair from sm. "Belanja lagi" is the primary

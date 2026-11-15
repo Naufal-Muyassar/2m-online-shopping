@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { formatIDR, type MockInvoice } from "@2m/shared";
@@ -5,6 +6,18 @@ import { api, errorMessage } from "../../lib/api";
 import { useToast } from "../../lib/toast";
 import { ErrorCard, PageSkeleton } from "../../components/States";
 import { DemoBanner } from "../../components/DemoBanner";
+
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+function Row({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex min-w-0 items-center justify-between gap-3">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="flex min-w-0 justify-end">{children}</dd>
+    </div>
+  );
+}
 
 // Stand-in for the hosted payment page (API runs with PAYMENT_PROVIDER=mock and DEMO_MODE=true).
 export function MockPayPage() {
@@ -41,43 +54,48 @@ export function MockPayPage() {
   return (
     <main className="app-main">
       <h1 className="t-headline">Pembayaran simulasi</h1>
-      <div className="page-narrow flex flex-col gap-4">
-        <DemoBanner />
-        <p className="notice">Tidak ada uang yang dipindahkan.</p>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
         <section className="card animate-rise text-sm">
           <p className="t-label">Jumlah</p>
           <p className="t-figure mt-1">{formatIDR(inv.amount)}</p>
-          <dl className="card-footer space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted-foreground">Metode</dt>
-              <dd className="font-semibold">{inv.method}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted-foreground">Status</dt>
-              <dd>
-                <span className={`pill pill-dot ${pending ? "pill-warning" : "pill-info"}`}>{inv.status}</span>
-              </dd>
-            </div>
+          <dl className="card-footer grid gap-x-8 gap-y-2 sm:grid-cols-2">
+            <Row label="Metode">
+              <span className="font-semibold">{inv.method}</span>
+            </Row>
+            <Row label="Status">
+              <span className={`pill pill-dot ${pending ? "pill-warning" : "pill-info"}`}>{inv.status}</span>
+            </Row>
+            <Row label="No. tagihan">
+              <span className="truncate font-semibold tabular-nums">{inv.external_id}</span>
+            </Row>
+            <Row label={inv.paid_at ? "Dibayar" : "Berlaku sampai"}>
+              <span className="font-semibold tabular-nums">{fmtTime(inv.paid_at ?? inv.expires_at)}</span>
+            </Row>
           </dl>
         </section>
-        {pending ? (
-          <div className="flex flex-col gap-2">
-            <button onClick={() => act.mutate("pay")} disabled={act.isPending} className="btn btn-primary btn-lg btn-block">
-              {act.isPending ? "Memproses…" : "Bayar (simulasi)"}
+
+        <aside className="flex flex-col gap-3 lg:sticky lg:top-24">
+          <DemoBanner />
+          <p className="notice">Tidak ada uang yang dipindahkan.</p>
+          {pending ? (
+            <>
+              <button onClick={() => act.mutate("pay")} disabled={act.isPending} className="btn btn-primary btn-lg btn-block">
+                {act.isPending ? "Memproses…" : "Bayar (simulasi)"}
+              </button>
+              <button onClick={() => act.mutate("expire")} disabled={act.isPending} className="btn btn-secondary btn-block">
+                Kedaluwarsakan
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => inv.order_id && navigate(`/orders/${inv.order_id}/return`, { replace: true })}
+              disabled={!inv.order_id}
+              className="btn btn-secondary btn-block"
+            >
+              Lihat pesanan
             </button>
-            <button onClick={() => act.mutate("expire")} disabled={act.isPending} className="btn btn-secondary btn-block">
-              Kedaluwarsakan
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => inv.order_id && navigate(`/orders/${inv.order_id}/return`, { replace: true })}
-            disabled={!inv.order_id}
-            className="btn btn-secondary btn-block"
-          >
-            Lihat pesanan
-          </button>
-        )}
+          )}
+        </aside>
       </div>
     </main>
   );
