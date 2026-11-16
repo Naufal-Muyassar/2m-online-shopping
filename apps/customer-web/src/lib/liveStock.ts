@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { stockEventSchema, type ProductDetail, type ProductsResponse, type StockLevel } from "@2m/shared";
+import { useMetaConfig } from "./queries";
 
 export type LiveState = "connecting" | "live" | "offline";
 
-const RETRY_MS = [3_000, 10_000, 30_000];
+// The server sends a snapshot as soon as a stream opens. No event by then means something between the browser and
+// the API holds the response back (a static host's rewrite proxy buffers a never-ending body), so stop waiting.
+const FIRST_EVENT_MS = 5_000;
+const RETRY_MS = [3_000, 15_000, 60_000];
 const OFFLINE_POLL_MS = 20_000;
 
 // Keeps the cached product page and catalogue rows in step with the server's sellable quantity.
@@ -12,13 +16,17 @@ const OFFLINE_POLL_MS = 20_000;
 // never an oversold one. The stream closes while the tab is hidden and reopens (with a fresh snapshot) on return.
 export function useLiveStock(branchId: string, productIds: readonly string[]): LiveState {
   const qc = useQueryClient();
+  const meta = useMetaConfig();
   const [state, setState] = useState<LiveState>("connecting");
   const ids = useMemo(() => [...new Set(productIds)].sort().join(","), [productIds]);
+  // Opened straight at the API when it says where it lives; same origin otherwise (the Vite dev proxy streams fine).
+  const origin = meta.isPending ? undefined : (meta.data?.live_stock_origin ?? "");
 
   useEffect(() => {
-    if (!branchId || !ids) return;
+    if (!branchId || !ids || origin === undefined) return;
     let source: EventSource | null = null;
     let retryTimer: number | undefined;
+    let firstEventTimer: number | undefined;
     let pollTimer: number | undefined;
     let failures = 0;
     let disposed = false;
@@ -55,16 +63,33 @@ export function useLiveStock(branchId: string, productIds: readonly string[]): L
       pollTimer = undefined;
     };
 
-    const open = () => {
-      if (disposed || document.hidden || typeof EventSource === "undefined") {
-        if (typeof EventSource === "undefined") {
-          setState("offline");
-          startPolling();
-        }
+    const close = () => {
+      source?.close();
+      source = null;
+      window.clearTimeout(firstEventTimer);
+      window.clearTimeout(retryTimer);
+    };
+
+    // Gives up on this stream, polls meanwhile, and tries a new one later.
+    const fail = () => {
+      close();
+      setState("offline");
+      startPolling();
+      const wait = RETRY_MS[Math.min(failures++, RETRY_MS.length - 1)];
+      retryTimer = window.setTimeout(open, wait);
+    };
+
+    function open() {
+      if (disposed || document.hidden) return;
+      if (typeof EventSource === "undefined") {
+        setState("offline");
+        startPolling();
         return;
       }
-      source = new EventSource(`/api/v1/branches/${branchId}/stock/stream?product_ids=${encodeURIComponent(ids)}`);
+      source = new EventSource(`${origin}/api/v1/branches/${branchId}/stock/stream?product_ids=${encodeURIComponent(ids)}`);
+      firstEventTimer = window.setTimeout(fail, FIRST_EVENT_MS);
       source.addEventListener("stock", (e) => {
+        window.clearTimeout(firstEventTimer);
         const parsed = stockEventSchema.safeParse(JSON.parse((e as MessageEvent<string>).data));
         if (!parsed.success) return;
         failures = 0;
@@ -73,22 +98,13 @@ export function useLiveStock(branchId: string, productIds: readonly string[]): L
         apply(parsed.data.items);
       });
       source.onerror = () => {
-        // CONNECTING: the browser retries by itself (server "retry:" hint). CLOSED: an HTTP error, retry with backoff.
+        // CONNECTING: the browser reconnects by itself (server "retry:" hint) and the snapshot comes again.
+        // CLOSED: an HTTP or CORS error, so retry ourselves with backoff.
         setState("offline");
         startPolling();
-        if (source?.readyState === EventSource.CLOSED) {
-          source = null;
-          const wait = RETRY_MS[Math.min(failures++, RETRY_MS.length - 1)];
-          retryTimer = window.setTimeout(open, wait);
-        }
+        if (source?.readyState === EventSource.CLOSED) fail();
       };
-    };
-
-    const close = () => {
-      source?.close();
-      source = null;
-      window.clearTimeout(retryTimer);
-    };
+    }
 
     const onVisibility = () => {
       if (document.hidden) close();
@@ -106,7 +122,7 @@ export function useLiveStock(branchId: string, productIds: readonly string[]): L
       close();
       stopPolling();
     };
-  }, [branchId, ids, qc]);
+  }, [branchId, ids, origin, qc]);
 
   return state;
 }

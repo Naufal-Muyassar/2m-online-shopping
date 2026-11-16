@@ -149,6 +149,8 @@ export async function openStockStream(res: Response, branchId: string, productId
     Connection: "keep-alive",
     // Proxies (nginx-style) must not buffer the stream.
     "X-Accel-Buffering": "no",
+    // The storefront opens this cross-origin (see PUBLIC_API_URL). Public, read-only, no credentials.
+    "Access-Control-Allow-Origin": "*",
   });
   res.write(`retry: 3000\n\n`);
 

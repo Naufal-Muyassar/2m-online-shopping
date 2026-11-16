@@ -168,7 +168,10 @@ describe("demo payment path", () => {
     try {
       const res = await fetch(`http://127.0.0.1:${(server.address() as AddressInfo).port}/api/v1/meta/config`);
       expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({ demo_mode: env.DEMO_MODE });
+      expect(await res.json()).toEqual({
+        demo_mode: env.DEMO_MODE,
+        live_stock_origin: env.PUBLIC_API_URL ?? env.RENDER_EXTERNAL_URL ?? null,
+      });
     } finally {
       server.close();
     }

@@ -89,8 +89,12 @@ NEEDS_DESTINATION ──customer isi rekening/e-wallet──▶ READY ──admi
 
 ## Batas yang diketahui
 
-- Proxy statis (Render/Netlify) bisa memutus SSE setelah beberapa puluh detik; EventSource tersambung ulang otomatis
-  dan menerima snapshot baru. Belum diuji di Render.
+- Rewrite `/api/*` di static site Render **menahan seluruh respons sampai selesai**, jadi stream SSE tidak pernah
+  sampai lewat jalur itu (terbukti 16 Nov 2026: 25 detik tanpa satu byte pun, sementara langsung ke API snapshot
+  datang seketika). Karena itu browser membuka stream langsung ke origin API: `GET /meta/config` memberi
+  `live_stock_origin` dari `PUBLIC_API_URL` atau `RENDER_EXTERNAL_URL` (diisi Render otomatis), dan route stream
+  mengirim `Access-Control-Allow-Origin: *` (publik, read-only, tanpa kredensial). Bila snapshot pertama tidak datang
+  dalam 5 detik, klien menutup stream, polling 20 detik ("Diperbarui berkala"), lalu mencoba lagi (3 s, 15 s, 60 s).
 - Rate limit per IP untuk checkout belum ada; key + kunci keranjang mencegah duplikat dari satu pelanggan.
 
 ## Test

@@ -1165,6 +1165,9 @@ function designSystem({ addBase, addComponents }) {
     ".stock-tick": {
       display: "inline-block",
       fontVariantNumeric: "tabular-nums",
+      // A plain space beside an inline-block number looked glued ("Stok200") at 12px bold; real spaces stay for
+      // copy and screen readers, this only widens them.
+      marginInline: "0.12em",
       animation: `stock-tick 260ms ${ease.settle} both`,
     },
     // Courier work status on the ink panel: green and breathing when ready, sand when delivering, a hollow ring when offline.
