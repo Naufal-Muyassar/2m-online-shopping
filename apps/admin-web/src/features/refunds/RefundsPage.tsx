@@ -311,7 +311,7 @@ export function RefundsPage() {
 
       <Segmented
         label="Status refund"
-        className="self-start"
+        className="w-full self-start sm:w-80"
         value={state}
         onChange={setState}
         items={[
