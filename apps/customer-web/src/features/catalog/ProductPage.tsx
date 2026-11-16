@@ -29,7 +29,7 @@ function BackLink({ branchId }: { branchId: string }) {
   const location = useLocation();
   // Opened from the catalogue: go back, so its filters and scroll position come back too.
   const fromCatalog = (location.state as { fromCatalog?: boolean } | null)?.fromCatalog === true;
-  const className = "link inline-flex items-center gap-1 self-start text-sm font-semibold";
+  const className = "btn btn-secondary btn-sm self-start";
   return fromCatalog ? (
     <button type="button" className={className} onClick={() => navigate(-1)}>
       <IconBack aria-hidden="true" /> Kembali ke katalog

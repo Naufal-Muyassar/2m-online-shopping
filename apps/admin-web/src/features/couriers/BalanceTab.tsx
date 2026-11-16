@@ -123,7 +123,7 @@ function WithdrawDialog({ courier, onClose }: { courier: AdminCourier; onClose: 
       </label>
       <button
         type="button"
-        className="link -my-2 self-start text-sm disabled:opacity-60"
+        className="btn btn-secondary btn-sm self-start"
         onClick={() => setDigits(String(courier.balance))}
         disabled={withdraw.isPending}
       >
@@ -192,7 +192,7 @@ function LedgerDialog({ courier, onClose }: { courier: AdminCourier; onClose: ()
                 {e.type === "WITHDRAWAL" && (
                   <button
                     type="button"
-                    className="link mt-1 inline-flex items-center gap-1 text-sm disabled:opacity-60"
+                    className="btn btn-secondary btn-sm mt-2"
                     onClick={() => slip.mutate(e.id)}
                     disabled={slip.isPending}
                     aria-label={`Unduh slip penarikan ${dateTime(e.created_at)}`}

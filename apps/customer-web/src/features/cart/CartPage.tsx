@@ -57,7 +57,7 @@ export function CartPage() {
                     <button
                       aria-label={`Hapus ${i.name}`}
                       onClick={() => sync.remove(i.product_id)}
-                      className="link link-danger -mt-2.5 shrink-0 text-sm"
+                      className="btn btn-danger-quiet btn-sm shrink-0"
                     >
                       Hapus
                     </button>

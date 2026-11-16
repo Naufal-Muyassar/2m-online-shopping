@@ -28,12 +28,12 @@ export function PaymentReturnPage() {
           </span>
           <h1 className="t-headline">Pembayaran tidak berhasil</h1>
           <p className="text-muted-foreground">Pesanan {order.code} dibatalkan karena pembayaran kedaluwarsa atau gagal.</p>
-          <div className="flex flex-wrap gap-x-6">
-            <Link to={`/orders/${order.id}`} className="link">
-              Lihat detail pesanan
-            </Link>
-            <Link to="/" className="link">
+          <div className="flex flex-wrap gap-2">
+            <Link to="/" className="btn btn-primary">
               Belanja lagi
+            </Link>
+            <Link to={`/orders/${order.id}`} className="btn btn-secondary">
+              Lihat detail pesanan
             </Link>
           </div>
         </div>
@@ -48,7 +48,7 @@ export function PaymentReturnPage() {
         <div className="skeleton size-12" aria-hidden="true" />
         <h1 className="t-headline">Memverifikasi pembayaran…</h1>
         <p className="text-muted-foreground">Jangan tutup halaman ini. Status pesanan {order.code} diperbarui otomatis.</p>
-        <Link to={`/orders/${order.id}`} className="link">
+        <Link to={`/orders/${order.id}`} className="btn btn-secondary">
           Lihat detail pesanan
         </Link>
       </div>

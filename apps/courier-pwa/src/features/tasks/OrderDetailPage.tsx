@@ -270,7 +270,7 @@ export function OrderDetailPage() {
         <p role="alert" className="alert-box">
           {errorMessage(query.error)}
         </p>
-        <Link to="/" className="link self-start">
+        <Link to="/" className="btn btn-secondary self-start">
           <FaArrowLeft aria-hidden="true" />
           Kembali
         </Link>

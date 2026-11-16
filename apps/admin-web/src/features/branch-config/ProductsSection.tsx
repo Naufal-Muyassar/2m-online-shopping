@@ -256,7 +256,7 @@ function AddProductDialog({ onClose }: { onClose: () => void }) {
             </p>
           )}
           <div className="flex justify-between gap-2">
-            <button type="button" className="btn btn-ghost" onClick={() => setPicked(null)} disabled={busy}>
+            <button type="button" className="btn btn-secondary" onClick={() => setPicked(null)} disabled={busy}>
               Kembali
             </button>
             <span className="flex gap-2">
@@ -450,7 +450,7 @@ export function ProductsSection() {
         {filtered && (
           <button
             type="button"
-            className="link shrink-0 px-1 text-sm"
+            className="btn btn-secondary btn-sm shrink-0"
             onClick={() => {
               setSearch("");
               setState("all");

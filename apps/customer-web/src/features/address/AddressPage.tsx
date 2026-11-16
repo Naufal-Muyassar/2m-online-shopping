@@ -312,8 +312,8 @@ export function AddressPage() {
                         {a.receiver_name} · {a.receiver_phone}
                       </p>
                     </div>
-                    <div className="ml-11 flex shrink-0 gap-4 sm:ml-0">
-                      <button onClick={() => setForm({ editing: a })} className="link text-sm">
+                    <div className="ml-11 flex shrink-0 gap-2 sm:ml-0">
+                      <button onClick={() => setForm({ editing: a })} className="btn btn-secondary btn-sm">
                         Ubah
                       </button>
                       <button
@@ -323,7 +323,7 @@ export function AddressPage() {
                             onError: (e) => toast("error", errorMessage(e)),
                           })
                         }
-                        className="link link-danger text-sm"
+                        className="btn btn-danger-quiet btn-sm"
                       >
                         Hapus
                       </button>
