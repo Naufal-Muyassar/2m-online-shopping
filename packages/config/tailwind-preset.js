@@ -379,7 +379,6 @@ function designSystem({ addBase, addComponents }) {
     },
     ".btn-primary:active:not(:disabled)": { backgroundColor: c("primary-pressed") },
     ".btn-secondary": { backgroundColor: c("surface"), borderColor: c("input"), color: c("foreground") },
-    ".btn-ghost": { backgroundColor: "transparent", color: c("primary") },
     ".btn-danger": {
       backgroundColor: c("destructive"),
       color: c("destructive-foreground"),
@@ -393,20 +392,7 @@ function designSystem({ addBase, addComponents }) {
     ".btn-sm": { minHeight: "2.25rem", padding: "0.375rem 0.75rem", fontSize: "0.8125rem" },
     ".btn-block": { width: "100%" },
     "@media (pointer: coarse)": { ".btn-sm": { minHeight: "var(--tap-target)" } },
-    ".link": {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "0.25rem",
-      minHeight: "var(--tap-target)",
-      fontWeight: "700",
-      color: c("primary"),
-      textDecoration: "underline",
-      textDecorationColor: a("primary", 0.3),
-      textDecorationThickness: "1px",
-      textUnderlineOffset: "0.25em",
-      transition: "color 160ms ease, text-decoration-color 160ms ease",
-    },
-    ".link-danger": { color: c("destructive"), textDecorationColor: a("destructive", 0.3) },
+    // No underlined text actions: every action, and every link that works as one, is a .btn.
     ".icon-btn": {
       display: "inline-flex",
       flexShrink: "0",
@@ -444,12 +430,10 @@ function designSystem({ addBase, addComponents }) {
     "@media (hover: hover)": {
       ".btn-primary:hover:not(:disabled)": { backgroundColor: c("primary-pressed") },
       ".btn-secondary:hover:not(:disabled)": { borderColor: c("foreground") },
-      ".btn-ghost:hover:not(:disabled)": { backgroundColor: c("primary-surface") },
       ".btn-danger:hover:not(:disabled)": { filter: "brightness(1.12)" },
       ".btn-danger-quiet:hover:not(:disabled)": { backgroundColor: c("destructive"), color: c("destructive-foreground") },
       ".btn-invert:hover:not(:disabled)": { backgroundColor: "#fff" },
       ".btn-invert-outline:hover:not(:disabled)": { backgroundColor: a("rail-foreground", 0.1), borderColor: c("rail-foreground") },
-      ".link:hover": { textDecorationColor: "currentColor" },
       ".icon-btn:hover:not(:disabled)": { borderColor: c("foreground") },
       ".chip:hover": { borderColor: c("foreground") },
       ".card-link:hover": { borderColor: a("foreground", 0.55), boxShadow: `0 6px 20px ${a("shadow-tint", 0.08)}` },
@@ -1307,9 +1291,32 @@ function designSystem({ addBase, addComponents }) {
       transition: `width 240ms ${ease.settle}, background-color 160ms ease`,
     },
     ".gallery-dot[aria-current='true']": { width: "1.125rem", backgroundColor: c("foreground") },
-    // A catalogue card's photo and text as one link; the cart controls under it stay outside.
-    ".product-card-link": { borderRadius: "0.875rem", transition: "transform 120ms ease-out" },
-    ".product-card-link:active": { transform: "scale(0.99)" },
+    // Catalogue card: a solid surface so it stands off the sand page. The whole card lifts on hover.
+    // The lift uses `translate`/`scale`, not `transform`, because `animate-rise` holds `transform` after it ends.
+    ".product-card": {
+      display: "flex",
+      flexDirection: "column",
+      padding: "0.625rem",
+      borderRadius: "0.875rem",
+      border: `1px solid ${c("border")}`,
+      backgroundColor: c("surface"),
+      transition: `translate 260ms ${ease.settle}, scale 120ms ease-out, box-shadow 260ms ${ease.settle}, border-color 160ms ease`,
+    },
+    ".product-card:has(.product-card-link:active)": { scale: "0.99" },
+    ".product-card:has(.product-card-link:focus-visible)": { outline: `2px solid ${c("ring")}`, outlineOffset: "2px" },
+    // The photo and text are one link to the product page; the cart controls under it stay outside.
+    ".product-card-link": { display: "flex", flex: "1", flexDirection: "column", borderRadius: "0.5rem", outline: "none" },
+    ".product-card-photo": {
+      position: "relative",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      aspectRatio: "4 / 3",
+      overflow: "hidden",
+      borderRadius: "var(--radius)",
+    },
+    ".product-card-photo > img, .product-card-photo > svg": { transition: `scale 360ms ${ease.settle}` },
+    ".product-card-photo > img": { width: "100%", height: "100%", objectFit: "cover" },
     ".spec-list": { display: "grid", gridTemplateColumns: "minmax(7rem, 38%) 1fr", borderTop: `1px solid ${c("border")}` },
     ".spec-list > dt, .spec-list > dd": { padding: "0.75rem 0", borderBottom: `1px solid ${c("border")}` },
     ".spec-list > dt": { paddingRight: "1rem", color: c("muted-foreground"), fontSize: "0.875rem" },
@@ -1318,6 +1325,13 @@ function designSystem({ addBase, addComponents }) {
       "button.photo-tile:hover": { borderColor: c("foreground") },
       ".photo-add:hover:not([aria-disabled='true'])": { borderColor: c("foreground"), color: c("foreground") },
       ".gallery-thumb:hover": { opacity: "1", borderColor: c("foreground") },
+      ".product-card:hover": {
+        translate: "0 -3px",
+        borderColor: a("foreground", 0.3),
+        boxShadow: `0 12px 28px ${a("shadow-tint", 0.1)}`,
+      },
+      ".product-card:hover .product-card-photo > img": { scale: "1.03" },
+      ".product-card:hover .product-card-photo > svg": { scale: "1.08" },
     },
   });
 }

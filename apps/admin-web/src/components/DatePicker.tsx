@@ -190,7 +190,7 @@ export function DatePicker({ value, onChange, label, max, placeholder = "Semua t
               <div className="flex items-center justify-between gap-2 border-t border-border pt-2">
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm"
+                  className="btn btn-secondary btn-sm"
                   onClick={() => {
                     onChange(null);
                     close();

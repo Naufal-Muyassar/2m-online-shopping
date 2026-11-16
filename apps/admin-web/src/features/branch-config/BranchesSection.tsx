@@ -498,7 +498,7 @@ export function BranchesSection() {
                             <span className="t-label tabular-nums">{a.phone}</span>
                             <button
                               type="button"
-                              className="link -my-2 text-sm"
+                              className="btn btn-secondary btn-sm"
                               aria-label={`Ubah akun ${a.name}`}
                               onClick={() => setOpen({ dialog: "edit-admin", branchId: b.id, adminId: a.id })}
                             >

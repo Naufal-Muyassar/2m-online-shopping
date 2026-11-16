@@ -63,7 +63,7 @@ export function CheckoutPage() {
             <section className="card animate-rise text-sm">
               <div className="flex items-center justify-between gap-3">
                 <p className="t-title">{address.label}</p>
-                <Link to={`/b/${branchId}/address`} className="link -my-2 text-sm">
+                <Link to={`/b/${branchId}/address`} className="btn btn-secondary btn-sm shrink-0">
                   Ubah
                 </Link>
               </div>

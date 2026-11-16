@@ -83,12 +83,12 @@ export function LoginPage() {
         <button type="submit" disabled={pending} className="btn btn-primary btn-lg btn-block">
           {pending ? "Masuk…" : "Masuk"}
         </button>
-        <p className="text-sm text-muted-foreground">
-          Belum punya akun?{" "}
-          <Link to="/register" state={{ from }} className="link min-h-0">
+        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4 text-sm text-muted-foreground">
+          Belum punya akun?
+          <Link to="/register" state={{ from }} className="btn btn-secondary btn-sm">
             Daftar
           </Link>
-        </p>
+        </div>
       </form>
     </AuthShell>
   );
@@ -148,12 +148,12 @@ export function RegisterPage() {
         <button type="submit" disabled={pending} className="btn btn-primary btn-lg btn-block">
           {pending ? "Mendaftar…" : "Daftar"}
         </button>
-        <p className="text-sm text-muted-foreground">
-          Sudah punya akun?{" "}
-          <Link to="/login" state={{ from }} className="link min-h-0">
+        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4 text-sm text-muted-foreground">
+          Sudah punya akun?
+          <Link to="/login" state={{ from }} className="btn btn-secondary btn-sm">
             Masuk
           </Link>
-        </p>
+        </div>
       </form>
     </AuthShell>
   );

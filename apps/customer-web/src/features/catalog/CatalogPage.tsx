@@ -17,7 +17,7 @@ import { EmptyState, ErrorCard, rise } from "../../components/States";
 // Exact remaining stock is shown only at or below this level.
 const STOCK_NOTICE_AT = 20;
 
-const PRODUCT_GRID = "grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 md:grid-cols-4 md:gap-x-4 lg:grid-cols-3 xl:grid-cols-4";
+const PRODUCT_GRID = "grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4 lg:grid-cols-3 xl:grid-cols-4";
 
 function useDebounced<T>(value: T, ms: number): T {
   const [v, setV] = useState(value);
@@ -59,36 +59,19 @@ function ProductCard({ product: p, href, index, qty, cap, onAdd, onSetQty, onCla
   const atLimit = !out && qty >= limit;
 
   return (
-    <li className="flex animate-rise flex-col" style={rise(index)}>
+    <li className="product-card animate-rise" style={rise(index)}>
       {/* The photo and the text open the product page; the cart controls below stay separate. */}
-      <Link to={href} state={{ fromCatalog: true }} className="product-card-link group flex flex-1 flex-col">
-        <div
-          className={cn(
-            "relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg border border-border text-5xl transition-colors duration-200 group-hover:border-foreground/40",
-            !p.image_url && categoryTint(p.category),
-            p.image_url && "bg-muted",
-            out && "opacity-55",
-          )}
-        >
-          {p.image_url ? (
-            <img
-              src={p.image_url}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="size-full object-cover transition-transform duration-300 ease-settle group-hover:scale-[1.04]"
-            />
-          ) : (
-            <CategoryIcon category={p.category} className="transition-transform duration-300 ease-settle group-hover:scale-110" />
-          )}
+      <Link to={href} state={{ fromCatalog: true }} className="product-card-link">
+        <div className={cn("product-card-photo text-5xl", p.image_url ? "bg-muted" : categoryTint(p.category), out && "opacity-55")}>
+          {p.image_url ? <img src={p.image_url} alt="" loading="lazy" decoding="async" /> : <CategoryIcon category={p.category} />}
           {(out || atLimit || low) && (
             <span className={cn("pill absolute left-2 top-2", out ? "pill-danger" : atLimit ? "pill-info" : "pill-warning")}>
               {out ? "Habis" : atLimit ? (cap.reason === "weight" ? "Berat penuh" : "Batas tercapai") : `Stok: ${p.sellable_qty}`}
             </span>
           )}
         </div>
-        <div className="mt-3 flex flex-1 flex-col">
-          <p className="line-clamp-2 text-sm font-bold leading-snug decoration-1 underline-offset-2 group-hover:underline">{p.name}</p>
+        <div className="mt-3 flex flex-1 flex-col px-0.5">
+          <p className="line-clamp-2 text-sm font-bold leading-snug">{p.name}</p>
           <p className="t-label mt-1">
             per {p.unit} · {p.weight_kg} kg
           </p>

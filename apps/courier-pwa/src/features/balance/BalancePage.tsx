@@ -24,7 +24,7 @@ function SlipButton({ entryId }: { entryId: string }) {
     <>
       <button
         type="button"
-        className="link mt-1 inline-flex items-center gap-1.5 text-sm disabled:opacity-60"
+        className="btn btn-secondary btn-sm mt-2"
         disabled={slip.isPending}
         onClick={() => slip.mutate()}
       >
