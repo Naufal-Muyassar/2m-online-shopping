@@ -5,7 +5,7 @@ import { closeRedis, getRedis } from "../../src/shared/redis";
 import { createFixture, giveStock, type Fixture } from "../../src/modules/orders/test-fixtures";
 import * as cart from "../../src/modules/cart/service";
 import * as cartRepo from "../../src/modules/cart/repo";
-import { createOrder } from "../../src/modules/orders/customer";
+import { placeOrder } from "../../src/modules/orders/test-fixtures";
 import { FakeProvider } from "../../src/modules/payments/fake-provider";
 import { setPaymentProvider } from "../../src/modules/payments/registry";
 import { handleXenditWebhook, reconcilePayments } from "../../src/modules/payments/service";
@@ -81,7 +81,7 @@ async function newCustomer(): Promise<{ userId: string; addressId: string }> {
 type Customer = Awaited<ReturnType<typeof newCustomer>>;
 
 const checkout = (c: Customer) =>
-  createOrder(c.userId, { branch_id: fx.branchId, address_id: c.addressId, payment_method: "QRIS" });
+  placeOrder(c.userId, { branch_id: fx.branchId, address_id: c.addressId, payment_method: "QRIS" });
 
 async function buy(c: Customer, lines: [string, number][]) {
   for (const [productId, qty] of lines) await cart.addItem(c.userId, fx.branchId, productId, qty);
@@ -242,9 +242,11 @@ describe("stock reservation", () => {
     commit.mockRestore();
   });
 
-  it("sweeps reservations past expires_at", async () => {
+  it("sweeps reservations past expires_at of orders that will not be paid", async () => {
     const productId = await newProduct(5);
     const order = await buy(await newCustomer(), [[productId, 2]]);
+    // Cancelled without its release handler having run (lost outbox event).
+    await pool.query(`UPDATE orders SET status = 'CANCELLED' WHERE id = $1`, [order.id]);
     await pool.query(`UPDATE stock_reservations SET expires_at = now() - interval '1 minute' WHERE order_id = $1`, [order.id]);
 
     expect(await sweepExpired()).toBeGreaterThanOrEqual(1);

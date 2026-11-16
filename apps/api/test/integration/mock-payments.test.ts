@@ -10,7 +10,7 @@ import { closeRedis } from "../../src/shared/redis";
 import { createFixture, giveStock, type Fixture } from "../../src/modules/orders/test-fixtures";
 import * as cart from "../../src/modules/cart/service";
 import * as address from "../../src/modules/address/service";
-import { createOrder } from "../../src/modules/orders/customer";
+import { placeOrder as checkoutOnce } from "../../src/modules/orders/test-fixtures";
 import { MockAdapter } from "../../src/modules/payments/mock.adapter";
 import { expireMockInvoice, payMockInvoice } from "../../src/modules/payments/mock.service";
 import { setPaymentProvider } from "../../src/modules/payments/registry";
@@ -58,7 +58,7 @@ afterAll(async () => {
 
 async function placeOrder() {
   await cart.addItem(fx.users.customer, fx.branchId, productId, 2);
-  const order = await createOrder(fx.users.customer, { branch_id: fx.branchId, address_id: addressId, payment_method: "QRIS" });
+  const order = await checkoutOnce(fx.users.customer, { branch_id: fx.branchId, address_id: addressId, payment_method: "QRIS" });
   const invoiceId = (await pool.query(`SELECT invoice_id FROM orders WHERE id = $1`, [order.id])).rows[0].invoice_id as string;
   return { order, invoiceId };
 }

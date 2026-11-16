@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   productDetailParamsSchema,
   productsQuerySchema,
+  stockStreamQuerySchema,
   type Branch,
   type BranchesResponse,
   type ProductDetail,
@@ -13,6 +14,7 @@ import { AppError } from "../../shared/errors";
 import { asyncHandler, validate } from "../../shared/http";
 import * as catalog from "../catalog/repo";
 import { stockStatusOf } from "../catalog/stock";
+import { MAX_STREAMS, liveStreamCount, openStockStream } from "../inventory/live";
 
 export const branchesRoutes = Router();
 
@@ -69,5 +71,22 @@ branchesRoutes.get(
     if (!row) throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found in this branch");
     const body: ProductDetail = { ...row, stock_status: stockStatusOf(row.sellable_qty) };
     res.json(body);
+  }),
+);
+
+// Live sellable quantity for the products a page shows (SSE). Public like the catalogue; holds no DB connection.
+branchesRoutes.get(
+  "/:id/stock/stream",
+  validate(z.object({ id: z.string().uuid() }), "params"),
+  validate(stockStreamQuerySchema, "query"),
+  asyncHandler(async (req, res) => {
+    const branchId = req.params.id as string;
+    if (liveStreamCount() >= MAX_STREAMS) {
+      res.setHeader("Retry-After", "30");
+      throw new AppError(503, "LIVE_STOCK_BUSY", "Too many live stock connections, try again shortly");
+    }
+    if (!(await catalog.branchIsActive(pool, branchId))) throw new AppError(404, "BRANCH_NOT_FOUND", "Branch not found");
+    const { product_ids } = req.query as unknown as z.infer<typeof stockStreamQuerySchema>;
+    await openStockStream(res, branchId, product_ids);
   }),
 );

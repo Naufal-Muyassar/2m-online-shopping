@@ -151,11 +151,24 @@ export const useQuote = (req: CalculatePriceRequest | null) =>
     retry: false,
   });
 
+// Safe to resend with the same Idempotency-Key: no answer at all, a busy server, or the original still running.
+export function isRetryableCheckoutError(err: unknown): boolean {
+  if (!isAxiosError(err)) return false;
+  if (!err.response) return true;
+  const code = (err.response.data as { error?: { code?: string } } | undefined)?.error?.code;
+  return err.response.status === 503 || code === "CHECKOUT_IN_PROGRESS";
+}
+
 export function useCreateOrder(branchId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (req: CreateOrderRequest) => (await api.post<{ order: CreatedOrder }>("/orders", req)).data.order,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["cart", branchId] }),
+    mutationFn: async ({ req, idempotencyKey }: { req: CreateOrderRequest; idempotencyKey: string }) =>
+      (await api.post<{ order: CreatedOrder }>("/orders", req, { headers: { "Idempotency-Key": idempotencyKey } })).data
+        .order,
+    // Retries reuse the same key (the variables do not change), so a lost response is answered by a replay.
+    retry: (count, err) => count < 3 && isRetryableCheckoutError(err),
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["cart", branchId] }),
   });
 }
 
@@ -163,8 +176,12 @@ export const useOrder = (id: string, pollMs = 10_000) =>
   useQuery({
     queryKey: ["order", id],
     queryFn: async () => (await api.get<CustomerOrderDetail>(`/orders/${id}`)).data,
-    refetchInterval: (query) =>
-      query.state.data && TERMINAL_STATUSES.includes(query.state.data.order.status) ? false : pollMs,
+    // A finished order still polls slowly while a refund is open, so the transfer receipt shows up on its own.
+    refetchInterval: (query) => {
+      const d = query.state.data;
+      if (!d || !TERMINAL_STATUSES.includes(d.order.status)) return pollMs;
+      return d.refunds.some((r) => r.status !== "COMPLETED") ? 30_000 : false;
+    },
   });
 
 export const useTracking = (orderId: string, enabled: boolean) =>

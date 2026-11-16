@@ -5,6 +5,7 @@ import { AppError } from "../../shared/errors";
 import { setCourierStatus } from "../courier/repo";
 import { creditOrder } from "../earnings/repo";
 import * as repo from "./repo";
+import * as refunds from "../refunds/service";
 
 export interface TransitionActor {
   id: string | null;
@@ -120,6 +121,8 @@ export async function transition(
   if (claimantId) await setCourierStatus(tx, claimantId, "DELIVERING");
   if (releasedCourierId) await setCourierStatus(tx, releasedCourierId, "IDLE");
   if (to === "DELIVERED" || to === "FAILED") await creditOrder(tx, orderId);
+  // Same transaction as the status change: a paid order cannot be cancelled (or shipped short) without its refund.
+  await refunds.onTransition(tx, { orderId, from, to });
 
   const reason = to === "FAILED" && hasText(meta.note) ? `${meta.reason}: ${meta.note}` : (meta.reason ?? null);
   await repo.insertTransition(tx, {

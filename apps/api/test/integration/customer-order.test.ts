@@ -5,7 +5,8 @@ import { closeRedis } from "../../src/shared/redis";
 import { createFixture, giveStock, type Fixture } from "../../src/modules/orders/test-fixtures";
 import * as cart from "../../src/modules/cart/service";
 import * as address from "../../src/modules/address/service";
-import { createOrder, getCustomerOrder } from "../../src/modules/orders/customer";
+import { getCustomerOrder } from "../../src/modules/orders/customer";
+import { placeOrder } from "../../src/modules/orders/test-fixtures";
 import { quote } from "../../src/modules/pricing/service";
 import { FakeProvider } from "../../src/modules/payments/fake-provider";
 import { setPaymentProvider } from "../../src/modules/payments/registry";
@@ -97,7 +98,7 @@ describe("customer ordering", () => {
     expect(q.breakdown.payment_fee).toBe(0);
     expect(q.breakdown.grand_total).toBe(45000 + q.breakdown.final_shipping_cost);
 
-    const order = await createOrder(fx.users.customer, req);
+    const order = await placeOrder(fx.users.customer, req);
     expect(order.status).toBe("PENDING_PAYMENT");
     expect(order.code).toMatch(/^ORD-\d{6}-[A-Z0-9]{4}$/);
     expect(order.grand_total).toBe(q.breakdown.grand_total);
@@ -107,7 +108,7 @@ describe("customer ordering", () => {
     expect(detail.invoice_url).toBe(order.invoice_url);
     expect(detail.items).toHaveLength(1);
     expect(detail.timeline.map((t) => t.status)).toEqual(["PENDING_PAYMENT"]);
-    await expect(createOrder(fx.users.customer, req)).rejects.toMatchObject({ code: "CART_EMPTY" });
+    await expect(placeOrder(fx.users.customer, req)).rejects.toMatchObject({ code: "CART_EMPTY" });
   });
 
   it("refuses vouchers for now", async () => {

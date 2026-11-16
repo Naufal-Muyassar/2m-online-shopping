@@ -1,5 +1,5 @@
 import { useRef, useState, type ComponentType, type SVGProps } from "react";
-import { IconBoard, IconCash, IconChat, IconClipboard, IconSearch, IconSettings, IconStore, IconTruck, IconWallet } from "../components/Icons";
+import { IconBoard, IconCash, IconChat, IconClipboard, IconRefund, IconSearch, IconSettings, IconStore, IconTruck, IconWallet } from "../components/Icons";
 import { Select } from "../components/Select";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { useThumb } from "../components/Segmented";
@@ -13,13 +13,15 @@ import { MessagesPage, type InboxChannel } from "../features/chat/MessagesPage";
 import { BalanceTab } from "../features/couriers/BalanceTab";
 import { CouriersTab } from "../features/couriers/CouriersTab";
 import { LiveBoard } from "../features/live-board/LiveBoard";
+import { RefundsPage, useRefunds } from "../features/refunds/RefundsPage";
 
-type TabId = "board" | "couriers" | "balance" | "messages" | "short-pick" | "cash" | "config";
+type TabId = "board" | "couriers" | "balance" | "refunds" | "messages" | "short-pick" | "cash" | "config";
 
 const TABS: { id: TabId; label: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; soon?: boolean }[] = [
   { id: "board", label: "Tracking", Icon: IconBoard },
   { id: "couriers", label: "Kurir", Icon: IconTruck },
   { id: "balance", label: "Saldo", Icon: IconWallet },
+  { id: "refunds", label: "Refund", Icon: IconRefund },
   { id: "messages", label: "Pesan", Icon: IconChat },
   { id: "short-pick", label: "Short Pick", Icon: IconClipboard, soon: true },
   { id: "cash", label: "Kas COD", Icon: IconCash, soon: true },
@@ -38,6 +40,8 @@ function Shell() {
   const thumb = useThumb(nav, "[aria-current='page']", tab);
   const unread = useUnreadChats();
   const unreadTotal = unread.customer_admin + unread.courier_admin;
+  // Refunds the customer already gave an account for: money the branch has to send now.
+  const refundsToPay = (useRefunds("open", 60_000).data ?? []).filter((r) => r.status === "READY").length;
 
   const openCourierChat = (id: string) => {
     setInbox("courier_admin");
@@ -75,6 +79,7 @@ function Shell() {
             <Icon className="text-xl" />
             {label}
             {id === "messages" && unreadTotal > 0 && <span className="count-badge right-2 top-1">{unreadTotal}</span>}
+            {id === "refunds" && refundsToPay > 0 && <span className="count-badge right-2 top-1">{refundsToPay}</span>}
           </button>
         ))}
       </nav>
@@ -124,6 +129,7 @@ function Shell() {
             {tab === "board" && <LiveBoard search={search} />}
             {tab === "couriers" && <CouriersTab onOpenChat={openCourierChat} />}
             {tab === "balance" && <BalanceTab />}
+            {tab === "refunds" && <RefundsPage />}
             {tab === "config" && <ConfigPage />}
             {tab === "messages" && (
               <MessagesPage

@@ -1145,6 +1145,28 @@ function designSystem({ addBase, addComponents }) {
       animation: "live-ring 1.8s ease-out infinite",
     },
     ".live-btn": { gap: "0.5rem" },
+    ".live-dot[data-state='offline']": { backgroundColor: c("muted-foreground") },
+    ".live-dot[data-state='offline']::after": { display: "none" },
+    // Product page stock: the status pill with the live count, then a quiet "Live" freshness label.
+    ".stock-live": { display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem 0.75rem" },
+    ".stock-live-meta": {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "0.4375rem",
+      fontSize: "0.75rem",
+      fontWeight: "600",
+      color: c("muted-foreground"),
+    },
+    // A changed count rolls in from below; one short move, no bounce.
+    "@keyframes stock-tick": {
+      from: { opacity: "0", transform: "translateY(0.45em)" },
+      to: { opacity: "1", transform: "none" },
+    },
+    ".stock-tick": {
+      display: "inline-block",
+      fontVariantNumeric: "tabular-nums",
+      animation: `stock-tick 260ms ${ease.settle} both`,
+    },
     // Courier work status on the ink panel: green and breathing when ready, sand when delivering, a hollow ring when offline.
     ".status-dot": {
       position: "relative",

@@ -7,6 +7,7 @@ import { env } from "../../config/env";
 import * as ordersRepo from "../orders/repo";
 import { linkInvoice, releaseOrder } from "../inventory/service";
 import { transition, type TransitionActor } from "../orders/service";
+import { onLatePayment } from "../refunds/service";
 import { PaymentProviderError, type Invoice } from "./provider";
 import { MockAdapter } from "./mock.adapter";
 import { getPaymentProvider } from "./registry";
@@ -119,7 +120,8 @@ export async function settleInTx(tx: Tx, invoice: Invoice): Promise<SettleOutcom
   if (order.invoice_id !== invoice.id) return "UNKNOWN_ORDER";
   if (order.status !== "PENDING_PAYMENT") {
     if ((invoice.status === "PAID" || invoice.status === "SETTLED") && order.status === "CANCELLED") {
-      logger.error({ order_id: order.id, invoice_id: invoice.id }, "payment received for a cancelled order, needs manual refund");
+      logger.warn({ order_id: order.id, invoice_id: invoice.id }, "payment received for a cancelled order, refund opened");
+      await onLatePayment(tx, order.id, invoice);
     }
     return "NOOP_STATE";
   }

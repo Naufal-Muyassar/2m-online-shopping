@@ -18,6 +18,11 @@ export const proofKeyFor = (orderId: string): string => `proofs/${orderId}/${ran
 export const isProofKeyFor = (orderId: string, key: string): boolean =>
   new RegExp(`^proofs/${orderId}/[0-9a-f-]{36}\\.jpg$`).test(key);
 
+// Refund transfer receipts: one fresh key per upload under the refund, checked again when the refund is completed.
+export const refundProofKeyFor = (refundId: string): string => `refunds/${refundId}/${randomUUID()}.jpg`;
+export const isRefundProofKeyFor = (refundId: string, key: string): boolean =>
+  new RegExp(`^refunds/${refundId}/[0-9a-f-]{36}\\.jpg$`).test(key);
+
 // Catalogue photos: one fresh key per upload, so a served image never changes and can be cached for good.
 const CATALOG_PREFIX = "catalog/";
 const CATALOG_URL_PREFIX = "/api/v1/catalog-images/";

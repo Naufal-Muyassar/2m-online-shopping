@@ -158,3 +158,11 @@ export const IconFile = (p: IconProps) => (
     <path d="M14 3.5v5h5M9 13h6M9 16.5h4" />
   </Svg>
 );
+
+export const IconRefund = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" />
+    <path d="M4.5 4.5v3.7h3.7" />
+    <path d="M14.2 9.6c-.4-.6-1.2-1-2.2-1-1.3 0-2.2.7-2.2 1.6 0 2.2 4.6 1.2 4.6 3.6 0 .9-1 1.6-2.4 1.6-1 0-1.9-.4-2.3-1.1M12 7.4v1.2M12 15.4v1.2" />
+  </Svg>
+);

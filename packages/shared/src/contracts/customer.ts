@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ORDER_STATUSES } from "../constants";
+import { customerRefundSchema } from "./refunds";
 
 export const PAYMENT_METHODS = ["QRIS", "VA_BCA", "VA_BNI", "VA_BRI", "VA_MANDIRI", "EWALLET"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
@@ -61,6 +62,24 @@ export const productDetailSchema = productSchema.extend({
 });
 export type ProductDetail = z.infer<typeof productDetailSchema>;
 export const productDetailParamsSchema = z.object({ id: uuid, productId: uuid });
+
+// GET /branches/:id/stock/stream?product_ids=a,b (Server-Sent Events, public)
+// Event "stock": a snapshot on connect, then only the products whose sellable quantity changed.
+export const STOCK_STREAM_MAX_PRODUCTS = 50;
+export const stockStreamQuerySchema = z.object({
+  product_ids: z
+    .string()
+    .transform((v) => [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))])
+    .pipe(z.array(uuid).min(1).max(STOCK_STREAM_MAX_PRODUCTS)),
+});
+export const stockLevelSchema = z.object({
+  product_id: uuid,
+  sellable_qty: z.number().int().min(0),
+  stock_status: z.enum(STOCK_STATUSES),
+});
+export type StockLevel = z.infer<typeof stockLevelSchema>;
+export const stockEventSchema = z.object({ items: z.array(stockLevelSchema) });
+export type StockEvent = z.infer<typeof stockEventSchema>;
 
 export const productsResponseSchema = z.object({
   products: z.array(productSchema),
@@ -240,6 +259,8 @@ export const customerOrderDetailSchema = z.object({
   // Set from PICKING onward; never the phone number.
   courier: z.object({ first_name: z.string() }).nullable(),
   failure: z.string().nullable(),
+  // Money owed back to the customer for this order, newest first.
+  refunds: z.array(customerRefundSchema),
   proof: z.object({ photo_url: z.string(), taken_at: z.string() }).nullable(),
   tracking_available: z.boolean(),
 });

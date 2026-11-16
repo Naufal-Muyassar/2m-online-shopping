@@ -1,9 +1,10 @@
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { isAxiosError } from "axios";
 import { formatIDR, PAYMENT_METHODS, type CalculatePriceRequest } from "@2m/shared";
 import { errorMessage } from "../../lib/api";
 import { DemoBanner } from "../../components/DemoBanner";
 import { useCheckout } from "../../lib/checkout";
-import { useAddresses, useCart, useCreateOrder, useQuote } from "../../lib/queries";
+import { isRetryableCheckoutError, useAddresses, useCart, useCreateOrder, useQuote } from "../../lib/queries";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { rise } from "../../components/States";
@@ -29,7 +30,8 @@ function Row({ label, value, quiet }: { label: string; value: string; quiet?: bo
 export function CheckoutPage() {
   const { branchId = "" } = useParams();
   const toast = useToast();
-  const { addressId, paymentMethod, setPaymentMethod } = useCheckout();
+  const { addressId, paymentMethod, setPaymentMethod, keyFor, endAttempt } = useCheckout();
+  const navigate = useNavigate();
   const { data: addresses } = useAddresses();
   const { data: cart } = useCart(branchId);
   const createOrder = useCreateOrder(branchId);
@@ -44,12 +46,26 @@ export function CheckoutPage() {
   if (addresses && !address) return <Navigate to={`/b/${branchId}/address`} replace />;
 
   function place() {
-    if (!req) return;
-    createOrder.mutate(req, {
-      // Hosted payment page; the status page, not this redirect, decides whether the order is paid.
-      onSuccess: (order) => window.location.assign(order.invoice_url),
-      onError: (e) => toast("error", errorMessage(e)),
-    });
+    if (!req || createOrder.isPending) return;
+    const idempotencyKey = keyFor(req);
+    createOrder.mutate(
+      { req, idempotencyKey },
+      {
+        onSuccess: (order) => {
+          endAttempt();
+          // Hosted payment page; the status page, not this redirect, decides whether the order is paid.
+          if (order.status === "PENDING_PAYMENT") window.location.assign(order.invoice_url);
+          else navigate(`/orders/${order.id}`);
+        },
+        onError: (e) => {
+          const details = isAxiosError(e) ? (e.response?.data as { error?: { details?: { order_id?: string } } })?.error?.details : undefined;
+          // A key whose request never got an answer stays, so pressing again replays instead of ordering twice.
+          if (!isRetryableCheckoutError(e)) endAttempt();
+          if (details?.order_id) navigate(`/orders/${details.order_id}`);
+          toast("error", errorMessage(e));
+        },
+      },
+    );
   }
 
   const b = quote.data;

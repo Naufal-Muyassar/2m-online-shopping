@@ -40,6 +40,13 @@ const CODE_MESSAGES: Record<string, string> = {
   IMAGE_NOT_UPLOADED: "Ada foto yang belum selesai diunggah. Hapus foto itu lalu unggah lagi.",
   WITHDRAWAL_NOT_FOUND: "Penarikan tidak ditemukan di cabang ini. Muat ulang riwayat saldo.",
   COURIER_NOT_FOUND: "Kurir tidak ditemukan di cabang ini. Muat ulang daftar kurir.",
+  REFUND_NOT_FOUND: "Refund tidak ditemukan di cabang ini. Muat ulang daftar refund.",
+  REFUND_NEEDS_DESTINATION: "Customer belum mengisi rekening tujuan. Tunggu sampai rekening terisi.",
+  REFUND_ALREADY_COMPLETED: "Refund ini sudah selesai dengan bukti lain. Muat ulang daftar refund.",
+  REFUND_EXCEEDS_ORDER: "Jumlah refund melebihi total pesanan yang belum direfund.",
+  ORDER_NOT_PAID: "Pesanan ini belum pernah dibayar, jadi tidak bisa direfund.",
+  PROOF_NOT_UPLOADED: "Bukti transfer belum terunggah. Unggah ulang fotonya.",
+  IDEMPOTENCY_KEY_REUSED: "Permintaan ini sudah tercatat dengan isi lain. Tutup lalu buka lagi formnya.",
 };
 
 export function errorMessage(err: unknown): string {
