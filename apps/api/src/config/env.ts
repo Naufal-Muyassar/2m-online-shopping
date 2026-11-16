@@ -35,6 +35,10 @@ const schema = z.object({
   RUN_WORKER_IN_PROCESS: z.enum(["true", "false"]).optional().transform((v) => (v === undefined ? undefined : v === "true")),
   // Public origin of customer-web; Xendit (or the mock pay page) sends the customer back to it.
   CUSTOMER_WEB_URL: z.string().url().default("http://localhost:5171"),
+  // Public origin of this API, for the live stock stream: static-site rewrites buffer a never-ending response, so
+  // the browser opens the stream here directly. Render sets RENDER_EXTERNAL_URL on every web service.
+  PUBLIC_API_URL: z.string().url().optional(),
+  RENDER_EXTERNAL_URL: z.string().url().optional(),
   // Average courier speed used only for the customer-facing ETA estimate.
   TRACKING_AVG_SPEED_KMH: z.coerce.number().positive().default(20),
 }).superRefine((e, ctx) => {

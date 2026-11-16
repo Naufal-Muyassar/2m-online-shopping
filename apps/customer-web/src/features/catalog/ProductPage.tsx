@@ -36,13 +36,9 @@ function StockLine({ p, live }: { p: ProductDetail; live: LiveState }) {
       <span className={cn("pill pill-dot", pill)} aria-live="polite" aria-atomic="true">
         {n <= 0 ? (
           "Stok habis"
-        ) : n <= STOCK_NOTICE_AT ? (
-          <span>
-            Sisa {count} {p.unit}
-          </span>
         ) : (
           <span>
-            Stok {count} {p.unit}
+            {n <= STOCK_NOTICE_AT ? "Sisa" : "Stok"} {count} {p.unit}
           </span>
         )}
       </span>
@@ -150,7 +146,6 @@ export function ProductPage() {
     { label: "Satuan", value: p.unit },
     { label: "Berat", value: weightText(p.weight_kg) },
     { label: "Kategori", value: p.category.charAt(0).toUpperCase() + p.category.slice(1) },
-    { label: "SKU", value: p.sku },
   ];
 
   function add() {
@@ -238,7 +233,7 @@ export function ProductPage() {
               {specs.map((s, i) => (
                 <Fragment key={`${s.label}-${i}`}>
                   <dt>{s.label}</dt>
-                  <dd className={cn(s.label === "SKU" && "tabular-nums")}>{s.value}</dd>
+                  <dd>{s.value}</dd>
                 </Fragment>
               ))}
             </dl>
