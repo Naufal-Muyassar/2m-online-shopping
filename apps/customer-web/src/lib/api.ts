@@ -46,6 +46,13 @@ const MESSAGES: Record<string, (d: Details, fallback: string) => string> = {
   ACCOUNT_EXISTS: () => "No. HP atau email sudah terdaftar.",
   ADDRESS_IN_USE: () => "Alamat dipakai oleh pesanan dan tidak bisa dihapus.",
   VALIDATION_ERROR: (_d, fallback) => fallback,
+  PAYMENT_INIT_FAILED: () => "Pembayaran belum bisa dimulai. Keranjang Anda aman, silakan coba lagi.",
+  CHECKOUT_IN_PROGRESS: () => "Pesanan Anda sedang diproses. Cek halaman Pesanan sebentar lagi.",
+  IDEMPOTENCY_KEY_REUSED: () => "Permintaan checkout berubah di tengah proses. Tekan Bayar sekali lagi.",
+  IDEMPOTENCY_KEY_REQUIRED: () => "Permintaan checkout tidak lengkap. Muat ulang halaman lalu coba lagi.",
+  REFUND_ALREADY_COMPLETED: () => "Dana refund ini sudah dikirim, rekening tidak bisa diubah lagi.",
+  REFUND_NOT_FOUND: () => "Refund tidak ditemukan. Muat ulang halaman pesanan.",
+  STOCK_UNAVAILABLE: () => "Pengecekan stok sedang sibuk. Coba lagi beberapa detik lagi.",
 };
 
 export function errorMessage(err: unknown): string {

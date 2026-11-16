@@ -1,4 +1,4 @@
-import { randomInt } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import { z } from "zod";
 import {
@@ -18,6 +18,8 @@ import { clearCart } from "../cart/repo";
 import { cancelReservation, reserveForOrder, type Reservation } from "../inventory/service";
 import { INVOICE_DURATION_SEC, initiatePayment } from "../payments/service";
 import { quote } from "../pricing/service";
+import * as idem from "./idempotency";
+import { customerRefunds } from "../refunds/service";
 
 type Db = Pool | Tx;
 
@@ -35,29 +37,44 @@ function newCode(): string {
   return `ORD-${day}-${suffix}`;
 }
 
-export async function createOrder(userId: string, req: CreateOrderRequest): Promise<CreatedOrder> {
-  // Tx1: order CREATED + items + stock reservation + empty cart. The payment provider is called after it commits, never inside it.
+export interface CheckoutResult {
+  order: CreatedOrder;
+  // true when this call answered with the outcome of an earlier request carrying the same key.
+  replayed: boolean;
+}
+
+export async function createOrder(userId: string, req: CreateOrderRequest, idempotencyKey: string): Promise<CheckoutResult> {
+  // Tx1: key claim + order CREATED + items + stock reservation + empty cart, all or nothing. The payment provider is
+  // called after it commits, never inside it.
+  const requestHash = idem.fingerprint(req);
   const held: { reservation?: Reservation } = {};
-  let created: { id: string; created_at: Date };
+  let created: { id: string; created_at: Date } | { replayOf: string };
   try {
     created = await withTransaction(async (tx) => {
+      const orderId = randomUUID();
+      if (!(await idem.claim(tx, { customerId: userId, key: idempotencyKey, requestHash, orderId }))) {
+        const prior = await idem.findClaim(tx, userId, idempotencyKey);
+        if (!prior) throw new AppError(409, "CHECKOUT_IN_PROGRESS", "This checkout is still being processed");
+        idem.assertSameRequest(prior.request_hash, requestHash);
+        return { replayOf: prior.order_id };
+      }
       const q = await quote(tx, userId, req, { lockCart: true });
       const b = q.breakdown;
 
       let inserted: { id: string; created_at: Date } | undefined;
       for (let attempt = 0; attempt < 5 && !inserted; attempt++) {
         const res = await tx.query<{ id: string; created_at: Date }>(
-          `INSERT INTO orders (code, branch_id, customer_id, address_id, status, subtotal, delivery_fee, payment_fee,
+          `INSERT INTO orders (id, code, branch_id, customer_id, address_id, status, subtotal, delivery_fee, payment_fee,
                                voucher_discount, grand_total, pricing_snapshot, payment_method, is_bulk_order,
                                route_distance_km, courier_wage)
-           VALUES ($1,$2,$3,$4,'CREATED',$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+           VALUES ($15,$1,$2,$3,$4,'CREATED',$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
            ON CONFLICT (code) DO NOTHING
            RETURNING id, created_at`,
           [
             newCode(), req.branch_id, userId, req.address_id, b.subtotal, b.final_shipping_cost, b.payment_fee,
             b.voucher_discount, b.grand_total,
             JSON.stringify({ ...b, ...q.snapshotExtra, address_id: req.address_id, payment_method: req.payment_method }),
-            req.payment_method, q.isBulkOrder, b.route_distance_km, q.courierWage,
+            req.payment_method, q.isBulkOrder, b.route_distance_km, q.courierWage, orderId,
           ],
         );
         inserted = res.rows[0];
@@ -85,15 +102,22 @@ export async function createOrder(userId: string, req: CreateOrderRequest): Prom
     throw err;
   }
 
+  if ("replayOf" in created) {
+    return { order: await idem.replayOutcome(pool, userId, created.replayOf), replayed: true };
+  }
+
   // Tx2 (inside): CREATED → PENDING_PAYMENT with the invoice. A provider failure cancels the order.
   const { order, invoice } = await initiatePayment(created.id);
   return {
-    id: order.id,
-    code: order.code,
-    status: order.status,
-    grand_total: order.grand_total,
-    created_at: created.created_at.toISOString(),
-    invoice_url: invoice.invoiceUrl,
+    order: {
+      id: order.id,
+      code: order.code,
+      status: order.status,
+      grand_total: order.grand_total,
+      created_at: created.created_at.toISOString(),
+      invoice_url: invoice.invoiceUrl,
+    },
+    replayed: false,
   };
 }
 
@@ -239,5 +263,6 @@ export async function getCustomerOrder(userId: string, orderId: string): Promise
         : null,
     proof: proofRow ? { photo_url: await presignGet(proofRow.photo_key), taken_at: iso(proofRow.taken_at) } : null,
     tracking_available: o.status === "ON_DELIVERY",
+    refunds: await customerRefunds(orderId),
   });
 }

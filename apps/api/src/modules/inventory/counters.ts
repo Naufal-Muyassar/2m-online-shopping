@@ -10,6 +10,20 @@ import * as repo from "./repo";
 export const counterKey = (branchId: string, productId: string): string => `stock:${branchId}:${productId}`;
 export const COUNTER_PATTERN = "stock:*";
 
+// Pub/sub channel for live stock on the storefront (inventory/live.ts). The message is a comma-separated list of
+// counter keys whose value changed, or "*" after a full rebuild. Subscribers read the values themselves, so a
+// lost or reordered message can only delay an update, never show a wrong number for long.
+export const CHANGED_CHANNEL = "stock:changed";
+export const ALL_CHANGED = "*";
+
+// Fire and forget: a failed publish must never fail or undo a reservation.
+export function notify(keys: readonly string[] | typeof ALL_CHANGED): void {
+  if (keys !== ALL_CHANGED && keys.length === 0) return;
+  getRedis()
+    .publish(CHANGED_CHANNEL, keys === ALL_CHANGED ? ALL_CHANGED : keys.join(","))
+    .catch((err) => logger.warn({ err }, "stock change notification failed"));
+}
+
 // Shared by checkouts for the duration of Tx1, exclusive for a full rebuild: a rebuild never reads Postgres
 // while a reservation is decremented in Redis but not yet committed.
 const REBUILD_LOCK_ID = 7_610_005;
@@ -72,6 +86,7 @@ async function seedMissing(tx: Tx, items: readonly repo.StockItem[]): Promise<vo
     // NX: a counter another checkout seeded in the meantime may already be decremented.
     for (const r of rows) pipe.set(counterKey(r.branch_id, r.product_id), r.sellable, "NX");
     await pipe.exec();
+    notify(rows.map((r) => counterKey(r.branch_id, r.product_id)));
   }
 }
 
@@ -86,7 +101,10 @@ export async function reserve(tx: Tx, items: readonly repo.StockItem[]): Promise
   try {
     for (let attempt = 0; attempt < 3; attempt++) {
       const [status, ...rest] = (await getRedis().eval(RESERVE_LUA, keys.length, ...keys, ...args)) as (number | string)[];
-      if (status === 0) return wanted;
+      if (status === 0) {
+        notify(keys);
+        return wanted;
+      }
       if (status === 1) {
         throw new InsufficientStockError(
           rest.map((entry) => {
@@ -118,6 +136,7 @@ export async function restore(items: readonly repo.StockItem[]): Promise<void> {
       ...wanted.map((i) => counterKey(i.branchId, i.productId)),
       ...wanted.map((i) => i.qty),
     );
+    notify(wanted.map((i) => counterKey(i.branchId, i.productId)));
   } catch (err) {
     logger.error({ err, items: wanted }, "could not give stock back to redis, a rebuild is needed");
   }
@@ -131,6 +150,7 @@ export async function rebuildAll(): Promise<number> {
     const pipe = getRedis().pipeline();
     for (const r of rows) pipe.set(counterKey(r.branch_id, r.product_id), r.sellable);
     await pipe.exec();
+    notify(ALL_CHANGED);
     return rows.length;
   });
 }
@@ -141,6 +161,7 @@ export async function refresh(branchId: string, productId: string): Promise<void
     await tx.query("SELECT pg_advisory_xact_lock($1)", [REBUILD_LOCK_ID]);
     const rows = await repo.computeSellable(tx, { branchId, productIds: [productId] });
     for (const r of rows) await getRedis().set(counterKey(r.branch_id, r.product_id), r.sellable);
+    notify(rows.map((r) => counterKey(r.branch_id, r.product_id)));
   });
 }
 
@@ -162,11 +183,19 @@ export async function setSellable(tx: Tx, branchId: string, productId: string, t
   const sellable = row?.sellable ?? 0;
   try {
     await getRedis().set(counterKey(branchId, productId), sellable);
+    notify([counterKey(branchId, productId)]);
   } catch (err) {
     logger.error({ err }, "stock counters unavailable");
     throw new AppError(503, "STOCK_UNAVAILABLE", "Stock check is temporarily unavailable, please try again");
   }
   return sellable;
+}
+
+// Values for display; a missing counter is null and the caller falls back to Postgres.
+export async function readCounters(keys: readonly string[]): Promise<(number | null)[]> {
+  if (keys.length === 0) return [];
+  const values = await getRedis().mget(...keys);
+  return values.map((v) => (v === null ? null : Number(v)));
 }
 
 export async function readCounter(branchId: string, productId: string): Promise<number | null> {

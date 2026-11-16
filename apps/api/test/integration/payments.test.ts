@@ -7,7 +7,7 @@ import { closeRedis } from "../../src/shared/redis";
 import { createFixture, giveStock, type Fixture } from "../../src/modules/orders/test-fixtures";
 import * as cart from "../../src/modules/cart/service";
 import * as address from "../../src/modules/address/service";
-import { createOrder } from "../../src/modules/orders/customer";
+import { placeOrder as checkoutOnce } from "../../src/modules/orders/test-fixtures";
 import { FakeProvider } from "../../src/modules/payments/fake-provider";
 import { setPaymentProvider } from "../../src/modules/payments/registry";
 import type { Invoice } from "../../src/modules/payments/provider";
@@ -60,7 +60,7 @@ const req = () => ({ branch_id: fx.branchId, address_id: addressId, payment_meth
 
 async function placeOrder() {
   await cart.addItem(fx.users.customer, fx.branchId, productId, 2);
-  return createOrder(fx.users.customer, req());
+  return checkoutOnce(fx.users.customer, req());
 }
 
 const callback = (inv: Invoice, opts: { token?: string; status?: string; amount?: number } = {}) =>
@@ -87,7 +87,7 @@ describe("invoice creation", () => {
   it("cancels with PAYMENT_INIT_FAILED and gives the cart back when the provider is down", async () => {
     fake.failNextCreates = 5;
     await cart.addItem(fx.users.customer, fx.branchId, productId, 2);
-    await expect(createOrder(fx.users.customer, req())).rejects.toMatchObject({ code: "PAYMENT_INIT_FAILED" });
+    await expect(checkoutOnce(fx.users.customer, req())).rejects.toMatchObject({ code: "PAYMENT_INIT_FAILED" });
     const o = (await pool.query(`SELECT id, status FROM orders WHERE customer_id = $1 ORDER BY created_at DESC LIMIT 1`, [fx.users.customer])).rows[0];
     expect(o.status).toBe("CANCELLED");
     const reason = (await pool.query(`SELECT reason FROM order_state_transitions WHERE order_id = $1 AND to_status = 'CANCELLED'`, [o.id])).rows[0];

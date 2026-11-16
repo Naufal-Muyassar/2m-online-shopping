@@ -1,3 +1,5 @@
+import type { CreateOrderRequest, CreatedOrder } from "@2m/shared";
+import { createOrder } from "./customer";
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import type { OrderStatus, Role } from "@2m/shared";
@@ -73,4 +75,9 @@ export async function insertOrder(db: Db, fx: Fixture, status: OrderStatus): Pro
     );
   }
   return id;
+}
+
+// One checkout intent with a fresh Idempotency-Key, answering the created order like the HTTP route does.
+export async function placeOrder(userId: string, req: CreateOrderRequest): Promise<CreatedOrder> {
+  return (await createOrder(userId, req, randomUUID())).order;
 }

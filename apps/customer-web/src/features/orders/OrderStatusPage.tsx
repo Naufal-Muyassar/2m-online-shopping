@@ -8,6 +8,7 @@ import { ErrorCard, PageSkeleton } from "../../components/States";
 import { StatusPill } from "../../components/StatusPill";
 import { CourierChatButton } from "./CourierChatButton";
 import { TrackingCard } from "./TrackingCard";
+import { RefundSection } from "./RefundSection";
 
 const LABEL = CUSTOMER_STATUS_LABELS;
 
@@ -58,7 +59,7 @@ export function OrderStatusPage() {
     : [...CUSTOMER_TIMELINE];
   const isDone = (s: OrderStatus) => (exit ? reachedAt.has(s) || s === exit : CUSTOMER_TIMELINE.indexOf(s) <= stepIdx);
 
-  // The signed photo URL expires after 5 minutes: one refetch on a load error fetches a fresh one.
+  // Signed photo URLs (delivery proof, refund receipt) expire after 5 minutes: one refetch on a load error fetches a fresh one.
   const onImageError = () => {
     if (refetchedOnImageError.current) return;
     refetchedOnImageError.current = true;
@@ -129,6 +130,8 @@ export function OrderStatusPage() {
               )}
             </div>
           )}
+
+          <RefundSection orderId={order.id} refunds={data.refunds} onImageError={onImageError} />
 
           {proof && (
             <section className="card animate-rise space-y-3 text-sm">

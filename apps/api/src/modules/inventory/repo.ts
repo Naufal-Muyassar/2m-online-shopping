@@ -86,21 +86,54 @@ export async function releaseHeld(db: Db, orderId: string): Promise<StockItem[]>
   return toItems(res.rows);
 }
 
+// Postgres-side guard for a checkout that Redis admitted. Locks the snapshot rows of the order's products in a fixed
+// order (no deadlock between multi-SKU carts), then recomputes sellable in a new statement: under READ COMMITTED it
+// sees every reservation committed by earlier lock holders plus this transaction's own rows. A negative value means
+// Redis let through more than Postgres holds, and the caller must refuse the checkout.
+export async function lockAndComputeSellable(tx: Tx, branchId: string, productIds: readonly string[]): Promise<SellableRow[]> {
+  await tx.query(
+    `SELECT 1 FROM stock_snapshots WHERE branch_id = $1 AND product_id = ANY($2::uuid[]) ORDER BY product_id FOR UPDATE`,
+    [branchId, productIds],
+  );
+  return computeSellable(tx, { branchId, productIds });
+}
+
+// Order statuses whose payment outcome is still open. Their reservations are never released on a timer: the
+// payment state machine (PAYMENT_EXPIRED / CANCELLED) or reconciliation decides, so a payment that lands late
+// always finds its units still held.
+export const PAYMENT_OPEN_STATUSES = ["CREATED", "PENDING_PAYMENT"] as const;
+const RELEASABLE_STATUSES = ["CANCELLED", "FAILED"] as const;
+
+// Safety net for an outbox handler that never ran: only orders that will not be paid any more give units back.
 export async function releaseExpired(db: Db, limit: number): Promise<StockItem[]> {
   const res = await db.query(
     `WITH due AS (
-       SELECT order_id, product_id FROM stock_reservations
-       WHERE status = 'ACTIVE' AND expires_at < now()
-       ORDER BY expires_at
+       SELECT r.order_id, r.product_id FROM stock_reservations r
+       JOIN orders o ON o.id = r.order_id
+       WHERE r.status = 'ACTIVE' AND r.expires_at < now() AND o.status = ANY($2::order_status[])
+       ORDER BY r.expires_at
        LIMIT $1
-       FOR UPDATE SKIP LOCKED
+       FOR UPDATE OF r SKIP LOCKED
      )
      UPDATE stock_reservations r SET status = 'RELEASED', updated_at = now()
      FROM due WHERE r.order_id = due.order_id AND r.product_id = due.product_id AND r.status = 'ACTIVE'
      RETURNING r.branch_id, r.product_id, r.qty`,
-    [limit],
+    [limit, RELEASABLE_STATUSES],
   );
   return toItems(res.rows);
+}
+
+// Paid (or later) orders whose PAYMENT_SUCCESS handler has not committed the reservation yet.
+export async function listPaidUncommitted(db: Db, limit: number): Promise<string[]> {
+  const res = await db.query<{ order_id: string }>(
+    `SELECT DISTINCT r.order_id FROM stock_reservations r
+     JOIN orders o ON o.id = r.order_id
+     WHERE r.status = 'ACTIVE' AND r.expires_at < now()
+       AND NOT (o.status = ANY($2::order_status[])) AND NOT (o.status = ANY($3::order_status[]))
+     LIMIT $1`,
+    [limit, PAYMENT_OPEN_STATUSES, RELEASABLE_STATUSES],
+  );
+  return res.rows.map((r) => r.order_id);
 }
 
 export interface CommitResult {

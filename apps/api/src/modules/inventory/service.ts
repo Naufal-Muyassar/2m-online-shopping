@@ -5,6 +5,7 @@ import { logger } from "../../shared/logger";
 import { stockProvider } from "../catalog/stock";
 import * as counters from "./counters";
 import * as repo from "./repo";
+import { purgeExpired as purgeExpiredCheckoutKeys } from "../orders/idempotency";
 
 export type { StockItem } from "./repo";
 
@@ -46,11 +47,42 @@ export async function reserveForOrder(
   }
   try {
     await repo.insertReservations(tx, { orderId: o.orderId, ttlSec: o.ttlSec, items });
+    // Redis is the admission gate that absorbs a rush; Postgres is the authority. Even if a counter drifted upwards
+    // (eviction, a lost decrement, a restore during a flush) this check refuses a reservation Postgres cannot cover.
+    const after = await repo.lockAndComputeSellable(tx, o.branchId, items.map((i) => i.productId));
+    const overdrawn = after.filter((r) => r.sellable < 0);
+    if (overdrawn.length > 0) {
+      const byProduct = new Map(o.lines.map((l) => [l.product_id, l]));
+      const wantedBy = new Map(items.map((i) => [i.productId, i.qty]));
+      const short = overdrawn.map((r) => {
+        const line = byProduct.get(r.product_id)!;
+        const requested = wantedBy.get(r.product_id)!;
+        return { sku: line.sku, name: line.name, requested, available: Math.max(0, r.sellable + requested) };
+      });
+      logger.warn({ branch_id: o.branchId, products: overdrawn.map((r) => r.product_id) }, "stock counter above Postgres, checkout refused");
+      scheduleRefresh(o.branchId, overdrawn.map((r) => r.product_id));
+      throw new AppError(409, "OUT_OF_STOCK", "Some products are out of stock", { skus: short.map((s) => s.sku), items: short });
+    }
   } catch (err) {
     await counters.restore(items);
     throw err;
   }
   return { orderId: o.orderId, items };
+}
+
+// Re-reads drifted counters from Postgres once the refusing transaction has ended (refresh needs the exclusive
+// rebuild lock, which that transaction holds in shared mode, so it must not be awaited inside it).
+const refreshing = new Set<string>();
+function scheduleRefresh(branchId: string, productIds: readonly string[]): void {
+  for (const productId of productIds) {
+    const key = counters.counterKey(branchId, productId);
+    if (refreshing.has(key)) continue;
+    refreshing.add(key);
+    counters
+      .refresh(branchId, productId)
+      .catch((err) => logger.error({ err, branch_id: branchId, product_id: productId }, "stock counter refresh failed"))
+      .finally(() => refreshing.delete(key));
+  }
 }
 
 // Call when the checkout transaction failed after reserveForOrder succeeded. If the COMMIT actually went through
@@ -99,8 +131,14 @@ export async function commitOrder(orderId: string): Promise<void> {
   );
 }
 
+// Repairs reservations whose outbox handler never ran. Orders still waiting for payment are left alone: their
+// reservation outlives the invoice and only the payment outcome releases or commits it.
 export async function sweepExpired(): Promise<number> {
   let total = 0;
+  for (const orderId of await repo.listPaidUncommitted(pool, SWEEP_BATCH)) {
+    logger.warn({ order_id: orderId }, "paid order still had an active reservation, committing it");
+    await commitOrder(orderId);
+  }
   for (;;) {
     const released = await repo.releaseExpired(pool, SWEEP_BATCH);
     if (released.length === 0) return total;
@@ -125,6 +163,8 @@ export function startSweeperLoop(intervalMs: number): { stop: () => void } {
     try {
       const released = await sweepExpired();
       if (released > 0) logger.info({ released }, "expired stock reservations released");
+      const purged = await purgeExpiredCheckoutKeys(pool);
+      if (purged > 0) logger.info({ purged }, "expired checkout idempotency keys removed");
     } catch (err) {
       logger.error({ err }, "stock reservation sweep failed");
     } finally {

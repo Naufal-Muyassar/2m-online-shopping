@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { isAxiosError } from "axios";
 import { formatIDR, type ProductDetail } from "@2m/shared";
@@ -6,6 +6,7 @@ import { useAuth } from "../../lib/auth";
 import { errorMessage } from "../../lib/api";
 import { capMessage, qtyCap, useCartSync } from "../../lib/cart";
 import { useBranches, useCart, useProduct } from "../../lib/queries";
+import { useLiveStock, type LiveState } from "../../lib/liveStock";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { IconBack, IconCart, IconPackage, IconPlus } from "../../components/Icons";
@@ -18,10 +19,39 @@ const STOCK_NOTICE_AT = 20;
 
 const weightText = (kg: number) => (kg < 1 ? `${Math.round(kg * 1000)} g` : `${String(kg).replace(".", ",")} kg`);
 
-function stockLine(p: ProductDetail): { text: string; pill: string } {
-  if (p.sellable_qty <= 0) return { text: "Stok habis", pill: "pill-danger" };
-  if (p.sellable_qty <= STOCK_NOTICE_AT) return { text: `Sisa ${p.sellable_qty} ${p.unit}`, pill: "pill-warning" };
-  return { text: "Stok tersedia", pill: "pill-success" };
+const qtyText = (n: number) => n.toLocaleString("id-ID");
+
+// The pill always carries the live count; colour and wording follow the catalogue thresholds.
+function StockLine({ p, live }: { p: ProductDetail; live: LiveState }) {
+  const n = p.sellable_qty;
+  const pill = n <= 0 ? "pill-danger" : n <= STOCK_NOTICE_AT ? "pill-warning" : "pill-success";
+  // Keyed on the count so a change rolls the number in; the label stays put.
+  const count = (
+    <span key={n} className="stock-tick">
+      {qtyText(n)}
+    </span>
+  );
+  return (
+    <div className="stock-live">
+      <span className={cn("pill pill-dot", pill)} aria-live="polite" aria-atomic="true">
+        {n <= 0 ? (
+          "Stok habis"
+        ) : n <= STOCK_NOTICE_AT ? (
+          <span>
+            Sisa {count} {p.unit}
+          </span>
+        ) : (
+          <span>
+            Stok {count} {p.unit}
+          </span>
+        )}
+      </span>
+      <span className="stock-live-meta" title={live === "live" ? "Jumlah stok diperbarui live" : undefined}>
+        <span aria-hidden="true" className="live-dot" data-state={live === "live" ? "live" : "offline"} />
+        {live === "live" ? "Live" : live === "connecting" ? "Menyambungkan…" : "Diperbarui berkala"}
+      </span>
+    </div>
+  );
 }
 
 function BackLink({ branchId }: { branchId: string }) {
@@ -66,6 +96,8 @@ export function ProductPage() {
   const branch = useBranches().data?.find((b) => b.id === branchId);
   const cart = useCart(branchId, !!user).data;
   const sync = useCartSync(branchId, (e) => toast("error", errorMessage(e)));
+  const productIds = useMemo(() => [productId], [productId]);
+  const live = useLiveStock(branchId, productIds);
 
   // Block body: newer browsers return a Promise from scrollTo, which React would take for a cleanup.
   useEffect(() => {
@@ -111,7 +143,6 @@ export function ProductPage() {
   const qty = cart?.items.find((i) => i.product_id === p.id)?.qty ?? 0;
   const cap = qtyCap(cart, { product_id: p.id, weight_kg: p.weight_kg, sellable_qty: p.sellable_qty });
   const out = p.sellable_qty <= 0;
-  const stock = stockLine(p);
   // The list row stands in while the page loads; its empty description is not the real one yet.
   const loadingDetail = product.isPlaceholderData;
   const specs = [
@@ -152,7 +183,7 @@ export function ProductPage() {
               per {p.unit} · {weightText(p.weight_kg)}
             </p>
             <p className="t-figure mt-1">{formatIDR(p.price)}</p>
-            <span className={cn("pill pill-dot self-start", stock.pill)}>{stock.text}</span>
+            <StockLine p={p} live={live} />
           </section>
 
           <div className="flex flex-col gap-2 border-y border-border py-4">

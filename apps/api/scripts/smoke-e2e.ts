@@ -28,12 +28,17 @@ const TINY_JPEG = Buffer.from(
   "base64",
 );
 
-async function call<T>(method: string, path: string, opts: { token?: string; body?: unknown } = {}): Promise<T> {
+async function call<T>(
+  method: string,
+  path: string,
+  opts: { token?: string; body?: unknown; headers?: Record<string, string> } = {},
+): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     method,
     headers: {
       ...(opts.body === undefined ? {} : { "Content-Type": "application/json" }),
       ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
+      ...opts.headers,
     },
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
   });
@@ -108,6 +113,7 @@ const quote = await step("quote", async () => {
   const q = await call<PriceBreakdown>("POST", "/calculate-price", {
     token: customer.access_token,
     body: { branch_id: branch.id, address_id: address.id, payment_method: "QRIS" },
+    headers: { "Idempotency-Key": crypto.randomUUID() },
   });
   if (!(q.grand_total > 0)) throw new Error("grand_total is not positive");
   return { value: q, detail: `${q.route_distance_km} km, shipping ${q.final_shipping_cost}, total ${q.grand_total}` };
@@ -117,6 +123,7 @@ const order = await step("create order", async () => {
   const { order: o } = await call<{ order: CreatedOrder }>("POST", "/orders", {
     token: customer.access_token,
     body: { branch_id: branch.id, address_id: address.id, payment_method: "QRIS" },
+    headers: { "Idempotency-Key": crypto.randomUUID() },
   });
   expect(o.status, "PENDING_PAYMENT", "status");
   expect(o.grand_total, quote.grand_total, "grand_total");
