@@ -1,7 +1,7 @@
 import { Link, Navigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { FaArrowDown, FaArrowLeft, FaArrowUp, FaFilePdf, FaWallet } from "react-icons/fa";
-import { formatIDR, type CourierLedgerEntry } from "@2m/shared";
+import { formatIDR, groupByDay, type CourierLedgerEntry } from "@2m/shared";
 import { EmptyState, ErrorCard, LoadingBlock } from "@/components/ui/feedback";
 import { useSession } from "@/features/session/session";
 import { errorMessage } from "@/lib/api";
@@ -10,8 +10,8 @@ import { cn } from "@/lib/utils";
 import { BalanceAmount } from "./BalanceAmount";
 import { useBalanceHistory } from "./hooks";
 
-const dateTime = (iso: string) =>
-  new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+// The day is in the divider above, so a row shows only the time.
+const timeOf = (iso: string) => new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
 
 function entryTitle(entry: CourierLedgerEntry): string {
   if (entry.type === "WITHDRAWAL") return "Tarik tunai di toko";
@@ -56,7 +56,7 @@ function EntryRow({ entry }: { entry: CourierLedgerEntry }) {
       <div className="min-w-0 flex-1 leading-tight">
         <p className="font-bold">{entryTitle(entry)}</p>
         {detail && <p className="t-label mt-0.5 truncate">{detail}</p>}
-        <p className="t-label mt-0.5 tabular-nums">{dateTime(entry.created_at)}</p>
+        <p className="t-label mt-0.5 tabular-nums">{timeOf(entry.created_at)}</p>
         {entry.type === "WITHDRAWAL" && <SlipButton entryId={entry.id} />}
       </div>
       <span className={cn("shrink-0 font-extrabold tabular-nums tracking-tight", earning && "text-success")}>
@@ -100,13 +100,19 @@ export function BalancePage() {
           {history.isSuccess && entries.length === 0 && (
             <EmptyState icon={<FaWallet />} title="Belum ada riwayat" hint="Upah masuk ke saldo setelah pesanan selesai." />
           )}
-          {entries.length > 0 && (
-            <ul className="list">
-              {entries.map((entry) => (
-                <EntryRow key={entry.id} entry={entry} />
-              ))}
-            </ul>
-          )}
+          {groupByDay(entries, (e) => e.created_at).map((group) => (
+            <section key={group.key} className="flex flex-col gap-2" aria-label={group.heading}>
+              <h3 className="date-divider mt-1">
+                {group.heading}
+                <span className="date-divider-count">{group.items.length} transaksi</span>
+              </h3>
+              <ul className="list">
+                {group.items.map((entry) => (
+                  <EntryRow key={entry.id} entry={entry} />
+                ))}
+              </ul>
+            </section>
+          ))}
           {history.hasNextPage && (
             <button
               type="button"
