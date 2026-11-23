@@ -9,7 +9,7 @@
 
 ## Testing lokal terisolasi (sebelum deploy)
 `.env` bisa menunjuk ke database hosted, dan `db:reset` menghapus seluruh schema. Stack ini memakai project Docker `2m-local` dan `infra/docker/local.env`, jadi tidak membaca `.env` dan tidak bentrok dengan Postgres lain di port 5432.
-1. `pnpm local:up` (Postgres 55432, Redis 56379, MinIO 59000).
+1. `pnpm local:up` (Postgres 15432, Redis 56379, MinIO 59000).
 2. `pnpm local:reset` (seed demo; tambah `-- --with-orders` untuk 3 order PAID).
 3. `pnpm local:api` dan `pnpm local:web` di dua terminal.
 4. `pnpm local:down` setelah selesai. Datanya tetap tersimpan di volume `2m-local`.
@@ -38,7 +38,7 @@ API http://localhost:3000 · Customer http://localhost:5171 · Kurir (PWA) http:
 8. Kurir centang semua barang, tekan "Jalan" (GPS dikirim). Customer melihat "Dalam perjalanan" dan nama depan kurir.
 9. Kurir "Sudah sampai": foto bukti, kirim → "Selesai". Kurir kembali ke daftar job.
 10. Customer melihat "Selesai"; admin melihat order di daftar "Selesai". Opsional: "Kedaluwarsakan" pada order baru → "Dibatalkan".
-
+
 ## Mengatur lokasi cabang demo
 - Seed membaca `DEMO_BRANCH_NAME`, `DEMO_BRANCH_LAT`, `DEMO_BRANCH_LNG`, `DEMO_BRANCH_RADIUS_M` dari `.env` (lihat `.env.example`); jalankan `pnpm db:reset:demo` setelah mengubahnya.
 - Tanpa reset (order tidak dihapus): `pnpm demo:set-branch -- --lat <n> --lng <n> [--name "<teks>"] [--radius <meter 500-10000>] [--branch <id>]`.
