@@ -24,6 +24,6 @@ Rencana kerja capstone (checklist Asah 2026, paket kerja WP-xx) ada di `docs/PRO
 - D4 embedding / vector DB:
 - D5 kanal:
 - D6 hosting:
-- D7 pembagian AE:
-- D8 tenggat:
+- D7 pembagian AE: Hafizh memegang hampir seluruh paket AE (WP-01–03, 10–16, 20, 40–43, 60, 62) + lead; bagian bersama Naufal menyusul. Urutan kerja: `docs/PROJECT_PLAN.md` bagian 6.0 (2026-11-23)
+- D8 tenggat: MA 4 Asah berakhir 22 Des 2026 23.59 WIB (MA 3 s.d. 24 Nov); tanggal pengumpulan capstone pasti belum diisi
 - D9 sumber data awal:
