@@ -18,12 +18,12 @@ Rencana kerja capstone (checklist Asah 2026, paket kerja WP-xx) ada di `docs/PRO
 
 ## Keputusan (isi satu baris per ID setelah WP-01)
 
-- D1 fitur generatif:
-- D2 model utama:
-- D3 LLM:
-- D4 embedding / vector DB:
-- D5 kanal:
-- D6 hosting:
+- D1 fitur generatif: Chatbot FAQ + RAG; Grocery List Parser stretch (WP-50); Address Parser digerbang (2026-11-24)
+- D2 model utama: klasifikasi intent teks (≥5 kelas); ETA regresi = DS Side Quest, disajikan lewat ml-api (2026-11-24)
+- D3 LLM: di balik antarmuka provider, dipilih lewat env. **Pengembangan: LLM lokal** (GPU RTX 5060 Ti 16 GB, runtime HTTP mis. Ollama). **Deploy: migrasi ke Gemini Flash**, cap biaya Rp0 (free tier) + batas harian di `llm_usage` (2026-11-24)
+- D4 embedding / vector DB: FAISS cpu, indeks dibangun ulang saat boot dari `services/ml-api/knowledge/`; embedding lokal saat pengembangan, Gemini saat deploy (dimensi beda, indeks tidak dipakai lintas provider) (2026-11-24)
+- D5 kanal: Telegram + widget customer-web; WhatsApp stretch (2026-11-24)
+- D6 hosting: Render (API, ml-api, statis) + Supabase + Upstash Redis + S3-compatible; Streamlit Community Cloud untuk dasbor DS; cadangan ml-api HF Spaces (2026-11-24)
 - D7 pembagian AE: Hafizh memegang hampir seluruh paket AE (WP-01–03, 10–16, 20, 40–43, 60, 62) + lead; bagian bersama Naufal menyusul. Urutan kerja: `docs/PROJECT_PLAN.md` bagian 6.0 (2026-11-23)
-- D8 tenggat: MA 4 Asah berakhir 22 Des 2026 23.59 WIB (MA 3 s.d. 24 Nov); tanggal pengumpulan capstone pasti belum diisi
-- D9 sumber data awal:
+- D8 tenggat: MA 4 Asah berakhir 22 Des 2026 23.59 WIB (MA 3 s.d. 24 Nov); dipakai sebagai tenggat kerja sampai tanggal pengumpulan resmi diketahui; Tahap 3 hanya bila Tahap 1–2 selesai sebelum 15 Des (2026-11-24)
+- D9 sumber data awal: dummy berlabel buatan tim, data asli 2M diminta paralel; kolom `source` (`team_written`/`synthetic`/`real`) (2026-11-24)
