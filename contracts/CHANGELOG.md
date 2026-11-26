@@ -2,6 +2,24 @@
 
 Perubahan pada `contracts/` dicatat di sini dan ditandai ke FS (Alga) dan DS (Ida). Kontrak adalah sumber kebenaran: kode yang menyimpang mengikuti kontrak, atau kontrak diubah di commit yang sama.
 
+## ml-api 0.2.0 (2026-11-26, draf, menunggu persetujuan)
+
+Penyelarasan dengan kamus DS (`kamus_data.csv`, `kamus_data_model.csv`) dan keputusan D1–D9 yang dikunci 2026-11-24. Asumsi D1, D2, D4 di 0.1.0 kini terkonfirmasi.
+
+ETA (`POST /v1/predict/eta`), **breaking** terhadap 0.1.0:
+
+- Definisi target berubah. `eta_minutes` sekarang menit dari kurir mengklaim pesanan (ACCEPTED → PICKING) sampai DELIVERED, sama dengan label DS `target_eta_menit`. Sebelumnya PAID → DELIVERED. Alasan: waktu sebelum klaim (bayar, diterima cabang, antre di job pool) tidak dimodelkan simulator, dan `motor_cluster` baru diketahui setelah klaim.
+- `hour` menjadi number (jam desimal, 17.5 = 17:30), mengikuti kolom DS `jam`. `hour` dan `dow` diambil dari saat klaim, bukan saat PAID.
+- `weight_kg` boleh null. ml-api mengimputasi median train (kolom DS `berat_estimasi`).
+- Fitur DS yang **tidak** disajikan di v0.2: `cabang_id` (kode dummy C01–C07 tidak bisa dipetakan ke UUID cabang di app) dan `is_macet` (tidak ada sumber lalu lintas real-time saat prediksi). Model yang disajikan dilatih tanpa keduanya.
+- Fitur rekayasa DS (`jarak_log1p`, `jam_sin/cos`, `hari_sin/cos`, `is_jam_puncak`, `is_sabtu`, `kelas_jarak`, `berat_per_item`) dihitung di dalam ml-api dari field request, bukan dikirim Node.
+
+Intent: tidak ada perubahan bentuk. Nama kelas kontrak (`cek_pesanan`, `tanya_ongkir`, `tanya_produk`, `info_umum`, `komplain`, `di_luar_konteks`) dipakai juga sebagai label dataset DS.
+
+Penamaan: file dataset DS memakai nama kolom Bahasa Indonesia, API memakai nama Inggris. Pemetaannya ada di `data-science/data_dictionary.md`.
+
+Direncanakan untuk WP-15 (zod, bukan berkas ini): `POST /api/v1/assistant/ask` menambah `remaining_today` (sisa kuota harian pengguna) untuk UI.
+
 ## ml-api 0.1.0 (2026-11-08, draf, menunggu persetujuan)
 
 Draf pertama `ml-api.openapi.json` dari bagian 8 `docs/PROJECT_PLAN.md` (WP-02).

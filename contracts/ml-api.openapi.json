@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "2M ml-api (internal)",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "summary": "Internal ML service: intent classification, FAQ chat with RAG, and delivery ETA.",
-    "description": "Draft v0.1 for WP-02, pending approval by AE, FS and DS. Only the Node API calls this service; browsers and apps must never reach it and never hold the LLM key. Every /v1 request carries the `X-Internal-Key` header. JSON fields are snake_case. Every successful /v1 response carries `model_version`. Errors use the same envelope as the Node API: `{ \"error\": { \"code\", \"message\", \"details?\" } }`. FastAPI's default 422 validation body must be remapped to this envelope with code `VALIDATION_ERROR` and status 400. Requests must not contain customer PII (names, phone numbers, addresses, other customers' order codes); Node masks the text before calling. Assumes the recommended options for D1 (FAQ chatbot + RAG), D2 (intent classifier as the main model, ETA as the DS model) and D4 (embedding API + FAISS), which are still open in PROJECT_PLAN.md section 5."
+    "description": "Draft v0.2 for WP-02, pending approval by AE, FS and DS. Only the Node API calls this service; browsers and apps must never reach it and never hold the LLM key. Every /v1 request carries the `X-Internal-Key` header. JSON fields are snake_case. Every successful /v1 response carries `model_version`. Errors use the same envelope as the Node API: `{ \"error\": { \"code\", \"message\", \"details?\" } }`. FastAPI's default 422 validation body must be remapped to this envelope with code `VALIDATION_ERROR` and status 400. Requests must not contain customer PII (names, phone numbers, addresses, other customers' order codes); Node masks the text before calling. Follows decisions D1 (FAQ chatbot + RAG), D2 (intent classifier as the main model, ETA regression from DS) and D4 (FAISS cpu, embedding behind a provider interface), locked on 2026-11-24 in PROJECT_PLAN.md section 5."
   },
   "servers": [
     { "url": "http://localhost:8000", "description": "Local development" }
@@ -138,13 +138,13 @@
         "tags": ["eta"],
         "operationId": "predictEta",
         "summary": "Predict total delivery time for an order",
-        "description": "Predicts the time from PAID to DELIVERED in minutes. The model is trained mostly on simulated courier movement (see data-science/data_dictionary.md), so treat it as an estimate for display, not a promise.",
+        "description": "Predicts the minutes from the moment a courier claims the order (ACCEPTED to PICKING) until DELIVERED, matching the DS label `target_eta_menit`. Call it once the order has a courier; time before the claim (payment, branch acceptance, waiting in the job pool) is not part of the prediction. The model is trained on simulated orders (`sumber_data = SINTETIS_SIMULASI`, see data-science/data_dictionary.md), so treat it as an estimate for display, not a promise.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": { "$ref": "#/components/schemas/EtaRequest" },
-              "example": { "distance_km": 3.4, "weight_kg": 6.5, "item_count": 4, "hour": 17, "dow": 4, "motor_cluster": "A" }
+              "example": { "distance_km": 3.4, "weight_kg": 6.5, "item_count": 4, "hour": 17.5, "dow": 4, "motor_cluster": "A" }
             }
           }
         },
@@ -154,7 +154,7 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/EtaResponse" },
-                "example": { "eta_minutes": 38, "model_version": "eta-2026.11.0" }
+                "example": { "eta_minutes": 21, "model_version": "eta-2026.11.0" }
               }
             }
           },
@@ -319,15 +319,15 @@
         "additionalProperties": false,
         "required": ["distance_km", "weight_kg", "item_count", "hour", "dow"],
         "properties": {
-          "distance_km": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "Route distance from branch to address (`orders.route_distance_km`)." },
-          "weight_kg": { "type": "number", "minimum": 0, "description": "Total order weight." },
-          "item_count": { "type": "integer", "minimum": 1, "description": "Number of order lines." },
-          "hour": { "type": "integer", "minimum": 0, "maximum": 23, "description": "Hour the order was paid, Asia/Jakarta time." },
-          "dow": { "type": "integer", "minimum": 0, "maximum": 6, "description": "Day of week the order was paid, Asia/Jakarta time; 0 = Monday, 6 = Sunday." },
+          "distance_km": { "type": "number", "exclusiveMinimum": 0, "maximum": 100, "description": "One-way route distance from branch to address (`orders.route_distance_km`; DS column `jarak_rute_km`)." },
+          "weight_kg": { "type": ["number", "null"], "minimum": 0, "description": "Total order weight (DS column `berat_total_kg`). Null when unknown; ml-api imputes the training median and sets the `berat_estimasi` flag internally." },
+          "item_count": { "type": "integer", "minimum": 1, "description": "Number of order lines, not units (DS column `jumlah_item`)." },
+          "hour": { "type": "number", "minimum": 0, "exclusiveMaximum": 24, "description": "Time of day the courier claimed the order, as decimal hours in Asia/Jakarta time (17.5 = 17:30; DS column `jam`)." },
+          "dow": { "type": "integer", "minimum": 0, "maximum": 6, "description": "Day of week the courier claimed the order, Asia/Jakarta time; 0 = Monday, 6 = Sunday (DS column `hari_minggu`)." },
           "motor_cluster": {
             "type": ["string", "null"],
             "enum": ["A", "B", null],
-            "description": "Assigned courier's motor cluster (`couriers.motor_cluster`). Null or omitted when no courier is assigned yet."
+            "description": "Claiming courier's motor cluster (`couriers.motor_cluster`; DS column `klaster_motor`). Null or omitted only if the cluster is unknown; the model then treats it as an unseen category."
           }
         }
       },
@@ -336,7 +336,7 @@
         "additionalProperties": false,
         "required": ["eta_minutes", "model_version"],
         "properties": {
-          "eta_minutes": { "type": "integer", "minimum": 1, "description": "Predicted minutes from PAID to DELIVERED, rounded up." },
+          "eta_minutes": { "type": "integer", "minimum": 1, "description": "Predicted minutes from courier claim to DELIVERED, rounded up." },
           "model_version": { "$ref": "#/components/schemas/ModelVersion" }
         }
       },
