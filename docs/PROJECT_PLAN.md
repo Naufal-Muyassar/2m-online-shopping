@@ -68,10 +68,10 @@ Semua butir ❌ di Trello dan di repo. Kartu AI yang ada (Golden Set, LLM Cost C
 
 | ID | Butir | Status | Paket |
 |---|---|---|---|
-| AE-M1 | README menjelaskan masalah yang diselesaikan model | ❌ | WP-03 |
+| AE-M1 | README menjelaskan masalah yang diselesaikan model | 🟡 | WP-03 (masalah UMKM ditulis; bagian model masih placeholder, diisi WP-60) |
 | AE-M2 | Model AI disesuaikan dengan data dari tim DS | ❌ | WP-11, WP-12 |
 | AE-M3 | Preprocessing sebelum dipakai model | ❌ | WP-11 |
-| AE-M4 | Sumber API/dataset/library dicantumkan di README | ❌ | WP-03 (log sejak awal) |
+| AE-M4 | Sumber API/dataset/library dicantumkan di README | ✅ | WP-03 (`docs/SOURCES.md`) |
 | AE-M5 | Fitur generatif dengan API model proprietary | ❌ | WP-14, WP-15, WP-16 |
 | AE-M6 | Bandingkan ≥2 model/konfigurasi, tabel + alasan di README | ❌ | WP-12 |
 | AE-M7 | REST API FastAPI/Flask online, diakses backend | ❌ | WP-10, WP-13 |
@@ -202,7 +202,7 @@ Dibuat 2026-11-23 setelah D7 diputuskan. Detail tiap paket tetap di bloknya masi
 - [x] **WP-00 Verifikasi kondisi deploy (FS-M6, FS-C3)** — Owner: Hafizh/Zoel. **Selesai 2026-11-08**: API Render hidup dan `GET /health` menjawab `{"status":"ok"}` setelah redeploy pukul 04:22 UTC (dilaporkan pemilik; saya tidak mengujinya sendiri). Sebelum redeploy, instance tidak menjawab sama sekali; penyebabnya tidak pernah terlihat di log, jadi risiko "tidur / macet lalu tidak bangun" tetap ada untuk demo (lihat WP-20). Catatan lama di bawah dipertahankan sebagai riwayat. Sisa yang dipindah ke WP-20: URL tiga situs statis yang sebenarnya, tes dari ponsel, alur checkout dan upload bukti di URL publik, dan cara mencegah instance tertidur saat demo. Dugaan Redis/env yang sempat dicatat **tidak didukung log**: saat boot, worker memanggil `rebuildCounters` dan mencetak "stock counters rebuilt" dengan 30 counter, jadi Postgres dan Redis terjangkau pada deploy 7 Nov. Yang belum terbukti: checkout end-to-end di URL publik dan upload foto bukti (S3). Selesai bila: catatan "hidup / mati + penyebab" tertulis di bagian 9.
 - [ ] **WP-01 Kunci keputusan D1–D9** — Owner: Hafizh (lead). Selesai bila kolom Status bagian 5 terisi dan hasilnya dikirim ke grup tim.
 - [x] **WP-02 Kontrak API v0.1 dan format dataset (AE-S1, FS-C2, DS-L1)** — Owner: Hafizh + Alga + Ida. Isi `contracts/ml-api.openapi.json` (draf endpoint di bagian 8), tambah entri di `contracts/CHANGELOG.md`, tulis spesifikasi dataset intent dan ETA di `data-science/data_dictionary.md`. Selesai bila tiga LP menyetujui (catat tanggal) dan tenggat serah-terima dataset terisi.
-- [ ] **WP-03 README dan log sumber (AE-M1, AE-M4, FS-M1)** — Owner: Hafizh. Tulis ulang `README.md`: masalah dan pengguna, URL publik, cara menjalankan, struktur, bagian placeholder untuk model (masalah, data, perbandingan, contoh request/response). Buat `docs/SOURCES.md` untuk mencatat setiap dataset, API, dan library dengan lisensinya **sejak awal**.
+- [x] **WP-03 README dan log sumber (AE-M1, AE-M4, FS-M1)** — Owner: Hafizh. Tulis ulang `README.md`: masalah dan pengguna, URL publik, cara menjalankan, struktur, bagian placeholder untuk model (masalah, data, perbandingan, contoh request/response). Buat `docs/SOURCES.md` untuk mencatat setiap dataset, API, dan library dengan lisensinya **sejak awal**.
 
 ### Tahap 1 — Main Quest (wajib)
 
@@ -314,3 +314,4 @@ Spesifikasi dataset ETA (DS): `order_id, branch_id, distance_km, weight_kg, item
 | Prompt injection lewat pesan pengguna | Jawaban menyimpang | Pesan pengguna diperlakukan sebagai data, dasar jawaban hanya potongan RAG, ambang penolakan |
 | Beban tim AE (20 butir, 2 orang, 1 sebagai lead) | Tenggat terlewat | D7 dan batasi Tahap 3 |
 | Database hosted terhapus oleh `db:reset` | Kehilangan data demo | Ikuti aturan di `CLAUDE.md` |
+| 2026-11-26 | **WP-03 selesai.** README ditulis ulang (masalah UMKM, pengguna, cara jalan, struktur, placeholder model; URL publik menunggu WP-20). `docs/SOURCES.md` sudah ada (pdfkit, dataset intent). AE-M1 → 🟡, AE-M4 → ✅. Tes `apps/api` gagal: `DATABASE_URL` di `.env` menunjuk Supabase hosted (ECIRCUITBREAKER), belum diperbaiki. |
