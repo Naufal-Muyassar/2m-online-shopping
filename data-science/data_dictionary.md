@@ -9,24 +9,27 @@ Semua dataset disimpan di `data-science/datasets/` (bukan `data-science/data/`, 
 ## Aturan umum
 
 - **Nama kolom.** File dataset memakai nama kolom Bahasa Indonesia mengikuti DS. Request dan response ml-api memakai nama Inggris. Pemetaannya ada di tabel tiap dataset.
-- **Kolom `sumber_data`** wajib di setiap baris (D9). Nilai: `team_written` (ditulis anggota tim), `synthetic` (dihasilkan skrip, simulator, atau LLM), `real` (data asli 2M). Dataset ETA yang sudah ada memakai `SINTETIS_SIMULASI`; nilai itu setara `synthetic`.
+- **Kolom `sumber_data`** wajib di setiap baris (D9: `team_written` / `synthetic` / `real`). File DS memakai kode sendiri yang dipetakan ke D9: `SINTETIS_DS_2M`, `SINTETIS_AI_2M`, dan `SINTETIS_SIMULASI` = `synthetic`; data asli kelak = `real`. Laporan dan README memakai istilah D9.
 - **Tanpa PII.** Tidak ada nama orang, nomor telepon, alamat lengkap, email, atau kode pesanan asli. Bila kalimat butuh contoh, pakai placeholder: `<NAMA>`, `<TELEPON>`, `<ALAMAT>`, `<KODE_PESANAN>`. Data `real` disamarkan sebelum masuk repo.
-- **Kolom `split`**: `train` atau `test`, 70/30. Test dibekukan; hash berkasnya dicatat saat dibekukan dan tidak boleh diubah sesudahnya.
+- **Kolom `split`**: `train` atau `test_beku`, 70/30. Test dibekukan; hash berkasnya dicatat saat dibekukan dan tidak boleh diubah sesudahnya.
 
 ## 1. Dataset intent
 
-Berkas: `intent_v0_raw.csv` (mentah, WP-11a) lalu `intent_v1.csv` (bersih dan ter-split, WP-11b). Dipakai untuk melatih model `POST /v1/intent`.
+Berkas: `intent_v0_raw.csv` (mentah AE, 240 baris, tanpa split) lalu `dataset_intent_clean_pp4.csv` (gabungan DS + AE, bersih dan ter-split; setara `intent_v1` di plan). Dipakai untuk melatih model `POST /v1/intent`. Nama kolom mengikuti file gabungan DS (2026-11-25).
 
 | Kolom | Tipe | Wajib | Keterangan |
 |---|---|---|---|
-| `id` | string | ya | Id unik baris |
-| `teks` | string, 1–500 karakter | ya | Satu pesan pelanggan, Bahasa Indonesia sehari-hari. Boleh slang, singkatan, dan typo. Batas 500 sama dengan kontrak (`text`) |
-| `label` | enum | ya | Salah satu dari enam kelas di bawah. Sama dengan `intent` di kontrak |
-| `group_id` | string | ya | Id kelompok parafrase. Kalimat yang merupakan variasi dari ide yang sama memakai `group_id` yang sama |
-| `sumber_data` | enum | ya | `team_written`, `synthetic`, `real` |
-| `split` | enum | ya di v1 | `train`, `test`. Kosong di `intent_v0_raw.csv` |
+| `intent_id` | string | ya | Id unik baris, `INT-001` dst. Nomor boleh bolong (baris duplikat dibuang) |
+| `group_id` | string | ya | Id kelompok parafrase. Kalimat yang merupakan variasi dari ide yang sama memakai `group_id` yang sama. Baris DS sekarang satu grup per kalimat (`grp_int_NNN`) |
+| `text` | string, 1–500 karakter | ya | Satu pesan pelanggan, Bahasa Indonesia sehari-hari. Boleh slang, singkatan, typo, dan placeholder PII. Sama dengan `text` di kontrak |
+| `intent` | enum | ya | Salah satu dari enam kelas di bawah. Sama dengan `intent` di kontrak |
+| `sumber_data` | enum | ya | `SINTETIS_DS_2M` (dibuat tim DS), `SINTETIS_AI_2M` (dibuat tim AE), kelak `ASLI_2M`. Dua yang pertama setara `synthetic` di D9 |
+| `split` | enum | ya | `train` atau `test_beku` |
+| `catatan_validasi` | string | tidak | Catatan audit DS, termasuk asal pemetaan label |
 
-**Aturan split (gabungan DS dan AE):** 70/30 per kelas, dilakukan per `group_id` sehingga satu grup parafrase tidak pernah ada di dua split. Di atas itu tetap berlaku aturan DS: tidak ada kalimat yang sama (setelah huruf kecil dan normalisasi spasi) di train dan test. Setelah dibekukan, split tidak diubah.
+Label versi awal DS dipetakan ke nama kontrak: `cek_ongkir` → `tanya_ongkir`, `keluhan` → `komplain`, `out_of_context` → `di_luar_konteks`. Pemetaan tercatat di `catatan_validasi`.
+
+**Aturan split (gabungan DS dan AE):** 70/30 per kelas, dilakukan per `group_id` sehingga satu grup parafrase tidak pernah ada di dua split. Di atas itu tetap berlaku aturan DS: tidak ada kalimat yang sama (setelah huruf kecil, buang tanda baca, normalisasi spasi) di train dan test. Kalimat dari sumber berbeda yang merupakan parafrase satu sama lain harus diberi `group_id` yang sama. Setelah dibekukan, baris `test_beku` tidak diubah; perbaikan kebocoran dilakukan dengan mengubah atau membuang baris train.
 
 ### Kelas
 
@@ -84,11 +87,11 @@ Kolom DS: `id`, `order_id`, `rating`, `komentar`, `label_sentimen`, `sumber_data
 
 | Dataset | Pemilik | Tenggat serah-terima |
 |---|---|---|
-| `intent_v0_raw.csv` | AE (Hafizh, Naufal) | 2 Des 2026 |
-| `intent_v1.csv` (dibersihkan, diberi label ulang, split dibekukan) | DS | 5 Des 2026 |
+| `intent_v0_raw.csv` | AE (Hafizh, Naufal) | Diserahkan 21 Nov 2026 |
+| `dataset_intent_clean_pp4.csv` (gabungan, label dipetakan, split dibekukan) | DS | Diserahkan 25 Nov 2026; perbaikan kebocoran 5 Des 2026 |
 | `dataset_model_order.csv` | DS | 1 Des 2026 |
 
-Tanggal di atas masih usulan, diturunkan dari urutan kerja bagian 6.0 plan (WP-11 28 Nov – 2 Des) dan D8 (tenggat kerja 22 Des 2026). Berlaku setelah disetujui di tabel persetujuan.
+Tanggal yang belum diserahkan masih usulan, diturunkan dari urutan kerja bagian 6.0 plan (WP-11 28 Nov – 2 Des) dan D8 (tenggat kerja 22 Des 2026). Berlaku setelah disetujui di tabel persetujuan.
 
 ## Persetujuan
 
