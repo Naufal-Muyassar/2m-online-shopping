@@ -24,5 +24,8 @@ WORKDIR /repo/apps/api
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD curl -fsS http://localhost:3000/health || exit 1
+# Migrations run before the server on every start, so a host that ignores render.yaml's dockerCommand (a service
+# created by hand, not from the Blueprint) still migrates. node-pg-migrate takes an advisory lock, and a failed
+# migration stops the start, so the previous deploy stays live.
 # Worker: override command with `node --import tsx src/worker.ts`
-CMD ["node", "--import", "tsx", "src/server.ts"]
+CMD ["sh", "-c", "node --import tsx scripts/db.ts migrate && exec node --import tsx src/server.ts"]
