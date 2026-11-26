@@ -15,7 +15,11 @@ Semua dataset disimpan di `data-science/datasets/` (bukan `data-science/data/`, 
 
 ## 1. Dataset intent
 
-Berkas: `intent_v0_raw.csv` (mentah AE, 240 baris, tanpa split) lalu `dataset_intent_clean_pp4.csv` (gabungan DS + AE, bersih dan ter-split; setara `intent_v1` di plan). Dipakai untuk melatih model `POST /v1/intent`. Nama kolom mengikuti file gabungan DS (2026-11-25).
+Berkas: `intent_v0_raw.csv` (mentah AE, 240 baris, tanpa split, di Drive), `dataset_intent_clean_pp4.csv` (gabungan DS + AE, 508 baris, 2026-11-25), lalu **`intent_v1.csv`** (493 baris) yang dipakai untuk melatih model `POST /v1/intent`. Nama kolom mengikuti file gabungan DS.
+
+`intent_v1.csv` dibangun oleh `data-science/scripts/build_intent_v1.py` dari file gabungan. **Split file gabungan adalah split resmi** (keputusan 2026-11-26; split di xlsx DS tidak dipakai). Skrip membuang 15 baris train yang duplikat atau parafrase baris `test_beku` (daftar dan pasangannya ada di skrip), merapikan spasi, lalu memeriksa kelas, panjang teks, `group_id`, duplikat lintas split, dan minimal 40 baris per kelas. Baris `test_beku` (154) tidak berubah; hash-nya `0e4d5ad732fa73945d00db4bf5f4e5dc393d98eee9667d1d49c1e00ff52e22dd` (SHA-256 baris `intent_id	text	intent` terurut). Distribusi: train 54–58 per kelas, test 25–26 per kelas.
+
+`dataset_intent_clean_pp4.csv` di repo disusun ulang dari ekspor teks Drive, bukan salinan byte asli; isi barisnya sama (508 baris), spasi di ujung sel bisa berbeda.
 
 | Kolom | Tipe | Wajib | Keterangan |
 |---|---|---|---|
@@ -92,7 +96,8 @@ Spesifikasi awal DS: `id`, `order_id`, `rating`, `komentar`, `label_sentimen`, `
 | Dataset | Pemilik | Tenggat serah-terima |
 |---|---|---|
 | `intent_v0_raw.csv` | AE (Hafizh, Naufal) | Diserahkan 21 Nov 2026 |
-| `dataset_intent_clean_pp4.csv` (gabungan, label dipetakan, split dibekukan) | DS | Diserahkan 25 Nov 2026; perbaikan kebocoran 5 Des 2026 |
+| `dataset_intent_clean_pp4.csv` (gabungan, label dipetakan, split dibekukan) | DS | Diserahkan 25 Nov 2026 |
+| `intent_v1.csv` (kebocoran diperbaiki) | AE (Hafizh) | Selesai 26 Nov 2026 |
 | `dataset_model_order.csv` | DS | 1 Des 2026 |
 
 Tanggal yang belum diserahkan masih usulan, diturunkan dari urutan kerja bagian 6.0 plan (WP-11 28 Nov – 2 Des) dan D8 (tenggat kerja 22 Des 2026). Berlaku setelah disetujui di tabel persetujuan.

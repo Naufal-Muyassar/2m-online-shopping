@@ -1,0 +1,494 @@
+intent_id,group_id,text,intent,sumber_data,split,catatan_validasi
+INT-001,grp_int_001,Beras premium 5 kg masih ada stoknya nggak ya?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-003,grp_int_003,Apakah jual gula pasir kiloan atau cuma kemasan 1 kg?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-004,grp_int_004,Telur ayam negeri per kilo hari ini harganya berapa?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-005,grp_int_005,Stok tepung terigu Segitiga Biru di cabang Pekayon ready?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-006,grp_int_006,Ada jual mie instan satu dus nggak di sini?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-007,grp_int_007,Merk beras apa saja yang tersedia di 2M Sembako?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-008,grp_int_008,Minyak goreng Bimoli 1 liter lagi ready atau kosong?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-009,grp_int_009,Bisa beli kecap manis Bango ukuran besar di sini?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-010,grp_int_010,Harga gas LPG 3 kg berapa kalau pesan lewat aplikasi?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-011,grp_int_011,Apakah tersedia air mineral galon Aqua atau Le Minerale?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-012,grp_int_012,Susu kental manis kaleng putih ada stoknya?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-013,grp_int_013,Jual sabun cuci piring Mama Lemon ukuran 780 ml nggak?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-014,grp_int_014,Kopi kapal api rentengan satu pak isinya berapa dan harga berapa?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-015,grp_int_015,Di cabang Tambun stok beras Pandan Wangi masih banyak?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-016,grp_int_016,Ada tepung tapioka sama tepung maizena nggak?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-017,grp_int_017,Harga garam dapur beryodium per bungkus berapa ya?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-018,grp_int_018,Apakah jual bumbu dapur instan seperti Royco dan Masako?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-019,grp_int_019,Minyak goreng curah ada atau cuma kemasan botol dan pouch?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-020,grp_int_020,Teh celup Sariwangi kotak isi 25 ready stok?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-021,grp_int_021,Kalau beli beras 10 kg atau 25 kg ada di katalog nggak?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-022,grp_int_022,Sarden kaleng ABC ukuran besar lagi ada promo atau harga normal?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-023,grp_int_023,Stok gula merah atau gula aren di cabang Jatibening ada?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-024,grp_int_024,Jual deterjen bubuk Rinso ukuran 800 gram nggak min?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-025,grp_int_025,Bisa cari produk santan instan Kara di aplikasi ini?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-026,grp_int_026,Harga mentega Blue Band sachet berapa satuannya?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-027,grp_int_027,Apakah 2M Sembako jual kebutuhan bayi seperti popok atau tisu basah?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-028,grp_int_028,Kacang tanah kupas dan kacang hijau per kilo ada?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-029,grp_int_029,Stok sirup Marjan rasa cocopandan masih tersedia?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-030,grp_int_030,Ada jual bihun jagung sama soun kering nggak?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-031,grp_int_031,Harga bawang merah dan bawang putih per setengah kilo berapa?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-032,grp_int_032,Di cabang Jonggol apakah minyak goreng Tropical 2L ready?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-033,grp_int_033,Jual obat nyamuk bakar atau semprot seperti Baygon nggak?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-034,grp_int_034,Apakah tersedia pasta gigi Pepsodent dan sabun mandi Lifebuoy?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-035,grp_int_035,Beras Ramos Setra 5 kg stoknya aman buat dikirim hari ini?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-036,grp_int_036,Ada jual kerupuk mentah atau emping melinjo nggak?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-037,grp_int_037,Harga susu UHT Full Cream 1 liter merek Ultra berapa?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-038,grp_int_038,Stok kecap asin dan saus sambal ABC botol sedang ada?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-039,grp_int_039,Apakah jual perlengkapan plastik kresek atau kantong sampah?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-040,grp_int_040,Gula pasir Gulaku kuning 1 kg lagi kosong atau ada?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-041,grp_int_041,Bisa lihat daftar harga sembako terbaru minggu ini?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-042,grp_int_042,Ada produk roti tawar atau selai coklat di cabang Kecapi?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-043,grp_int_043,"Jual gas bright gas 5,5 kg nggak selain yang tabung melon?",tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-044,grp_int_044,Stok mie telur cap 3 Ayam masih tersedia di katalog?,tanya_produk,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-045,grp_int_045,Harga sabun cuci baju cair Attack Jazz1 berapa ya?,tanya_produk,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-046,grp_int_046,Ongkir ke daerah Pekayon Jaya berapa ya?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-048,grp_int_048,Apakah ada gratis ongkir untuk minimal belanja tertentu?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-049,grp_int_049,Berapa tarif pengiriman kurir mandiri 2M Sembako per kilometer?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-050,grp_int_050,Pengantaran ke Perumahan Villa Nusa Indah 2 kena biaya kirim berapa?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-051,grp_int_051,Maksimal jarak pengantaran dari toko ke rumah berapa km?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-052,grp_int_052,Kalau alamat saya di luar radius pengantaran masih bisa dikirim nggak?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-053,grp_int_053,Ongkir untuk belanja 1 karung beras 25 kg dihitung per jarak atau berat?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-054,grp_int_054,Berapa biaya kirim dari cabang Jatibening ke Komplek TNI AL?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-055,grp_int_055,Apakah tarif ongkir berubah kalau pesan pas jam sibuk atau hujan?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-056,grp_int_056,Kenapa ongkir ke alamat saya muncul Rp 12.000 ya?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-057,grp_int_057,Ada potongan ongkir nggak buat pelanggan baru?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-058,grp_int_058,Kirim ke daerah Cileungsi dari cabang Jonggol kena ongkir berapa?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-059,grp_int_059,Tarif dasar pengiriman 2M Sembako mulai dari berapa ribu?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-060,grp_int_060,Kalau pesan banyak item apakah ongkirnya jadi lebih mahal?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-061,grp_int_061,Ongkir ke Jatibening Baru dari cabang terdekat berapa ya?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-062,grp_int_062,Apakah pengiriman pakai kurir toko lebih murah dibanding ojek online?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-063,grp_int_063,Batas maksimal jarak kurir mandiri 2M Sembako sampai berapa kilometer?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-064,grp_int_064,"Kalau jaraknya cuma 1,5 km kena ongkir minimum berapa?",tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-065,grp_int_065,Biaya kirim ke daerah Jatiwarna sekitar Pasar Kecapi berapa?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-066,grp_int_066,Bagaimana cara menghitung rincian ongkir sebelum saya checkout?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-067,grp_int_067,Apakah ada biaya tambahan kalau alamat pengiriman masuk gang sempit?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-068,grp_int_068,Ongkir ke wilayah Sumberjaya Tambun Selatan kena berapa rupiah?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-069,grp_int_069,Kalau saya pilih cabang yang lebih dekat apakah ongkirnya otomatis turun?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-070,grp_int_070,Berapa ongkos kirim untuk pengantaran jarak 4 kilometer?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-071,grp_int_071,Apakah 2M Sembako melayani pengiriman ke luar Bekasi dan Bogor?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-072,grp_int_072,Minimum transaksi supaya dapat diskon ongkir berapa ya?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-074,grp_int_074,Kenapa alamat saya terdeteksi di luar radius layanan?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-075,grp_int_075,Ongkir dari cabang Pekayon ke Bekasi Selatan sekitar berapa?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-076,grp_int_076,Apakah biaya pengiriman sudah termasuk biaya parkir atau tambahan lain?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-077,grp_int_077,Kalau berat belanjaan di atas 20 kg kena cas ongkir tambahan nggak?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-078,grp_int_078,Cek ongkir ke Bojong Kulur Gunung Putri dong min.,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-079,grp_int_079,Berapa selisih ongkir kalau dikirim dari cabang Jatibening vs Jatibening Baru?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-080,grp_int_080,Apakah kurir mandiri mengenakan tarif flat atau berdasarkan peta?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-081,grp_int_081,Ongkir ke daerah Gandoang Cileungsi berapa ya?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-082,grp_int_082,"Kalau jarak 2,5 km dari toko estimasi ongkos kirimnya berapa?",tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-083,grp_int_083,Bisa cek estimasi ongkir dulu sebelum masukin barang ke keranjang?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-084,grp_int_084,Apakah hari Minggu tarif ongkirnya sama dengan hari biasa?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-085,grp_int_085,Kenapa titik peta alamat saya bikin ongkir jadi mahal?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-086,grp_int_086,Berapa ongkir kalau saya pesan sembako dari cabang Pondok Gede?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-087,grp_int_087,Ada batas berat maksimal per sekali antar untuk satu kurir nggak?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-088,grp_int_088,Kalau belanja Rp 200.000 apakah ongkirnya gratis?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-089,grp_int_089,Tarif ongkir ke perumahan sekitar Jati Utama Raya berapa?,tanya_ongkir,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-090,grp_int_090,Apakah ongkir dibayar sekalian pas checkout atau bayar di tempat ke kurir?,tanya_ongkir,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'cek_ongkir'
+INT-091,grp_int_091,Jam buka dan tutup toko 2M Sembako setiap hari jam berapa?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-092,grp_int_092,Cabang 2M Sembako ada di mana saja lokasinya?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-094,grp_int_094,Batas waktu pemesanan untuk dikirim di hari yang sama jam berapa?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-095,grp_int_095,Apakah hari Minggu dan tanggal merah 2M Sembako tetap buka?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-096,grp_int_096,Bagaimana cara memesan sembako lewat website ini?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-097,grp_int_097,Apakah bisa bayar di tempat atau COD ke kurir saat barang sampai?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-098,grp_int_098,Alamat lengkap cabang 2M Sembako yang di Pekayon di sebelah mana?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-099,grp_int_099,Sistem pengirimannya pakai kurir toko sendiri atau ekspedisi luar?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-100,grp_int_100,Apakah bisa ambil pesanan langsung ke toko tanpa diantar kurir?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-101,grp_int_101,Kalau pesan malam hari apakah akan dikirim besok paginya?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-102,grp_int_102,Ada nomor WhatsApp atau kontak admin cabang yang bisa dihubungi?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-103,grp_int_103,Bagaimana cara mengganti titik lokasi alamat pengiriman di peta?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-104,grp_int_104,Apakah harga barang di aplikasi sama dengan harga beli langsung di toko?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-105,grp_int_105,Wilayah mana saja yang masuk area layanan 2M Sembako?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-106,grp_int_106,Cabang terdekat dari daerah Jatiwarna Bekasi yang mana ya?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-107,grp_int_107,Apakah aplikasi ini melayani pembelian grosir untuk warung?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-108,grp_int_108,Jam operasional pengantaran kurir dimulai dari jam berapa pagi?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-109,grp_int_109,Pembayaran via transfer bank atau QRIS apakah sudah tersedia?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-110,grp_int_110,Bagaimana cara daftar akun baru di customer-web 2M Sembako?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-111,grp_int_111,Apakah bisa menjadwalkan waktu pengiriman sesuai jam saya di rumah?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-112,grp_int_112,Alamat cabang 2M Sembako Tambun tepatnya di jalan apa?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-113,grp_int_113,Berapa lama rata-rata waktu pengantaran setelah pesanan dibayar?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-114,grp_int_114,Apakah ada minimal pembelian untuk order online di 2M Sembako?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-115,grp_int_115,Kalau stok barang di satu cabang habis apakah bisa dialihkan ke cabang lain?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-116,grp_int_116,Di mana lokasi cabang 2M Sembako yang daerah Jonggol?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-117,grp_int_117,Apakah tersedia fitur simpan lebih dari satu alamat pengiriman?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-118,grp_int_118,Bagaimana prosedur pembatalan pesanan sebelum diproses admin?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-119,grp_int_119,Apakah setiap transaksi mendapatkan struk atau rincian belanja digital?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-120,grp_int_120,Jam istirahat operasional toko dan kurir pukul berapa saja?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-121,grp_int_121,Cabang 2M Sembako di Villa Nusa Indah buka dari jam berapa?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-122,grp_int_122,Apakah pembayaran simulasi di web langsung memproses pesanan?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-123,grp_int_123,Bagaimana cara melihat halaman panduan atau bantuan penggunaan aplikasi?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-124,grp_int_124,Apakah kurir mengantar sampai ke depan pintu rumah atau hanya depan gerbang?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-125,grp_int_125,Info lokasi cabang Jatibening dan Jatibening Baru dong min.,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-126,grp_int_126,Apakah bisa memesan untuk dikirimkan ke alamat keluarga yang berbeda?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-127,grp_int_127,Kapan jadwal restock barang sembako di cabang-cabang 2M Sembako?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-128,grp_int_128,Apakah akun pelanggan wajib login dulu sebelum bertanya ke asisten?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-129,grp_int_129,Bagaimana cara menghubungi admin cabang kalau butuh bantuan mendesak?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-130,grp_int_130,Apakah 2M Sembako punya program langganan atau poin member?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-131,grp_int_131,Batas maksimal jumlah item dalam satu keranjang belanja berapa?,info_umum,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-132,grp_int_132,Apakah pengiriman tetap berjalan saat cuaca hujan deras?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-133,grp_int_133,Di mana saya bisa melihat riwayat transaksi belanja saya sebelumnya?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-134,grp_int_134,Apakah toko cabang Pasar Kecapi melayani pengiriman sore hari?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-135,grp_int_135,Bagaimana cara mengubah nomor telepon yang terdaftar di profil akun?,info_umum,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-136,grp_int_136,Pesanan saya yang barusan di-checkout statusnya sudah sampai mana?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-137,grp_int_137,Tolong cek status orderan saya hari ini dong.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-138,grp_int_138,Kurir yang mengantar pesanan saya sudah berangkat dari toko belum?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-139,grp_int_139,Kira-kira pesanan sembako saya tiba di rumah jam berapa ya?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-140,grp_int_140,Kenapa status pesanan saya masih menunggu konfirmasi admin?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-141,grp_int_141,Cek pengiriman order terakhir saya sudah sampai mana posisinya.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-142,grp_int_142,Apakah pembayaran pesanan saya tadi sudah terverifikasi?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-143,grp_int_143,Pesanan saya dengan nomor order terbaru lagi diproses atau sudah dikirim?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-144,grp_int_144,Siapa nama kurir yang mengambil job pengantaran pesanan saya?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-145,grp_int_145,"Sudah 30 menit sejak checkout, status paket saya sekarang apa?",cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-146,grp_int_146,Tolong lacak pesanan saya yang dikirim dari cabang Pekayon.,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-147,grp_int_147,Apakah pesanan saya sudah selesai diantar dan ada bukti fotonya?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-149,grp_int_149,"Status di halaman tracking masih diproses, apakah sudah siap kirim?",cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-150,grp_int_150,Berapa estimasi waktu tiba kurir untuk pesanan saya saat ini?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-151,grp_int_151,Pesanan saya yang tadi pagi jam 9 sudah sampai mana ya?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-152,grp_int_152,Bisa bantu cek apakah orderan saya sudah diambil oleh kurir?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-153,grp_int_153,Saya mau lihat progres pengantaran pesanan saya sekarang.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-154,grp_int_154,Kenapa status order saya belum berubah dari sedang disiapkan?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-155,grp_int_155,Apakah kurir sudah dekat dengan alamat rumah saya?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-156,grp_int_156,Cek status transaksi terakhir di akun saya dong min.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-157,grp_int_157,Orderan saya dari cabang Tambun sudah dikirim atau masih antre?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-158,grp_int_158,Tolong infokan posisi terkini kurir untuk pesanan saya.,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-159,grp_int_159,Apakah pesanan saya dijadwalkan masuk kloter pengiriman siang ini?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-160,grp_int_160,"Saya baru saja bayar pesanan, apakah statusnya sudah masuk ke admin?",cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-161,grp_int_161,Cek riwayat status pengiriman orderan saya hari ini.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-162,grp_int_162,Sudah sejauh mana kurir mengantar pesanan sembako saya?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-163,grp_int_163,Apakah pesanan saya mengalami keterlambatan pengiriman?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-164,grp_int_164,Bisa tolong cek status orderan saya yang alamatnya ke Jatibening?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-165,grp_int_165,Kapan pesanan saya mulai dikirim dari cabang?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-166,grp_int_166,Tolong periksa apakah pesanan saya sudah dinyatakan selesai.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-167,grp_int_167,Status tracking pesanan saya kok masih belum bergerak ya?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-168,grp_int_168,Cek estimasi kedatangan kurir untuk order aktif saya.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-169,grp_int_169,Apakah barang pesanan saya sedang dalam perjalanan ke lokasi?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-170,grp_int_170,Saya mau memastikan orderan saya tidak terlewat oleh admin cabang.,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-171,grp_int_171,Sudah berapa lama pesanan saya dalam status dikirim kurir?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-172,grp_int_172,Tolong tampilkan status terbaru dari pesanan aktif saya.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-173,grp_int_173,Apakah kurir sudah mengunggah foto bukti pengiriman untuk order saya?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-174,grp_int_174,Cek pesanan saya yang checkout sekitar jam 10 tadi.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-175,grp_int_175,Orderan sembako saya sudah keluar dari toko belum ya?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-176,grp_int_176,Bisa bantu pantau status pengiriman paket belanja saya?,cek_pesanan,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI)
+INT-177,grp_int_177,Apakah pesanan saya sudah diterima oleh admin cabang Jonggol?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-178,grp_int_178,Status pembayaran dan pengiriman order terakhir saya bagaimana?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-179,grp_int_179,Tolong cek kapan kurir berangkat mengantar belanjaan saya.,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-180,grp_int_180,Pesanan saya saat ini sedang di tahap apa ya?,cek_pesanan,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI)
+INT-181,grp_int_181,"Barang yang saya terima kurang satu item, minyak gorengnya nggak ada.",komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-182,grp_int_182,Kenapa pesanan saya lama banget sampainya sudah lebih dari 2 jam?,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-183,grp_int_183,Kemasan tepung terigu yang diantar kurir robek dan tumpah di plastik.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-184,grp_int_184,"Saya mau komplain, beras yang dikirim beda merek dengan yang saya pesan.",komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-185,grp_int_185,Telur yang sampai di rumah banyak yang pecah di dalam kantong.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-187,grp_int_187,Kurirnya salah kirim alamat dan susah dihubungi.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-188,grp_int_188,Admin cabang belum memproses pesanan saya padahal sudah bayar dari tadi.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-189,grp_int_189,Total tagihan yang muncul saat checkout tidak sesuai dengan rincian harga.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-190,grp_int_190,Gula pasir yang saya terima kemasannya basah dan menggumpal.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-191,grp_int_191,Saya kecewa pelayanan pengantaran hari ini sangat lambat tanpa kabar.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-192,grp_int_192,"Tolong sambungkan saya ke admin, ada barang rusak di pesanan saya.",komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-193,grp_int_193,Pesanan saya dibatalkan sepihak tanpa konfirmasi terlebih dahulu.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-194,grp_int_194,Jumlah barang yang dikirim tidak sesuai dengan nota pembelian.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-195,grp_int_195,Kurir tidak sopan saat mengantar paket ke rumah saya.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-196,grp_int_196,Minyak goreng yang dikirim bocor membasahi belanjaan lainnya.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-197,grp_int_197,Saya sudah bayar tapi status di aplikasi masih gagal terus.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-198,grp_int_198,Kenapa barang yang dikirim sudah mendekati tanggal kedaluwarsa?,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-199,grp_int_199,Alamat di peta sudah benar tapi kurir malah nyasar jauh banget.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-200,grp_int_200,Saya mau ajukan pengembalian atau penukaran barang yang rusak ini.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-201,grp_int_201,Tolong tindak lanjuti keluhan saya soal item yang tertinggal di toko.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-202,grp_int_202,Pelayanan cabang ini lambat sekali merespons pesanan masuk.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-203,grp_int_203,Susu kaleng yang saya terima penyok parah semua.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-204,grp_int_204,Ongkir yang ditagihkan ke saya tiba-tiba naik padahal jaraknya dekat.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-205,grp_int_205,Pesanan saya tidak kunjung diantar sampai toko mau tutup.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-206,grp_int_206,Ada kesalahan pengiriman varian produk di paket belanja saya.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-207,grp_int_207,Saya mau bicara langsung dengan pemilik atau admin cabang terkait komplain.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-208,grp_int_208,Barang pesanan saya tertukar dengan pesanan pelanggan lain.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-209,grp_int_209,Kenapa aplikasi error terus pas saya mau konfirmasi penerimaan barang?,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-210,grp_int_210,Kualitas beras yang dikirim kali ini kurang bagus dan banyak kutunya.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-211,grp_int_211,Kurir meninggalkan paket di pagar tanpa memberi tahu penghuni rumah.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-212,grp_int_212,Saya butuh solusi cepat karena barang yang kurang untuk keperluan masak hari ini.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-213,grp_int_213,Pembayaran saya sudah terpotong tapi orderan tidak tercatat di sistem.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-214,grp_int_214,"Tolong hubungkan ke admin cabang, ada kendala serius pada pesanan saya.",komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-215,grp_int_215,Saus botol yang dikirim pecah di jalan.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-216,grp_int_216,Waktu tunggu pengiriman jauh lebih lama dari estimasi awal di aplikasi.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-217,grp_int_217,Saya komplain karena pesanan saya dilewati terus oleh kurir.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-218,grp_int_218,Item promo yang saya masukkan ke keranjang tidak ikut terkirim.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-219,grp_int_219,Bagaimana tanggung jawab toko kalau barang belanjaan rusak di perjalanan?,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-220,grp_int_220,Admin tidak merespons chat saya padahal pesanan bermasalah.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-221,grp_int_221,Berat beras yang saya timbang ulang kurang dari 5 kg.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-222,grp_int_222,Saya sangat tidak puas dengan kondisi barang yang diterima hari ini.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-223,grp_int_223,Tolong segera kirimkan kekurangan barang pesanan saya tadi.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-224,grp_int_224,Aplikasi sering macet saat saya mau melacak kurir yang terlambat.,komplain,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-225,grp_int_225,Saya ingin melaporkan masalah pengiriman dari cabang Tambun.,komplain,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'keluhan'
+INT-227,grp_int_227,Tolong buatkan puisi tentang hujan di sore hari.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-228,grp_int_228,Berapa hasil dari 125 dikali 48 ditambah 320?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-229,grp_int_229,Bagaimana cuaca di Jakarta dan Bekasi hari ini?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-231,grp_int_231,Tolong terjemahkan kalimat ini ke dalam bahasa Inggris.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-232,grp_int_232,Siapa pemenang pertandingan sepak bola tadi malam?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-233,grp_int_233,Buatkan kode Python untuk mengurutkan array angka.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-234,grp_int_234,Apa resep cara membuat nasi goreng spesial ala restoran?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-235,grp_int_235,Kapan jadwal libur nasional dan cuti bersama bulan depan?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-236,grp_int_236,Ceritakan dongeng sebelum tidur tentang kancil dan buaya.,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-237,grp_int_237,Berapa kurs nilai tukar dolar Amerika terhadap rupiah hari ini?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-238,grp_int_238,Bagaimana cara memperbaiki laptop Windows yang lemot?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-239,grp_int_239,Sebutkan ibu kota dari negara Jepang dan Korea Selatan.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-240,grp_int_240,Kasih saran tempat wisata keluarga yang bagus di Puncak Bogor.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-241,grp_int_241,Apa arti mimpi dikejar ular menurut psikologi?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-242,grp_int_242,Tolong buatkan contoh surat lamaran kerja untuk posisi admin.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-243,grp_int_243,Mengapa langit berwarna biru pada siang hari?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-244,grp_int_244,Siapa penemu lampu pijar dan telepon pertama kali?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-245,grp_int_245,Rekomendasi lagu pop Indonesia yang enak didengar saat kerja.,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-246,grp_int_246,Bagaimana cara merawat tanaman hias monstera agar subur?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-247,grp_int_247,Apa perbedaan antara machine learning dan deep learning?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-248,grp_int_248,Tolong hitungkan cicilan KPR rumah kalau bunganya 7 persen.,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-249,grp_int_249,Siapa aktor utama yang memerankan karakter Iron Man?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-250,grp_int_250,Kasih tips diet sehat untuk menurunkan berat badan dalam sebulan.,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-251,grp_int_251,Bagaimana sejarah berdirinya Candi Borobudur?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-252,grp_int_252,Apa gejala umum penyakit demam berdarah pada anak?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-253,grp_int_253,Buatkan caption Instagram yang menarik untuk foto liburan di pantai.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-254,grp_int_254,Berapa jarak dari bumi ke bulan dalam satuan kilometer?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-255,grp_int_255,Tolong jelaskan hukum Newton pertama beserta contohnya.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-256,grp_int_256,Aplikasi edit video gratis di HP yang bagus apa saja?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-257,grp_int_257,Siapa pencipta lagu kebangsaan Indonesia Raya?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-258,grp_int_258,Bagaimana cara membuat akun email baru di Gmail?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-259,grp_int_259,Rekomendasi merk sepatu lari lokal yang nyaman dipakai.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-260,grp_int_260,Apa saja rukun iman dan rukun islam dalam agama Islam?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-261,grp_int_261,Tolong buatkan pantun jenaka empat baris.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-262,grp_int_262,Kapan gerhana matahari total berikutnya akan terjadi?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-263,grp_int_263,Bagaimana cara menghilangkan noda tinta di baju putih?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-264,grp_int_264,Siapa penulis novel Laskar Pelangi?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-265,grp_int_265,Berapa kalori yang terkandung dalam satu porsi mie ayam?,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-266,grp_int_266,Tolong buatkan jadwal belajar untuk persiapan ujian akhir semester.,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-267,grp_int_267,Apa fungsi utama jantung dan paru-paru pada tubuh manusia?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-268,grp_int_268,Kasih rekomendasi game offline seru di Android.,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-269,grp_int_269,Bagaimana cara menghitung luas permukaan tabung?,di_luar_konteks,SINTETIS_DS_2M,test_beku,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-270,grp_int_270,Ceritakan lelucon singkat biar nggak ngantuk.,di_luar_konteks,SINTETIS_DS_2M,train,Draf awal DS (perlu review tim Gen AI) | label dipetakan dari 'out_of_context'
+INT-271,grp_cek_01,Pesanan saya dengan kode <KODE_PESANAN> sudah sampai mana ya?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-272,grp_cek_01,Tolong cek status orderan <KODE_PESANAN> dong min udah jalan belum?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-273,grp_cek_02,Kurirnya kok belum sampai ke <ALAMAT> ya padahal udah lama,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-274,grp_cek_02,Mas kurir yang antar ke <ALAMAT> posisinya sekarang di mana?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-275,grp_cek_03,Kira-kira belanjaan saya nyampe jam berapa ya?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-276,grp_cek_03,Estimasi waktu tiba pesanan saya berapa menit lagi min?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-277,grp_cek_04,Orderan atas nama <NAMA> apakah sedang disiapkan di toko?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-278,grp_cek_04,Pesanan punya <NAMA> udah selesai dikemas belum ya?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-279,grp_cek_05,Apakah sudah ada kurir yang ambil pesanan <KODE_PESANAN>?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-280,grp_cek_05,Orderan <KODE_PESANAN> udah di-pickup driver atau masih nunggu?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-281,grp_cek_06,Pembayaran saya untuk <KODE_PESANAN> sudah terkonfirmasi belum?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-282,grp_cek_06,Min cek dong transferan saya buat order <KODE_PESANAN> udah masuk belum,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-283,grp_cek_07,Paket sembako saya udah berangkat dari cabang belum ya?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-284,grp_cek_07,Belanjaan saya masih di toko atau udah di jalan nih?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-285,grp_cek_08,Bisa minta nomor HP kurir yang antar pesanan <KODE_PESANAN>?,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-286,grp_cek_08,Tolong infoin kontak driver yang bawa orderan saya dong,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-287,grp_cek_09,Kok status di aplikasi masih diproses terus ya dari tadi?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-288,grp_cek_09,Status pesanan <KODE_PESANAN> kok belum berubah dari dikemas?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-289,grp_cek_10,Saya pesan galon sama beras tadi udah dikirim belum ya?,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-290,grp_cek_10,Orderan beras dan minyak goreng saya tadi siang udah jalan belum?,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-291,grp_cek_11,Kurirnya sudah dekat <ALAMAT> belum ya soalnya mau saya tunggu di depan,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-292,grp_cek_11,Driver udah deket rumah saya di <ALAMAT> belum min?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-293,grp_cek_12,Kenapa pesanan saya belum sampai juga padahal statusnya sedang dikirim?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-294,grp_cek_12,Di aplikasi tulisannya on delivery tapi kok barang belum nyampe?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-295,grp_cek_13,Bisa bantu lacak posisi kurir untuk transaksi <KODE_PESANAN>?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-296,grp_cek_13,Tracking pengiriman kode <KODE_PESANAN> sekarang lagi di mana?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-297,grp_cek_14,Pesanan saya jadinya dikirim hari ini atau besok pagi ya?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-298,grp_cek_14,Orderan barusan langsung diantar sekarang kan min?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-299,grp_cek_15,Apakah pesanan <KODE_PESANAN> sudah diterima sama orang rumah di <ALAMAT>?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-300,grp_cek_15,Tolong pastiin barang <KODE_PESANAN> udah dititipin ke satpam belum,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-301,grp_cek_16,Punya saya antrean ke berapa ya buat diantar kurir?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-302,grp_cek_16,Kurirnya lagi antar ke tempat lain dulu atau langsung ke sini?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-303,grp_cek_17,Min pesanan saya berhasil masuk sistem kan tadi?,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-304,grp_cek_17,Cek orderan terbaru dari akun <NAMA> udah masuk antrean belum,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-305,grp_cek_18,Sudah 30 menit sejak bayar tapi kurir belum gerak juga ya?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-306,grp_cek_18,Dari tadi saya tunggu kok belum ada kabar pengiriman ya?,cek_pesanan,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-307,grp_cek_19,Kalau statusnya ready artinya tinggal nunggu kurir ambil ya?,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-308,grp_cek_19,Orderan <KODE_PESANAN> statusnya siap kirim sejak kapan min?,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-309,grp_cek_20,Bisa minta update terbaru pengiriman ke nomor <TELEPON>?,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-310,grp_cek_20,Kabarin dong kalau kurirnya sudah berangkat menuju <ALAMAT>,cek_pesanan,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-311,grp_ongkir_01,Ongkir pengiriman ke daerah <ALAMAT> kena berapa ya?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-312,grp_ongkir_01,Kalau kirim sembako ke <ALAMAT> biaya antarnya berapa min?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-313,grp_ongkir_02,Cara hitung tarif ongkos kirim di 2M gimana sih?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-314,grp_ongkir_02,Perhitungan ongkir dihitung per kilometer atau flat?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-315,grp_ongkir_03,Kok ongkir ke rumah saya lumayan mahal ya padahal deket?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-316,grp_ongkir_03,Kenapa biaya pengiriman saya naik jadi segitu ya min?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-317,grp_ongkir_04,Ada promo gratis ongkir nggak kalau belanja banyak?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-318,grp_ongkir_04,Minimal belanja berapa rupiah biar dapet free ongkir?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-319,grp_ongkir_05,Kalau pesan beras 10 kg sama galon 2 biji ongkirnya nambah nggak?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-320,grp_ongkir_05,Berat belanjaan ngaruh ke tarif pengiriman nggak min?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-321,grp_ongkir_06,Batas jarak maksimal pengiriman dari cabang berapa kilometer?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-322,grp_ongkir_06,Radius pengantaran maksimal sampai berapa km dari toko?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-323,grp_ongkir_07,Alamat saya di <ALAMAT> masih masuk jangkauan kurir nggak ya?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-324,grp_ongkir_07,Apakah area <ALAMAT> tercover pengiriman cabang ini?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-325,grp_ongkir_08,Tarif dasar ongkir mulai dari berapa ribu rupiah?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-326,grp_ongkir_08,Ongkos kirim paling murah di aplikasi ini berapa ya?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-327,grp_ongkir_09,Kalau belanja di atas 20 kg dikirim pakai mobil atau motor dan beda ongkirnya?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-328,grp_ongkir_09,Tarif pengiriman armada mobil sama motor beda berapa ya?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-329,grp_ongkir_10,Jarak rumah saya sekitar 3 km dari toko kena ongkir berapa?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-330,grp_ongkir_10,Estimasi biaya antar untuk jarak 2 sampai 4 km berapa min?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-331,grp_ongkir_11,Apakah ada biaya tambahan parkir atau kemasan selain ongkir?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-332,grp_ongkir_11,Harga ongkir yang muncul di checkout sudah final tanpa biaya lain?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-333,grp_ongkir_12,Kalau saya order dua kali di hari yang sama bisa digabung ongkirnya?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-334,grp_ongkir_12,Bisa hemat ongkir nggak kalau nambah barang ke pesanan yang belum dikirim?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-335,grp_ongkir_13,Ongkir malam hari sama siang hari tarifnya sama aja kan?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-336,grp_ongkir_13,Kalau hujan biaya pengirimannya ikut naik nggak min?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-337,grp_ongkir_14,Minimal transaksi supaya bisa diantar kurir berapa ya?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-338,grp_ongkir_14,Beli sabun satu batang aja bisa dikirim pakai kurir nggak?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-339,grp_ongkir_15,Kenapa alamat <ALAMAT> keterangannya di luar jangkauan pengiriman?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-340,grp_ongkir_15,Rumah saya jaraknya 6 km kok nggak bisa checkout pengiriman ya?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-341,grp_ongkir_16,Tarif per kilometer setelah jarak minimum dikenakan berapa?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-342,grp_ongkir_16,Biaya tambahan per km untuk pengiriman jauh berapa rupiah?,tanya_ongkir,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-343,grp_ongkir_17,Ada voucher potongan ongkos kirim buat pengguna baru nggak?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-344,grp_ongkir_17,Kode promo gratis ongkir hari ini apa ya min?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-345,grp_ongkir_18,Kalau ambil sendiri ke toko berarti bebas ongkir ya?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-346,grp_ongkir_18,Bisa pilih self pickup biar nggak kena biaya kurir?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-347,grp_ongkir_19,Kenapa ongkir dari cabang sebelah lebih murah ke <ALAMAT>?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-348,grp_ongkir_19,Biaya antar dihitung dari cabang terdekat dari alamat saya kan?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-349,grp_ongkir_20,Cek tarif kirim ke kelurahan sebelah dong min,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-350,grp_ongkir_20,Ongkir flat 8000 itu berlaku sampai jarak berapa kilometer?,tanya_ongkir,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-351,grp_produk_01,Beras Premium 5 kg masih ready stok nggak min?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-352,grp_produk_01,Stok beras kemasan 5 kiloan hari ini masih ada?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-353,grp_produk_02,Harga Minyak Goreng 2 L sekarang berapa ya?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-354,grp_produk_02,Minyak goreng pouch 2 liter lagi promo nggak hari ini?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-355,grp_produk_03,Air Galon 19 L apakah tersedia buat dikirim sekarang?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-356,grp_produk_03,Galon air mineral 19 liter stoknya masih aman nggak?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-357,grp_produk_04,Telur Ayam 1 Tray isi berapa butir dan harganya berapa?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-358,grp_produk_04,Jual telur ayam per kg atau per tray ya di sini?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-359,grp_produk_05,Tisu Gulung isi 4 kok di aplikasi keterangannya habis ya?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-360,grp_produk_05,Kapan stok Tisu Gulung isi 4 masuk lagi min?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-361,grp_produk_06,Ada jual Beras Medium 10 kg karungan nggak?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-362,grp_produk_06,Beras ukuran 10 kg merk apa aja yang tersedia?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-363,grp_produk_07,Susu UHT 1 L ada varian rasa cokelat sama full cream?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-364,grp_produk_07,Stok Susu UHT kotak 1 liter tinggal berapa ya?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-365,grp_produk_08,Bawang Merah 500 g sama Bawang Putih 500 g kondisinya segar kan?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-366,grp_produk_08,Sayuran kayak kentang sama cabai rawit 250 g ready hari ini?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-367,grp_produk_09,Mie Instan Goreng kalau beli satu dus bisa nggak?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-368,grp_produk_09,Harga mie instan goreng per bungkus berapa ya?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-369,grp_produk_10,Gula Pasir 1 kg sama Tepung Terigu 1 kg masih ada stok?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-370,grp_produk_10,Jual gula pasir kemasan 1 kiloan merk apa aja min?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-371,grp_produk_11,Sabun Cuci Piring 800 ml sama Deterjen Bubuk 800 g ready?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-372,grp_produk_11,Kebutuhan rumah tangga kayak sabun mandi batang ada stok?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-373,grp_produk_12,Sarden Kaleng 155 g dan Kornet Kaleng 198 g expired-nya masih lama?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-374,grp_produk_12,Tanggal kedaluwarsa makanan kaleng di toko aman kan min?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-375,grp_produk_13,Kopi Bubuk 165 g sama Teh Celup isi 25 stoknya tersedia?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-376,grp_produk_13,Ada jual kopi bubuk kemasan pak nggak di katalog?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-377,grp_produk_14,Kecap Manis 275 ml botol sama Saus Sambal 340 ml ada?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-378,grp_produk_14,Bumbu dapur kayak garam dapur 250 g dan kecap manis ready?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-379,grp_produk_15,Jual gas elpiji 3 kg atau gas melon nggak min?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-380,grp_produk_15,Apakah di 2M Sembako tersedia tabung gas LPG?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-381,grp_produk_16,Sampo Sachet isi 12 satu renteng harganya berapa ya?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-382,grp_produk_16,Ada sampo kemasan sachet rentengan nggak min?,tanya_produk,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-383,grp_produk_17,Snack kayak Biskuit Kelapa 100 g sama Kerupuk Udang 200 g ada?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-384,grp_produk_17,Camilan atau kerupuk udang kemasan 200 gram masih tersedia?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-385,grp_produk_18,Minyak Goreng 1 L sama 2 L bedanya berapa rupiah?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-386,grp_produk_18,Lebih hemat beli minyak goreng 2 liter atau dua yang 1 liter?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-387,grp_produk_19,Kalau beli telur ayam 1 kg dapet berapa butir kira-kira?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-388,grp_produk_19,Harga telur ayam sekilo hari ini lagi naik atau turun?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-389,grp_produk_20,Jual pampers bayi atau susu formula nggak di sini?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-390,grp_produk_20,Apakah toko menyediakan kebutuhan bayi seperti popok?,tanya_produk,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-392,grp_info_01,Jam operasional pengiriman kurir mulai pukul berapa ya?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-394,grp_info_02,Metode pembayaran apa saja yang diterima di aplikasi ini?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-395,grp_info_03,Bisa bayar pakai QRIS atau transfer virtual account?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-396,grp_info_03,Pembayaran lewat e-wallet atau QRIS tersedia nggak min?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-397,grp_info_04,Cara pesan sembako lewat web ini gimana langkahnya?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-398,grp_info_04,Saya pengguna baru tolong pandu cara ordernya dong,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-400,grp_info_05,Alamat lengkap toko cabang terdekat dari Jatibening di mana?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-402,grp_info_06,Akhir pekan tetap melayani pengiriman sembako kan min?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-403,grp_info_07,Kalau mau ubah alamat pengiriman setelah checkout bisa nggak?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-404,grp_info_07,Gimana cara ganti titik lokasi rumah di akun saya?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-405,grp_info_08,Batas waktu pembayaran setelah buat pesanan berapa menit?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-406,grp_info_08,Orderan otomatis batal kalau belum dibayar dalam berapa jam?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-407,grp_info_09,Kalau mau batalkan pesanan yang sudah dibayar prosesnya gimana?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-408,grp_info_09,Syarat dan ketentuan refund dana di 2M seperti apa ya?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-409,grp_info_10,Apakah bisa pesan sekarang tapi minta dikirim besok pagi?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-410,grp_info_10,Bisa atur jadwal pengiriman atau preorder untuk besok?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-411,grp_info_11,Nomor WhatsApp customer service 2M Sembako berapa ya?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-412,grp_info_11,Ada kontak admin yang bisa dihubungi selain lewat chat ini?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-413,grp_info_12,Apakah toko melayani pembelian grosir untuk warung?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-414,grp_info_12,Bisa daftar jadi mitra atau beli partai besar nggak?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-415,grp_info_13,Struk atau nota belanja digital bisa diunduh di mana?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-416,grp_info_13,Apakah kurir memberikan bukti transaksi saat serah terima?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-417,grp_info_14,Kalau galon air harus tukar tabung kosong atau beli sekalian galonnya?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-418,grp_info_14,Aturan pemesanan Air Galon 19 L apakah wajib ada galon kosong?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-419,grp_info_15,Bagaimana cara mengganti cabang toko pilihan di aplikasi?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-420,grp_info_15,Bisa pilih cabang lain kalau stok di cabang pertama habis?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-421,grp_info_16,Apakah harga barang di web sama dengan harga beli langsung di toko?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-422,grp_info_16,Ada perbedaan harga antara belanja online dan offline nggak?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-423,grp_info_17,Lupa password akun <NAMA> cara reset-nya gimana ya?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-424,grp_info_17,Saya nggak bisa login pakai nomor <TELEPON> solusinya gimana?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-425,grp_info_18,Kapasitas maksimal sekali angkut kurir berapa banyak barang?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-426,grp_info_18,Ada batasan maksimal berat belanja dalam satu kali checkout?,info_umum,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-427,grp_info_19,Apakah barang pesanan dikemas pakai kardus atau kantong plastik?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-428,grp_info_19,Kemasan belanjaan aman nggak buat barang pecah belah kayak telur?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-429,grp_info_20,2M Sembako ini toko kelontong online khusus area mana aja?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-430,grp_info_20,Bisa jelasin layanan apa saja yang ada di platform 2M?,info_umum,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-431,grp_komplain_01,Telur ayam yang saya terima pecah 4 butir pas dibuka,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-432,grp_komplain_01,Min barang pesanan <KODE_PESANAN> telurnya banyak yang retak,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-433,grp_komplain_02,Pesanan saya kurang Minyak Goreng 2 L satu pouch padahal sudah bayar,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-434,grp_komplain_02,Barang yang datang tidak lengkap kurang 2 item dari struk,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-435,grp_komplain_03,Saya pesan Beras Premium 5 kg tapi yang dikirim malah Beras Medium,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-436,grp_komplain_03,Produk yang diantar salah varian tidak sesuai pesanan <KODE_PESANAN>,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-437,grp_komplain_04,Kemasan minyak gorengnya bocor jadi tumpah ke barang lain,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-438,grp_komplain_04,Plastik gula pasirnya sobek dan isinya berceceran di kantong,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-439,grp_komplain_05,Bawang merah yang dikirim sudah busuk dan lembek sebagian,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-440,grp_komplain_05,Kualitas sayur dan cabai rawitnya layu banget tidak segar,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-441,grp_komplain_06,Kurirnya kurang ramah dan main lempar paket di depan pagar <ALAMAT>,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-442,grp_komplain_06,Keluhan pelayanan kurir yang antar pesanan <KODE_PESANAN> sangat tidak sopan,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-443,grp_komplain_07,Status di aplikasi sudah selesai diterima tapi saya belum terima barangnya,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-444,grp_komplain_07,Pesanan <KODE_PESANAN> ditandai delivered padahal kurir nggak datang ke <ALAMAT>,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-446,grp_komplain_08,Uang saya sudah ketarik lewat QRIS untuk <KODE_PESANAN> kok orderannya batal?,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-447,grp_komplain_09,Saya mau ajukan pengembalian dana karena barang rusak saat pengiriman,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-448,grp_komplain_09,Tolong proses refund untuk item yang kurang di order <KODE_PESANAN>,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-449,grp_komplain_10,Beras yang saya terima bau apek dan berkutu min,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-450,grp_komplain_10,Kualitas beras 5 kg yang dikirim kali ini jelek banget banyak kutunya,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-451,grp_komplain_11,Sarden kaleng yang dikirim penyok parah dan sudah melewati tanggal expired,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-452,grp_komplain_11,Produk makanan yang saya terima sudah kedaluwarsa bulan lalu,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-453,grp_komplain_12,Pengiriman telat hampir 2 jam dari estimasi dan tidak ada konfirmasi,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-454,grp_komplain_12,Kecewa banget pesanan <KODE_PESANAN> molor lama tanpa kabar,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-455,grp_komplain_13,Kurir salah kirim paket punya orang lain ke rumah saya di <ALAMAT>,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-456,grp_komplain_13,Belanjaan saya tertukar sama pesanan pelanggan lain nih min,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-457,grp_komplain_14,Galon air yang diantar tutup segelnya sudah rusak dan rembes,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-458,grp_komplain_14,Air Galon 19 L yang dikirim bocor halus dari bagian bawah,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-459,grp_komplain_15,Dana refund saya dari kemarin belum masuk ke rekening <NAMA>,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-460,grp_komplain_15,Kenapa pengembalian uang untuk pesanan <KODE_PESANAN> lama sekali cairnya?,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-461,grp_komplain_16,Saya sudah chat berkali-kali tapi tidak ada respons dari admin cabang,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-462,grp_komplain_16,Pelayanan lambat banget komplain saya dari pagi belum ditanggapi,komplain,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-463,grp_komplain_17,Total tagihan yang ditagih beda sama rincian harga pas checkout,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-464,grp_komplain_17,Saya dikenakan ongkir dua kali untuk satu transaksi <KODE_PESANAN>,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-465,grp_komplain_18,Kecap manis botolnya pecah di dalam plastik belanjaan,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-466,grp_komplain_18,Botol saus sambal retak pas diterima dari kurir,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-467,grp_komplain_19,Kurir tidak mau antar sampai depan pintu padahal jaraknya masih masuk area,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-468,grp_komplain_19,Driver minta uang tip tambahan padahal ongkir sudah lunas di aplikasi,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-469,grp_komplain_20,Pesanan saya dibatalkan sepihak tanpa pemberitahuan padahal stok tadi ada,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-470,grp_komplain_20,Kenapa orderan <KODE_PESANAN> di-cancel tiba-tiba oleh toko?,komplain,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-471,grp_oot_01,Prakiraan cuaca Jakarta hari ini hujan atau cerah ya?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-472,grp_oot_01,Besok sore bakal turun hujan deras nggak menurut ramalan cuaca?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-473,grp_oot_02,Tolong buatin puisi romantis tentang senja dan kopi dong,di_luar_konteks,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-474,grp_oot_02,Buatkan pantun jenaka buat acara ulang tahun teman saya,di_luar_konteks,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-475,grp_oot_03,Siapa presiden pertama Republik Indonesia?,di_luar_konteks,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-476,grp_oot_03,Kapan hari kemerdekaan negara Indonesia diperingati?,di_luar_konteks,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-477,grp_oot_04,Bantu kerjakan soal matematika integral berikut ini dong,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-478,grp_oot_04,Berapa hasil dari 25 dikali 48 dibagi 12?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-479,grp_oot_05,Skor pertandingan bola tadi malam antara timnas menang berapa?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-480,grp_oot_05,Kapan jadwal pertandingan final Liga Champions musim ini?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-481,grp_oot_06,Rekomendasi film action terbaik di Netflix tahun ini apa ya?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-482,grp_oot_06,Judul lagu yang liriknya tentang hujan di bulan Juni apa ya?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-483,grp_oot_07,Tolong buatkan kode Python untuk mengurutkan array angka,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-486,grp_oot_08,Bagaimana langkah memasak rendang daging sapi biar empuk?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-487,grp_oot_09,Harga emas Antam 1 gram hari ini naik atau turun?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-488,grp_oot_09,Berapa kurs nilai tukar dolar Amerika terhadap rupiah sekarang?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-489,grp_oot_10,Kamu bisa jualan pulsa listrik token PLN dan paket data nggak?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-490,grp_oot_10,Bisa bantu top up saldo game online atau bayar tagihan BPJS?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-492,grp_oot_11,Kasih tebak-tebakan lucu biar nggak bosan menunggu,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-493,grp_oot_12,Obat yang ampuh untuk sakit kepala dan demam tinggi apa ya?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-495,grp_oot_13,Rute kereta KRL dari stasiun Bekasi ke Sudirman transit di mana?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-496,grp_oot_13,Jam berapa jadwal keberangkatan pesawat terakhir ke Surabaya?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-497,grp_oot_14,Terjemahkan kalimat ini ke dalam bahasa Inggris yang formal,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-498,grp_oot_14,Apa arti dari peribahasa bagai pungguk merindukan bulan?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-499,grp_oot_15,Tempat wisata keluarga yang bagus di Bandung bagian mana ya?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-500,grp_oot_15,Rekomendasi hotel murah dekat pantai Kuta Bali dong,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-501,grp_oot_16,Kenapa langit berwarna biru saat siang hari?,di_luar_konteks,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-502,grp_oot_16,Berapa jarak rata-rata dari planet Bumi ke Matahari?,di_luar_konteks,SINTETIS_AI_2M,test_beku,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-503,grp_oot_17,Halo apa kabar kamu siapa yang menciptakan kamu?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-504,grp_oot_17,Kamu robot AI atau manusia asli yang balas chat ini?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-505,grp_oot_18,Bantu buatkan surat lamaran kerja untuk posisi staf administrasi,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-506,grp_oot_18,Tips menjawab pertanyaan wawancara kerja saat ditanya kelemahan diri,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-507,grp_oot_19,Cara merawat tanaman hias monstera supaya daunnya tidak menguning,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-508,grp_oot_19,Jenis makanan kucing yang bagus untuk bulu rontok apa ya?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-509,grp_oot_20,Siapa pemenang penghargaan Ballon d'Or tahun lalu?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
+INT-510,grp_oot_20,Berapa jumlah provinsi yang ada di Indonesia saat ini?,di_luar_konteks,SINTETIS_AI_2M,train,Draf awal AI (slot entitas placeholder dipertahankan)
