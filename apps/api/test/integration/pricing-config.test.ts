@@ -19,14 +19,34 @@ afterAll(async () => {
   await pool.end();
 });
 
-describe("ds_v2 pricing config", () => {
-  it("defaults to ds_v2 with the DS parameters", async () => {
+describe("branch pricing config", () => {
+  it("defaults to the owner's tier table", async () => {
     const cfg = (await getPricingConfig(pool, fx.branchId))!;
-    expect(cfg.pricing_model).toBe("ds_v2");
-    expect(computeShipping(cfg, 4.25, 5).base_delivery_fee).toBe(7833);
+    expect(cfg.pricing_model).toBe("tiered");
+    expect(cfg.tier_extra_per_km).toBe(1333);
+    expect(cfg.fee_tiers).toEqual([
+      { max_km: 0.75, fee: 5500 },
+      { max_km: 1, fee: 6000 },
+      { max_km: 1.25, fee: 6500 },
+      { max_km: 1.75, fee: 7000 },
+      { max_km: 4, fee: 7500 },
+    ]);
+    expect(computeShipping(cfg, 0.5, 5).base_delivery_fee).toBe(5500);
+    expect(computeShipping(cfg, 4.25, 5).base_delivery_fee).toBe(8000);
   });
 
-  it("changing wage_per_km in the DB changes the quote without a deploy", async () => {
+  it("changing the tiers in the DB changes the quote without a deploy", async () => {
+    await pool.query(
+      `UPDATE branch_pricing_config SET fee_tiers = '[{"max_km":2,"fee":5000},{"max_km":4,"fee":8000}]' WHERE branch_id = $1`,
+      [fx.branchId],
+    );
+    const cfg = (await getPricingConfig(pool, fx.branchId))!;
+    expect(computeShipping(cfg, 1, 5).base_delivery_fee).toBe(5000);
+    expect(computeShipping(cfg, 3, 5).base_delivery_fee).toBe(8000);
+  });
+
+  it("keeps ds_v2 selectable, still driven by wage_per_km", async () => {
+    await pool.query(`UPDATE branch_pricing_config SET pricing_model = 'ds_v2' WHERE branch_id = $1`, [fx.branchId]);
     const before = computeShipping((await getPricingConfig(pool, fx.branchId))!, 1, 5).base_delivery_fee;
     await pool.query(`UPDATE branch_pricing_config SET wage_per_km = 3000 WHERE branch_id = $1`, [fx.branchId]);
     const after = computeShipping((await getPricingConfig(pool, fx.branchId))!, 1, 5).base_delivery_fee;

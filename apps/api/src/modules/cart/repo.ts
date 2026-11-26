@@ -19,6 +19,11 @@ export interface BranchLimits {
   heavy_order_threshold_kg: number;
 }
 
+export interface FeeTier {
+  max_km: number;
+  fee: number;
+}
+
 export interface PricingConfig {
   base_fee: number;
   per_km: number;
@@ -29,7 +34,9 @@ export interface PricingConfig {
   fee_max: number;
   min_order: number;
   circuity_factor: number;
-  pricing_model: "ds_v2" | "linear";
+  pricing_model: "tiered" | "ds_v2" | "linear";
+  fee_tiers: FeeTier[];
+  tier_extra_per_km: number;
   wage_base: number;
   wage_per_km: number;
   failed_rate: number;
@@ -130,7 +137,7 @@ export async function getPricingConfig(db: Db, branchId: string): Promise<Pricin
             failed_pay_fraction::float8 AS failed_pay_fraction,
             failed_fee_charged_fraction::float8 AS failed_fee_charged_fraction,
             overhead_per_day, drops_per_day, round_to, cap_min_fee, cap_free_km::float8 AS cap_free_km,
-            cap_per_km::float8 AS cap_per_km
+            cap_per_km::float8 AS cap_per_km, fee_tiers, tier_extra_per_km
      FROM branch_pricing_config WHERE branch_id = $1`,
     [branchId],
   );

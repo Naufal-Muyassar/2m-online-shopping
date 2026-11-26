@@ -86,6 +86,7 @@ export async function quote(
     // Internal cost data: stored on the order, never sent to the customer.
     snapshotExtra: {
       route_distance_km: distanceKm,
+      fee_model: pricing.pricing_model,
       fee_floor: feeFloor,
       fee_cap: feeCap,
       courier_wage: {

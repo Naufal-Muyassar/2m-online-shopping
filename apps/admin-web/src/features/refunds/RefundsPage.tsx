@@ -336,7 +336,7 @@ export function RefundsPage() {
           <p className="t-title">{state === "open" ? "Tidak ada refund yang menunggu." : "Belum ada refund yang selesai."}</p>
           <p className="text-muted-foreground">
             {state === "open"
-              ? "Refund dibuat otomatis saat pesanan yang sudah dibayar dibatalkan atau barangnya kurang."
+              ? "Refund dibuat otomatis saat pesanan yang sudah dibayar dibatalkan, gagal diantar, atau barangnya kurang."
               : "Refund yang sudah ditransfer dan diberi bukti muncul di sini."}
           </p>
         </div>
