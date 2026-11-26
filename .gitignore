@@ -6,5 +6,6 @@ services/ml-api/models/*
 !services/ml-api/models/.gitkeep
 __pycache__/
 .venv/
+*.egg-info/
 # Added by code-review-graph
 .code-review-graph/

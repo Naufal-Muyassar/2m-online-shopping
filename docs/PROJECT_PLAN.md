@@ -59,7 +59,7 @@ Legenda: ✅ ada, 🟡 sebagian, ❌ belum, ❓ perlu verifikasi. Kolom **Trello
 | FS-U1 | Mockup dibuat sebelum pengembangan | ❌ | ❌ | Tidak ada berkas mockup. Ada `docs/DESIGN_SYSTEM.md` (42 KB) yang bisa jadi dasar penjelasan | WP-46 |
 | FS-U2 | Responsif dengan keputusan desain jelas | 🟡 | ✅ ⬆ | Redesign + `DESIGN_SYSTEM.md` (token warna, kolom 30rem, admin lebar) | WP-46 (dokumentasi) |
 | FS-C1 | Riwayat kode dengan Git/GitHub | ✅ | ✅ | 40 commit | – |
-| FS-C2 | Kontrak API/format data disepakati dengan AE dan DS | ❌ | 🟡 | Draf v0.1 `contracts/ml-api.openapi.json` + `data-science/data_dictionary.md`, menunggu persetujuan 3 LP | WP-02 |
+| FS-C2 | Kontrak API/format data disepakati dengan AE dan DS | ❌ | ✅ | `contracts/ml-api.openapi.json` v0.2.0 + `data-science/data_dictionary.md` v0.2, disetujui Hafizh, Alga, Ida 2026-11-26 | WP-02 |
 | FS-C3 | Deploy ke layanan free tier | ❌ | ✅ (laporan pemilik) | Lihat FS-M6; `render.yaml` memang free tier, tetapi belum terbukti jalan | WP-00, WP-20 |
 
 ### 3.2 AI Engineer (Hafizh, Naufal)
@@ -68,13 +68,13 @@ Semua butir ❌ di Trello dan di repo. Kartu AI yang ada (Golden Set, LLM Cost C
 
 | ID | Butir | Status | Paket |
 |---|---|---|---|
-| AE-M1 | README menjelaskan masalah yang diselesaikan model | ❌ | WP-03 |
+| AE-M1 | README menjelaskan masalah yang diselesaikan model | 🟡 | WP-03 (masalah UMKM ditulis; bagian model masih placeholder, diisi WP-60) |
 | AE-M2 | Model AI disesuaikan dengan data dari tim DS | ❌ | WP-11, WP-12 |
 | AE-M3 | Preprocessing sebelum dipakai model | ❌ | WP-11 |
-| AE-M4 | Sumber API/dataset/library dicantumkan di README | ❌ | WP-03 (log sejak awal) |
+| AE-M4 | Sumber API/dataset/library dicantumkan di README | ✅ | WP-03 (`docs/SOURCES.md`) |
 | AE-M5 | Fitur generatif dengan API model proprietary | ❌ | WP-14, WP-15, WP-16 |
 | AE-M6 | Bandingkan ≥2 model/konfigurasi, tabel + alasan di README | ❌ | WP-12 |
-| AE-M7 | REST API FastAPI/Flask online, diakses backend | ❌ | WP-10, WP-13 |
+| AE-M7 | REST API FastAPI/Flask online, diakses backend | 🟡 | WP-10, WP-13 |
 | AE-P1 | Cek dan tangani ketidakseimbangan kelas | ❌ | WP-42 |
 | AE-P2 | Peningkatan kinerja (augmentasi / tuning) + pengaruhnya | ❌ | WP-42 |
 | AE-P3 | Uji pada data uji tersisih, metrik sesuai, hasil di README | ❌ | WP-42 |
@@ -84,10 +84,10 @@ Semua butir ❌ di Trello dan di repo. Kartu AI yang ada (Golden Set, LLM Cost C
 | AE-G3 | Prompt terstruktur (template, few-shot) | ❌ | WP-14 |
 | AE-G4 | Tolak pertanyaan di luar konteks, uji ≥10 pertanyaan | ❌ | WP-41 |
 | AE-G5 | Bonus: SLM/LLM open-source lokal sebagai generation | ❌ | WP-53 (opsional) |
-| AE-S1 | Kontrak API disepakati dengan FS sebelum coding | 🟡 | WP-02 |
+| AE-S1 | Kontrak API disepakati dengan FS sebelum coding | ✅ | WP-02 |
 | AE-S2 | Tangani input tidak valid dan kegagalan/kuota AI | ❌ | WP-14, WP-43 |
 | AE-S3 | Integrasi ke kanal UMKM (Telegram/WhatsApp) | ❌ | WP-40 |
-| AE-S4 | Dokumentasi API yang bisa dicoba (Swagger/OpenAPI) | ❌ | WP-10, WP-43 |
+| AE-S4 | Dokumentasi API yang bisa dicoba (Swagger/OpenAPI) | 🟡 | WP-10, WP-43 |
 
 ### 3.3 Data Science (Ida, Dian)
 
@@ -107,7 +107,7 @@ Semua ❌ di repo. Di luar repo: analisis tarif kurir (xlsx) menyentuh DS-M1, DS
 | DS-D3 | Pembaruan data lewat upload / koneksi | ❌ | ❌ | WP-44 |
 | DS-D4 | Prioritaskan data primer, dummy/publik jika kurang | ❌ | ❌ | WP-31 |
 | DS-D5 | Dasbor terintegrasi ke web app | ❌ | ❌ | WP-44 |
-| DS-L1 | Sepakati kebutuhan/format data dengan tim Gen AI | ❌ | 🟡 | WP-02 |
+| DS-L1 | Sepakati kebutuhan/format data dengan tim Gen AI | ❌ | ✅ | WP-02 |
 | DS-L2 | Pelabelan, transformasi, feature engineering | ❌ | ❌ | WP-11, WP-45 |
 | DS-L3 | Kamus data | ❌ | ❌ (file 0 byte) | WP-31 |
 | DS-L4 | Split train/test + cegah kebocoran | ❌ | ❌ | WP-11, WP-45 |
@@ -201,8 +201,8 @@ Dibuat 2026-11-23 setelah D7 diputuskan. Detail tiap paket tetap di bloknya masi
 
 - [x] **WP-00 Verifikasi kondisi deploy (FS-M6, FS-C3)** — Owner: Hafizh/Zoel. **Selesai 2026-11-08**: API Render hidup dan `GET /health` menjawab `{"status":"ok"}` setelah redeploy pukul 04:22 UTC (dilaporkan pemilik; saya tidak mengujinya sendiri). Sebelum redeploy, instance tidak menjawab sama sekali; penyebabnya tidak pernah terlihat di log, jadi risiko "tidur / macet lalu tidak bangun" tetap ada untuk demo (lihat WP-20). Catatan lama di bawah dipertahankan sebagai riwayat. Sisa yang dipindah ke WP-20: URL tiga situs statis yang sebenarnya, tes dari ponsel, alur checkout dan upload bukti di URL publik, dan cara mencegah instance tertidur saat demo. Dugaan Redis/env yang sempat dicatat **tidak didukung log**: saat boot, worker memanggil `rebuildCounters` dan mencetak "stock counters rebuilt" dengan 30 counter, jadi Postgres dan Redis terjangkau pada deploy 7 Nov. Yang belum terbukti: checkout end-to-end di URL publik dan upload foto bukti (S3). Selesai bila: catatan "hidup / mati + penyebab" tertulis di bagian 9.
 - [ ] **WP-01 Kunci keputusan D1–D9** — Owner: Hafizh (lead). Selesai bila kolom Status bagian 5 terisi dan hasilnya dikirim ke grup tim.
-- [ ] **WP-02 Kontrak API v0.1 dan format dataset (AE-S1, FS-C2, DS-L1)** — Owner: Hafizh + Alga + Ida. Isi `contracts/ml-api.openapi.json` (draf endpoint di bagian 8), tambah entri di `contracts/CHANGELOG.md`, tulis spesifikasi dataset intent dan ETA di `data-science/data_dictionary.md`. Selesai bila tiga LP menyetujui (catat tanggal) dan tenggat serah-terima dataset terisi.
-- [ ] **WP-03 README dan log sumber (AE-M1, AE-M4, FS-M1)** — Owner: Hafizh. Tulis ulang `README.md`: masalah dan pengguna, URL publik, cara menjalankan, struktur, bagian placeholder untuk model (masalah, data, perbandingan, contoh request/response). Buat `docs/SOURCES.md` untuk mencatat setiap dataset, API, dan library dengan lisensinya **sejak awal**.
+- [x] **WP-02 Kontrak API v0.1 dan format dataset (AE-S1, FS-C2, DS-L1)** — Owner: Hafizh + Alga + Ida. Isi `contracts/ml-api.openapi.json` (draf endpoint di bagian 8), tambah entri di `contracts/CHANGELOG.md`, tulis spesifikasi dataset intent dan ETA di `data-science/data_dictionary.md`. Selesai bila tiga LP menyetujui (catat tanggal) dan tenggat serah-terima dataset terisi.
+- [x] **WP-03 README dan log sumber (AE-M1, AE-M4, FS-M1)** — Owner: Hafizh. Tulis ulang `README.md`: masalah dan pengguna, URL publik, cara menjalankan, struktur, bagian placeholder untuk model (masalah, data, perbandingan, contoh request/response). Buat `docs/SOURCES.md` untuk mencatat setiap dataset, API, dan library dengan lisensinya **sejak awal**.
 
 ### Tahap 1 — Main Quest (wajib)
 
@@ -297,6 +297,10 @@ Spesifikasi dataset ETA (DS): `order_id, branch_id, distance_km, weight_kg, item
 | 2026-11-23 | **D7 diputuskan.** Hafizh memegang hampir seluruh paket AE (WP-01–03, 10–16, 20, 40–43, 60, 62) plus peran lead; bagian bersama Naufal menyusul. Ditambahkan bagian **6.0 Jalur AE Hafizh** (urutan, ketergantungan, target minggu), label Owner di tiap paket, linimasa Asah di D8 (MA 3 s.d. 24 Nov, MA 4 30 Nov – 22 Des 2026), dan nomor migrasi WP-15 diperbarui ke `1761000000016_*`. Penegasan arsitektur: cache, circuit breaker, dan fallback ada di ml-api (WP-14); kuota dihitung dari `llm_usage`; Redis hanya untuk batas laju Telegram. |
 | 2026-11-24 | **D1–D6, D8, D9 dikunci** (WP-01, belum dicentang sampai ringkasan dikirim ke grup tim). Semua mengikuti rekomendasi; rincian: D3 Gemini Flash dengan cap biaya Rp0 (free tier saja, batas harian token/permintaan di `llm_usage`), D4 embedding Gemini + FAISS cpu, D8 tenggat kerja 22 Des sampai tanggal resmi diketahui. Asumsi draf WP-02 (D1, D2, D4, D9) kini terkonfirmasi. |
 | 2026-11-24 | **D3 dan D4 diubah menjadi dua fase** atas permintaan pemilik: selama pengembangan LLM dan embedding berjalan **lokal** di GPU pemilik (RTX 5060 Ti 16 GB) lewat runtime HTTP, lalu **migrasi ke Gemini** untuk deploy. Konsekuensi untuk WP ml-api: antarmuka provider wajib sejak awal, provider dipilih lewat env, indeks FAISS dibangun ulang per provider, dan uji akhir (kualitas jawaban, latensi, kuota `llm_usage`) diulang setelah migrasi ke Gemini. Model lokal tidak masuk image ml-api (target RAM 512 MB tetap). |
+| 2026-11-26 | **WP-02 draf v0.2, belum dicentang.** Kontrak dan `data_dictionary.md` diselaraskan dengan kamus DS (`kamus_data.csv`, `kamus_data_model.csv`); Hafizh mengambil peran keputusan DS. ETA breaking: target menjadi klaim kurir → DELIVERED (`target_eta_menit`), `hour` desimal, `weight_kg` nullable, `cabang_id` dan `is_macet` tidak disajikan. Dataset intent memakai kolom DS (`id, teks, label, sumber_data, split`) + `group_id`, kelas tetap nama kontrak. Tenggat serah-terima diisi sebagai usulan (1, 2, 5 Des). Redocly tidak dijalankan (cek struktur + `$ref` lokal saja). Tes: 158/159 lulus di DB lokal; `admin-ops` gagal sekali di run penuh dan lulus saat diulang sendiri (flaky, tidak terkait perubahan dokumen). |
+| 2026-11-26 | **WP-02 v0.2: artefak DS diperiksa.** Dataset intent gabungan (508 baris, label kontrak) bersih dari kebocoran `group_id`, tetapi ada 1 duplikat persis dan 7 parafrase lintas split; split DS di xlsx berbeda dari CSV gabungan (117 baris pindah). ETA PP6 (Ridge, MAE 2,90) memakai `/v1/eta` dengan field Indonesia dan `cabang_id` wajib; diputuskan kontrak tetap, ml-api memakai adapter, respons menambah `eta_range_minutes` dan `weight_imputed`. Dataset ulasan belum layak latih (teks, rating, sentimen acak terpisah). |
+| 2026-11-26 | **Split intent dikunci: split CSV gabungan DS.** `intent_v1.csv` (493 baris) dibangun `data-science/scripts/build_intent_v1.py`: 15 baris train duplikat/parafrase test dibuang, `test_beku` 154 baris tetap (sha256 `0e4d5ad7…`). Train 54–58 dan test 25–26 per kelas. |
+| 2026-11-26 | **WP-02 dicentang.** Kontrak ml-api v0.2.0 dan `data_dictionary.md` v0.2 disetujui tiga LP (Hafizh, Alga, Ida) 2026-11-26; tenggat serah-terima disepakati (intent sudah diserahkan 21 dan 25 Nov, `dataset_model_order.csv` 1 Des). FS-C2, AE-S1, DS-L1 → ✅. |
 
 ## 10. Risiko
 
@@ -310,3 +314,5 @@ Spesifikasi dataset ETA (DS): `order_id, branch_id, distance_km, weight_kg, item
 | Prompt injection lewat pesan pengguna | Jawaban menyimpang | Pesan pengguna diperlakukan sebagai data, dasar jawaban hanya potongan RAG, ambang penolakan |
 | Beban tim AE (20 butir, 2 orang, 1 sebagai lead) | Tenggat terlewat | D7 dan batasi Tahap 3 |
 | Database hosted terhapus oleh `db:reset` | Kehilangan data demo | Ikuti aturan di `CLAUDE.md` |
+| 2026-11-26 | **WP-03 selesai.** README ditulis ulang (masalah UMKM, pengguna, cara jalan, struktur, placeholder model; URL publik menunggu WP-20). `docs/SOURCES.md` sudah ada (pdfkit, dataset intent). AE-M1 → 🟡, AE-M4 → ✅. Tes `apps/api` gagal: `DATABASE_URL` di `.env` menunjuk Supabase hosted (ECIRCUITBREAKER), belum diperbaiki. |
+| 2026-11-26 | **WP-10 kode selesai, belum dicentang** (branch `feat/wp-10-ml-api`): FastAPI `/health`, `/docs`, kunci `X-Internal-Key` untuk `/v1`, batas body 64 KB, error envelope, 11 tes pytest, Dockerfile (smoke test lokal: image 202 MB, RAM 34 MB), job CI `ml-api`, service `2m-ml-api` di `render.yaml`, kontrak 0.2.1 (penjelasan saja). Sisa: deploy dan cek `/health` + `/docs` di URL online; isi `ML_API_KEY` di Render; job CI belum pernah jalan. Tes API di DB lokal baru `sembako_wp10`: `checkout-idempotency` flaky (gagal 2 dari 3 run di DB itu). AE-M7, AE-S4 → 🟡. |

@@ -23,6 +23,7 @@ jobs:
       courier: ${{ steps.f.outputs.courier }}
       admin: ${{ steps.f.outputs.admin }}
       customer: ${{ steps.f.outputs.customer }}
+      ml: ${{ steps.f.outputs.ml }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -46,6 +47,10 @@ jobs:
             customer:
               - *shared
               - 'apps/customer-web/**'
+            ml:
+              - 'services/ml-api/**'
+              - '.dockerignore'
+              - '.github/workflows/ci.yml'
 
   api:
     needs: changes
@@ -75,3 +80,18 @@ jobs:
     uses: ./.github/workflows/app-check.yml
     with:
       filter: customer-web
+
+  ml-api:
+    needs: changes
+    if: needs.changes.outputs.ml == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e ".[dev]"
+        working-directory: services/ml-api
+      - run: pytest
+        working-directory: services/ml-api
+      - run: docker build -f services/ml-api/Dockerfile .

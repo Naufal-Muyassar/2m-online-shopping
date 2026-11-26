@@ -7,6 +7,9 @@
 apps/admin-web
 apps/courier-pwa
 apps/customer-web
-services
+services/**/.venv
+services/**/__pycache__
+services/**/*.egg-info
+services/**/.pytest_cache
 data-science
 docs
