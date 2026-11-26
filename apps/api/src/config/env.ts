@@ -41,6 +41,13 @@ const schema = z.object({
   RENDER_EXTERNAL_URL: z.string().url().optional(),
   // Average courier speed used only for the customer-facing ETA estimate.
   TRACKING_AVG_SPEED_KMH: z.coerce.number().positive().default(20),
+  // Internal ML service. Without both, the assistant answers AI_UNAVAILABLE and the rest of the app is unaffected.
+  ML_API_URL: optionalString.pipe(z.string().url().optional()),
+  ML_API_KEY: optionalString,
+  ML_API_TIMEOUT_MS: z.coerce.number().int().positive().default(8000),
+  // Assistant questions allowed per day (Asia/Jakarta), counted from llm_usage.
+  ASSISTANT_DAILY_LIMIT_PER_USER: z.coerce.number().int().min(0).default(20),
+  ASSISTANT_DAILY_LIMIT_GLOBAL: z.coerce.number().int().min(0).default(500),
 }).superRefine((e, ctx) => {
   const provider = e.PAYMENT_PROVIDER ?? (e.NODE_ENV === "production" ? "xendit" : "mock");
   const demoMode = e.DEMO_MODE ?? e.NODE_ENV !== "production";

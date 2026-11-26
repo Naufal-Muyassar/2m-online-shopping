@@ -36,6 +36,10 @@ services:
         value: "true"
       - key: CUSTOMER_WEB_URL
         sync: false
+      - key: ML_API_URL
+        sync: false
+      - key: ML_API_KEY
+        sync: false
 
   # Internal: only 2m-api calls it. The free plan has no private network, so /v1 is guarded by X-Internal-Key.
   - type: web
