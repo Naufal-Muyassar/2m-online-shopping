@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computePaymentFee, computeShipping, courierWageFull } from "./calc";
+import { computePaymentFee, computeShipping, computeTieredBase, courierWageFull } from "./calc";
 
 const dsV2 = {
   wage_base: 3500,
@@ -15,6 +15,14 @@ const dsV2 = {
   cap_per_km: 1333.33,
 };
 
+const OWNER_TIERS = [
+  { max_km: 0.75, fee: 5500 },
+  { max_km: 1, fee: 6000 },
+  { max_km: 1.25, fee: 6500 },
+  { max_km: 1.75, fee: 7000 },
+  { max_km: 4, fee: 7500 },
+];
+
 const cfg = {
   ...dsV2,
   pricing_model: "linear" as const,
@@ -25,6 +33,8 @@ const cfg = {
   surcharge_per_kg: 500,
   fee_min: 6000,
   fee_max: 30000,
+  fee_tiers: OWNER_TIERS,
+  tier_extra_per_km: 1333,
 };
 
 describe("computeShipping (linear)", () => {
@@ -50,6 +60,57 @@ describe("computeShipping (linear)", () => {
 
   it("clamps to fee_max", () => {
     expect(computeShipping(cfg, 40, 80).final_shipping_cost).toBe(30000);
+  });
+});
+
+describe("computeTieredBase (owner's tier table)", () => {
+  const tiered = { fee_tiers: OWNER_TIERS, tier_extra_per_km: 1333, round_to: 500 };
+
+  it.each([
+    [0.01, 5500],
+    [0.5, 5500],
+    [0.75, 5500],
+    [0.76, 6000],
+    [1, 6000],
+    [1.01, 6500],
+    [1.25, 6500],
+    [1.26, 7000],
+    [1.75, 7000],
+    [1.76, 7500],
+    [2.67, 7500],
+    [4, 7500],
+    [4.01, 7500], // 7513 → 7500
+    [4.19, 8000], // 7753 → 8000
+    [4.25, 8000], // 7833 → 8000
+    [5, 9000], // 8833 → 9000
+    [6, 10000], // 10166 → 10000
+    [8, 13000], // 12832 → 13000
+  ])("km %s → %s", (km, fee) => {
+    expect(computeTieredBase(tiered, km)).toBe(fee);
+  });
+
+  it("does not depend on the stored tier order", () => {
+    expect(computeTieredBase({ ...tiered, fee_tiers: [...OWNER_TIERS].reverse() }, 1.1)).toBe(6500);
+  });
+});
+
+describe("computeShipping (tiered)", () => {
+  const tiered = { ...cfg, pricing_model: "tiered" as const, fee_min: 0 };
+
+  it("uses the tier fee as the base and reports no floor or cap", () => {
+    expect(computeShipping(tiered, 1.5, 5)).toEqual({
+      base_delivery_fee: 7000,
+      weight_surcharge: 0,
+      final_shipping_cost: 7000,
+      fee_floor: null,
+      fee_cap: null,
+    });
+  });
+
+  it("keeps the weight surcharge on top of the tier fee", () => {
+    const q = computeShipping(tiered, 2, 20.2);
+    expect(q.base_delivery_fee).toBe(7500);
+    expect(q.final_shipping_cost).toBe(8000);
   });
 });
 

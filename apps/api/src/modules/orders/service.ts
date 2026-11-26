@@ -6,6 +6,7 @@ import { setCourierStatus } from "../courier/repo";
 import { creditOrder } from "../earnings/repo";
 import * as repo from "./repo";
 import * as refunds from "../refunds/service";
+import * as platformWallet from "../platform-wallet/repo";
 
 export interface TransitionActor {
   id: string | null;
@@ -123,6 +124,8 @@ export async function transition(
   if (to === "DELIVERED" || to === "FAILED") await creditOrder(tx, orderId);
   // Same transaction as the status change: a paid order cannot be cancelled (or shipped short) without its refund.
   await refunds.onTransition(tx, { orderId, from, to });
+  // After courier pay and the failed-delivery refund are set: the order's ongkir, voucher, pay and refund lines.
+  if (to === "DELIVERED" || to === "FAILED") await platformWallet.settleOrder(tx, orderId);
 
   const reason = to === "FAILED" && hasText(meta.note) ? `${meta.reason}: ${meta.note}` : (meta.reason ?? null);
   await repo.insertTransition(tx, {

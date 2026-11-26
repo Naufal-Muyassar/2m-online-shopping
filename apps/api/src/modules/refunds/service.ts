@@ -20,6 +20,8 @@ import * as repo from "./repo";
 //     admin refunds carry the client's idempotency key. A replay finds the existing row.
 //  3. COMPLETED only from READY, in one conditional statement, with a transfer reference and an uploaded receipt.
 
+export const FAILED_DELIVERY_REFUND_KEY = "auto:failed_delivery";
+
 // Statuses an order can be cancelled from after the money arrived.
 const PAID_STATUSES: readonly OrderStatus[] = ["PAID", "ACCEPTED", "PICKING", "READY", "ASSIGNED"];
 
@@ -82,6 +84,13 @@ export async function onTransition(tx: Tx, t: { orderId: string; from: OrderStat
   if (t.to === "CANCELLED" && PAID_STATUSES.includes(t.from)) {
     const order = await lockedOrder(tx, t.orderId);
     await open(tx, order, { reason: "ORDER_CANCELLED", amount: order.grand_total, dedupeKey: "auto:cancelled" });
+    return;
+  }
+  // Owner's rule: the customer never received the goods, so a failed delivery refunds everything still unrefunded
+  // (goods, ongkir and any payment fee). Only the ongkir part is charged to the 2M wallet (see platform-wallet/repo).
+  if (t.to === "FAILED") {
+    const order = await lockedOrder(tx, t.orderId);
+    await open(tx, order, { reason: "DELIVERY_FAILED", amount: order.grand_total, dedupeKey: FAILED_DELIVERY_REFUND_KEY });
     return;
   }
   if (t.from === "PICKING" && t.to === "ON_DELIVERY") {

@@ -10,3 +10,4 @@ export * from "./chat";
 export * from "./earnings";
 export * from "./branch-config";
 export * from "./refunds";
+export * from "./platform-wallet";

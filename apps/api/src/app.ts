@@ -18,6 +18,7 @@ import { metaRoutes } from "./modules/meta/routes";
 import { chatRoutes } from "./modules/chat/routes";
 import { catalogImageRoutes } from "./modules/catalog/images";
 import { refundsAdminRoutes } from "./modules/refunds/routes";
+import { platformWalletRoutes } from "./modules/platform-wallet/routes";
 import { env } from "./config/env";
 
 export function createApp() {
@@ -38,6 +39,7 @@ export function createApp() {
   v1.use("/orders", ordersRoutes);
   v1.use("/courier", courierRoutes);
   v1.use("/admin/refunds", refundsAdminRoutes);
+  v1.use("/admin/platform-wallet", platformWalletRoutes);
   v1.use("/admin", adminRoutes);
   v1.use("/admin", branchConfigRoutes);
   v1.use("/events", eventsRoutes);
