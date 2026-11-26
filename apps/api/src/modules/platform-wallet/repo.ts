@@ -17,7 +17,9 @@ type Db = Pool | Tx;
 //   ONGKIR_IN      + delivery_fee (gross ongkir charged)
 //   VOUCHER        − voucher_discount (ongkir voucher, borne by 2M)
 //   COURIER_PAY    − courier_pay_final (full wage, or the failed fraction)
-//   ONGKIR_REFUND  − the failed-delivery refund actually opened for the order
+//   ONGKIR_REFUND  − the ongkir part of the failed-delivery refund: what the customer paid for ongkir
+//                    (delivery_fee − voucher_discount), never more than the refund itself. The goods part of that
+//                    refund is the store's, not the wallet's.
 export async function settleOrder(tx: Tx, orderId: string): Promise<void> {
   await tx.query(
     `INSERT INTO platform_wallet_entries (branch_id, order_id, type, amount)
@@ -28,7 +30,8 @@ export async function settleOrder(tx: Tx, orderId: string): Promise<void> {
        ('VOUCHER', -o.voucher_discount),
        ('COURIER_PAY', -COALESCE(o.courier_pay_final, 0)),
        ('ONGKIR_REFUND', -COALESCE(
-         (SELECT r.amount FROM refunds r WHERE r.order_id = o.id AND r.dedupe_key = $2), 0))
+         (SELECT LEAST(r.amount, GREATEST(o.delivery_fee - o.voucher_discount, 0))
+          FROM refunds r WHERE r.order_id = o.id AND r.dedupe_key = $2), 0))
      ) AS e(type, amount)
      WHERE o.id = $1 AND o.status IN ('DELIVERED', 'FAILED') AND e.amount <> 0
      ON CONFLICT (order_id, type) DO NOTHING`,

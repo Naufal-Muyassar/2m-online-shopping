@@ -15,7 +15,7 @@ ALTER TABLE branch_pricing_config
 ALTER TABLE branch_pricing_config ALTER COLUMN pricing_model SET DEFAULT 'tiered';
 UPDATE branch_pricing_config SET pricing_model = 'tiered' WHERE pricing_model = 'ds_v2';
 
--- Pesanan gagal diantar: ongkir yang dibayar pelanggan dikembalikan otomatis.
+-- Pesanan gagal diantar: semua yang dibayar pelanggan (barang + ongkir) dikembalikan otomatis.
 ALTER TYPE refund_reason ADD VALUE IF NOT EXISTS 'DELIVERY_FAILED';
 
 -- Dompet 2M: dana penyangga dari selisih ongkir dan upah kurir, bukan laba. Dipakai menutup ongkir pesanan gagal,

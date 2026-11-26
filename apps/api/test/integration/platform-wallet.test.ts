@@ -73,12 +73,13 @@ describe("settling finished orders into the 2M wallet", () => {
     expect(w.period.subsidized_orders).toBe(0);
   });
 
-  it("refunds the ongkir of a failed delivery and pays the courier half from the wallet", async () => {
+  it("refunds a failed delivery in full and charges only the ongkir and half the wage to the wallet", async () => {
     const fx = await createFixture(pool);
     const id = await onDelivery(fx, { fee: 6000, wage: 5000 });
     await finish(fx, id, "FAILED");
 
-    expect(await refundsOf(id)).toEqual([{ reason: "DELIVERY_FAILED", amount: 6000 }]);
+    // Goods (10 000) + ongkir (6 000): the customer got nothing, so everything goes back.
+    expect(await refundsOf(id)).toEqual([{ reason: "DELIVERY_FAILED", amount: 16000 }]);
     expect(await entriesOf(id)).toEqual({ ONGKIR_IN: 6000, ONGKIR_REFUND: -6000, COURIER_PAY: -2500 });
     const w = await overview(fx);
     expect(w.balance).toBe(-2500);
@@ -105,10 +106,11 @@ describe("settling finished orders into the 2M wallet", () => {
     await finish(fx, delivered, "DELIVERED");
     expect(await entriesOf(delivered)).toEqual({ ONGKIR_IN: 7000, VOUCHER: -2000, COURIER_PAY: -6125 });
 
-    // A failed order refunds only the ongkir the customer actually paid.
+    // A failed order refunds what the customer paid (goods + ongkir after voucher); the wallet gives back only the
+    // ongkir the customer actually paid.
     const failed = await onDelivery(fx, { fee: 7000, wage: 6125, voucher: 2000 });
     await finish(fx, failed, "FAILED");
-    expect(await refundsOf(failed)).toEqual([{ reason: "DELIVERY_FAILED", amount: 5000 }]);
+    expect(await refundsOf(failed)).toEqual([{ reason: "DELIVERY_FAILED", amount: 15000 }]);
     expect(await entriesOf(failed)).toEqual({ ONGKIR_IN: 7000, VOUCHER: -2000, ONGKIR_REFUND: -5000, COURIER_PAY: -3063 });
   });
 
@@ -121,12 +123,30 @@ describe("settling finished orders into the 2M wallet", () => {
     expect(n).toBe(2);
   });
 
-  it("leaves an order with no ongkir and no pay out of the wallet", async () => {
+  it("refunds the goods of a failed order with no ongkir but leaves the wallet untouched", async () => {
     const fx = await createFixture(pool);
     const id = await insertOrder(pool, fx, "ON_DELIVERY");
     await finish(fx, id, "FAILED");
     expect(await entriesOf(id)).toEqual({});
-    expect(await refundsOf(id)).toEqual([]);
+    expect(await refundsOf(id)).toEqual([{ reason: "DELIVERY_FAILED", amount: 10000 }]);
+  });
+
+  it("refunds only what is left after an earlier shortage refund", async () => {
+    const fx = await createFixture(pool);
+    const id = await onDelivery(fx, { fee: 6000, wage: 5000 });
+    await pool.query(
+      `INSERT INTO refunds (order_id, branch_id, customer_id, reason, amount, dedupe_key)
+       SELECT id, branch_id, customer_id, 'ITEM_SHORTAGE', 4000, 'auto:shortage' FROM orders WHERE id = $1`,
+      [id],
+    );
+    await finish(fx, id, "FAILED");
+    expect(await refundsOf(id)).toEqual(
+      expect.arrayContaining([
+        { reason: "ITEM_SHORTAGE", amount: 4000 },
+        { reason: "DELIVERY_FAILED", amount: 12000 },
+      ]),
+    );
+    expect((await entriesOf(id)).ONGKIR_REFUND).toBe(-6000);
   });
 });
 

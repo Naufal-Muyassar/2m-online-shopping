@@ -3,7 +3,7 @@ import { z } from "zod";
 const uuid = z.string().uuid();
 
 // A refund is money the store owes a customer for one order. It is opened by the system (paid order cancelled,
-// items short at picking, payment that landed after cancellation, ongkir of a failed delivery) or by an admin, and it is closed only with a
+// items short at picking, payment that landed after cancellation, everything paid for a failed delivery) or by an admin, and it is closed only with a
 // transfer reference and a photo of the transfer receipt, which the customer can see.
 export const REFUND_STATUSES = ["NEEDS_DESTINATION", "READY", "COMPLETED"] as const;
 export type RefundStatus = (typeof REFUND_STATUSES)[number];
@@ -15,7 +15,7 @@ export const REFUND_REASON_LABELS: Record<RefundReason, string> = {
   ORDER_CANCELLED: "Pesanan dibatalkan setelah dibayar",
   ITEM_SHORTAGE: "Sebagian barang tidak tersedia",
   LATE_PAYMENT: "Pembayaran masuk setelah pesanan dibatalkan",
-  DELIVERY_FAILED: "Pesanan gagal diantar, ongkir dikembalikan",
+  DELIVERY_FAILED: "Pesanan gagal diantar, dana dikembalikan penuh",
   OTHER: "Pengembalian dana dari toko",
 };
 

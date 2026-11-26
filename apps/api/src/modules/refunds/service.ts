@@ -30,8 +30,6 @@ interface LockedOrder {
   branch_id: string;
   customer_id: string;
   grand_total: number;
-  delivery_fee: number;
-  voucher_discount: number;
 }
 
 async function open(
@@ -73,7 +71,7 @@ async function open(
 
 async function lockedOrder(tx: Tx, orderId: string): Promise<LockedOrder> {
   const res = await tx.query<LockedOrder>(
-    `SELECT id, branch_id, customer_id, grand_total, delivery_fee, voucher_discount FROM orders WHERE id = $1 FOR UPDATE`,
+    `SELECT id, branch_id, customer_id, grand_total FROM orders WHERE id = $1 FOR UPDATE`,
     [orderId],
   );
   const o = res.rows[0];
@@ -88,14 +86,11 @@ export async function onTransition(tx: Tx, t: { orderId: string; from: OrderStat
     await open(tx, order, { reason: "ORDER_CANCELLED", amount: order.grand_total, dedupeKey: "auto:cancelled" });
     return;
   }
-  // Owner's rule: a failed delivery costs the customer no ongkir. The courier's failed pay comes out of the 2M wallet.
-  // Vouchers are ongkir vouchers, so the ongkir the customer actually paid is delivery_fee − voucher_discount.
+  // Owner's rule: the customer never received the goods, so a failed delivery refunds everything still unrefunded
+  // (goods, ongkir and any payment fee). Only the ongkir part is charged to the 2M wallet (see platform-wallet/repo).
   if (t.to === "FAILED") {
     const order = await lockedOrder(tx, t.orderId);
-    const paidOngkir = order.delivery_fee - order.voucher_discount;
-    if (paidOngkir > 0) {
-      await open(tx, order, { reason: "DELIVERY_FAILED", amount: paidOngkir, dedupeKey: FAILED_DELIVERY_REFUND_KEY });
-    }
+    await open(tx, order, { reason: "DELIVERY_FAILED", amount: order.grand_total, dedupeKey: FAILED_DELIVERY_REFUND_KEY });
     return;
   }
   if (t.from === "PICKING" && t.to === "ON_DELIVERY") {
