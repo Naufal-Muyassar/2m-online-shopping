@@ -1,6 +1,6 @@
 # Data dictionary
 
-Spesifikasi dataset yang dipakai bersama AE dan DS (WP-02, draf v0.2, 2026-11-26). Kontrak service ada di `contracts/ml-api.openapi.json` (v0.2.0); nama kelas di sini harus sama dengan kontrak itu. Perubahan dicatat di `contracts/CHANGELOG.md`.
+Spesifikasi dataset yang dipakai bersama AE dan DS (WP-02, v0.2, disetujui 2026-11-26). Kontrak service ada di `contracts/ml-api.openapi.json` (v0.2.0); nama kelas di sini harus sama dengan kontrak itu. Perubahan dicatat di `contracts/CHANGELOG.md`.
 
 Versi ini menggabungkan kamus DS (`kamus_data.csv` untuk data mentah order kurir, `kamus_data_model.csv` untuk dataset siap model) dengan spesifikasi AE dari v0.1. Kamus DS tetap menjadi rincian lengkap kolom ETA; berkas ini mencatat bagian yang menjadi kontrak dengan ml-api.
 
@@ -100,12 +100,12 @@ Spesifikasi awal DS: `id`, `order_id`, `rating`, `komentar`, `label_sentimen`, `
 | `intent_v1.csv` (kebocoran diperbaiki) | AE (Hafizh) | Selesai 26 Nov 2026 |
 | `dataset_model_order.csv` | DS | 1 Des 2026 |
 
-Tanggal yang belum diserahkan masih usulan, diturunkan dari urutan kerja bagian 6.0 plan (WP-11 28 Nov – 2 Des) dan D8 (tenggat kerja 22 Des 2026). Berlaku setelah disetujui di tabel persetujuan.
+Tenggat disepakati tiga LP pada 2026-11-26, mengikuti urutan kerja bagian 6.0 plan dan D8 (tenggat kerja 22 Des 2026).
 
 ## Persetujuan
 
 | Peran | Nama | Tanggal |
 |---|---|---|
-| AE | Hafizh | |
-| FS | Alga | |
-| DS | Ida | |
+| AE | Hafizh | 2026-11-26 |
+| FS | Alga | 2026-11-26 |
+| DS | Ida | 2026-11-26 |

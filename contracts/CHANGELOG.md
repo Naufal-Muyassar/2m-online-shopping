@@ -2,7 +2,7 @@
 
 Perubahan pada `contracts/` dicatat di sini dan ditandai ke FS (Alga) dan DS (Ida). Kontrak adalah sumber kebenaran: kode yang menyimpang mengikuti kontrak, atau kontrak diubah di commit yang sama.
 
-## ml-api 0.2.0 (2026-11-26, draf, menunggu persetujuan)
+## ml-api 0.2.0 (2026-11-26, disetujui AE, FS, DS)
 
 Penyelarasan dengan kamus DS (`kamus_data.csv`, `kamus_data_model.csv`) dan keputusan D1–D9 yang dikunci 2026-11-24. Asumsi D1, D2, D4 di 0.1.0 kini terkonfirmasi.
 
@@ -48,6 +48,6 @@ Persetujuan:
 
 | Peran | Nama | Tanggal |
 |---|---|---|
-| AE | Hafizh | |
-| FS | Alga | |
-| DS | Ida | |
+| AE | Hafizh | 2026-11-26 (v0.2.0) |
+| FS | Alga | 2026-11-26 (v0.2.0) |
+| DS | Ida | 2026-11-26 (v0.2.0) |
