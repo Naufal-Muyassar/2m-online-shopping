@@ -2,6 +2,10 @@
 
 Perubahan pada `contracts/` dicatat di sini dan ditandai ke FS (Alga) dan DS (Ida). Kontrak adalah sumber kebenaran: kode yang menyimpang mengikuti kontrak, atau kontrak diubah di commit yang sama.
 
+## ml-api 0.2.1 (2026-11-26, perlu ditandai ke FS dan DS)
+
+Hanya penjelasan, bentuk request/response tidak berubah. Sebelum model intent dipasang (WP-13), `GET /health` menjawab 200 `ok` dengan `model_version: "none"` dan `llm: "down"`, supaya health check hosting lulus.
+
 ## ml-api 0.2.0 (2026-11-26, disetujui AE, FS, DS)
 
 Penyelarasan dengan kamus DS (`kamus_data.csv`, `kamus_data_model.csv`) dan keputusan D1–D9 yang dikunci 2026-11-24. Asumsi D1, D2, D4 di 0.1.0 kini terkonfirmasi.

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "2M ml-api (internal)",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "summary": "Internal ML service: intent classification, FAQ chat with RAG, and delivery ETA.",
     "description": "v0.2 for WP-02, approved by AE, FS and DS on 2026-11-26. Only the Node API calls this service; browsers and apps must never reach it and never hold the LLM key. Every /v1 request carries the `X-Internal-Key` header. JSON fields are snake_case. Every successful /v1 response carries `model_version`. Errors use the same envelope as the Node API: `{ \"error\": { \"code\", \"message\", \"details?\" } }`. FastAPI's default 422 validation body must be remapped to this envelope with code `VALIDATION_ERROR` and status 400. Requests must not contain customer PII (names, phone numbers, addresses, other customers' order codes); Node masks the text before calling. Follows decisions D1 (FAQ chatbot + RAG), D2 (intent classifier as the main model, ETA regression from DS) and D4 (FAISS cpu, embedding behind a provider interface), locked on 2026-11-24 in PROJECT_PLAN.md section 5."
   },
@@ -21,7 +21,7 @@
         "tags": ["meta"],
         "operationId": "getHealth",
         "summary": "Liveness and dependency status",
-        "description": "No key required so the hosting platform can probe it. Exposes no data beyond versions and up/down flags. `status` is `ok` while the intent model is loaded, even if the LLM is down, because chat can still answer with the extractive fallback.",
+        "description": "No key required so the hosting platform can probe it. Exposes no data beyond versions and up/down flags. `status` is `ok` while the intent model is loaded, even if the LLM is down, because chat can still answer with the extractive fallback. Before the intent model ships (WP-13) the skeleton answers `ok` with `model_version: \"none\"` and `llm: \"down\"` so the hosting platform can probe it.",
         "security": [],
         "responses": {
           "200": {

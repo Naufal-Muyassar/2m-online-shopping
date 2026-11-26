@@ -37,6 +37,18 @@ services:
       - key: CUSTOMER_WEB_URL
         sync: false
 
+  # Internal: only 2m-api calls it. The free plan has no private network, so /v1 is guarded by X-Internal-Key.
+  - type: web
+    name: 2m-ml-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./services/ml-api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: ML_API_KEY
+        sync: false
+
   - type: web
     name: 2m-courier-pwa
     runtime: static

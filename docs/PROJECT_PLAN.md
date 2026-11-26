@@ -74,7 +74,7 @@ Semua butir ❌ di Trello dan di repo. Kartu AI yang ada (Golden Set, LLM Cost C
 | AE-M4 | Sumber API/dataset/library dicantumkan di README | ✅ | WP-03 (`docs/SOURCES.md`) |
 | AE-M5 | Fitur generatif dengan API model proprietary | ❌ | WP-14, WP-15, WP-16 |
 | AE-M6 | Bandingkan ≥2 model/konfigurasi, tabel + alasan di README | ❌ | WP-12 |
-| AE-M7 | REST API FastAPI/Flask online, diakses backend | ❌ | WP-10, WP-13 |
+| AE-M7 | REST API FastAPI/Flask online, diakses backend | 🟡 | WP-10, WP-13 |
 | AE-P1 | Cek dan tangani ketidakseimbangan kelas | ❌ | WP-42 |
 | AE-P2 | Peningkatan kinerja (augmentasi / tuning) + pengaruhnya | ❌ | WP-42 |
 | AE-P3 | Uji pada data uji tersisih, metrik sesuai, hasil di README | ❌ | WP-42 |
@@ -87,7 +87,7 @@ Semua butir ❌ di Trello dan di repo. Kartu AI yang ada (Golden Set, LLM Cost C
 | AE-S1 | Kontrak API disepakati dengan FS sebelum coding | ✅ | WP-02 |
 | AE-S2 | Tangani input tidak valid dan kegagalan/kuota AI | ❌ | WP-14, WP-43 |
 | AE-S3 | Integrasi ke kanal UMKM (Telegram/WhatsApp) | ❌ | WP-40 |
-| AE-S4 | Dokumentasi API yang bisa dicoba (Swagger/OpenAPI) | ❌ | WP-10, WP-43 |
+| AE-S4 | Dokumentasi API yang bisa dicoba (Swagger/OpenAPI) | 🟡 | WP-10, WP-43 |
 
 ### 3.3 Data Science (Ida, Dian)
 
@@ -315,3 +315,4 @@ Spesifikasi dataset ETA (DS): `order_id, branch_id, distance_km, weight_kg, item
 | Beban tim AE (20 butir, 2 orang, 1 sebagai lead) | Tenggat terlewat | D7 dan batasi Tahap 3 |
 | Database hosted terhapus oleh `db:reset` | Kehilangan data demo | Ikuti aturan di `CLAUDE.md` |
 | 2026-11-26 | **WP-03 selesai.** README ditulis ulang (masalah UMKM, pengguna, cara jalan, struktur, placeholder model; URL publik menunggu WP-20). `docs/SOURCES.md` sudah ada (pdfkit, dataset intent). AE-M1 → 🟡, AE-M4 → ✅. Tes `apps/api` gagal: `DATABASE_URL` di `.env` menunjuk Supabase hosted (ECIRCUITBREAKER), belum diperbaiki. |
+| 2026-11-26 | **WP-10 kode selesai, belum dicentang** (branch `feat/wp-10-ml-api`): FastAPI `/health`, `/docs`, kunci `X-Internal-Key` untuk `/v1`, batas body 64 KB, error envelope, 11 tes pytest, Dockerfile (smoke test lokal: image 202 MB, RAM 34 MB), job CI `ml-api`, service `2m-ml-api` di `render.yaml`, kontrak 0.2.1 (penjelasan saja). Sisa: deploy dan cek `/health` + `/docs` di URL online; isi `ML_API_KEY` di Render; job CI belum pernah jalan. Tes API di DB lokal baru `sembako_wp10`: `checkout-idempotency` flaky (gagal 2 dari 3 run di DB itu). AE-M7, AE-S4 → 🟡. |
