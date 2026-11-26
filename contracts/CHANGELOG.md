@@ -13,6 +13,8 @@ ETA (`POST /v1/predict/eta`), **breaking** terhadap 0.1.0:
 - `weight_kg` boleh null. ml-api mengimputasi median train (kolom DS `berat_estimasi`).
 - Fitur DS yang **tidak** disajikan di v0.2: `cabang_id` (kode dummy C01–C07 tidak bisa dipetakan ke UUID cabang di app) dan `is_macet` (tidak ada sumber lalu lintas real-time saat prediksi). Model yang disajikan dilatih tanpa keduanya.
 - Fitur rekayasa DS (`jarak_log1p`, `jam_sin/cos`, `hari_sin/cos`, `is_jam_puncak`, `is_sabtu`, `kelas_jarak`, `berat_per_item`) dihitung di dalam ml-api dari field request, bukan dikirim Node.
+- Respons menambah `eta_range_minutes` (`[bawah, atas]` = prediksi ± RMSE test beku, bawah minimal 1) dan `weight_imputed` (dari `berat_estimasi` DS). Keduanya dipakai halaman tracking dan admin-web.
+- Implementasi DS PP6 (`eta_inferensi.prediksi_eta`, endpoint `/v1/eta`, field Bahasa Indonesia, `cabang_id` wajib, `order_id`) **tidak** menjadi kontrak. ml-api memakai adapter: field kontrak dipetakan ke nama DS (tabel di `data-science/data_dictionary.md`), `cabang_id` diisi kategori tak dikenal sehingga one-hot cabang bernilai nol, `eta_menit` dibulatkan ke atas menjadi `eta_minutes`, dan `model_versi` menjadi `model_version`. `order_id` tidak dikirim karena bukan fitur dan termasuk kode pesanan.
 
 Intent: tidak ada perubahan bentuk. Nama kelas kontrak (`cek_pesanan`, `tanya_ongkir`, `tanya_produk`, `info_umum`, `komplain`, `di_luar_konteks`) dipakai juga sebagai label dataset DS.
 

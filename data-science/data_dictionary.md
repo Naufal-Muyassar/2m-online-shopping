@@ -73,6 +73,8 @@ Berkas: `dataset_model_order.csv` (DS). Dipakai untuk melatih model `POST /v1/pr
 
 Fitur rekayasa (`jarak_log1p`, `jam_sin`, `jam_cos`, `hari_sin`, `hari_cos`, `is_jam_puncak`, `is_sabtu`, `kelas_jarak`, `berat_per_item`) dan scaling z-score dihitung di dalam ml-api dari field request, memakai statistik train yang disimpan bersama model. Node tidak mengirimnya.
 
+**Artefak DS PP6 (2026-11-25):** model Ridge `v1.0-sintetis` (MAE test beku 2,90 menit, baseline 6,05), `fitur_eta.py`, `eta_inferensi.py`, `model_eta_meta.json`, `requirements_ml_api.txt` (scikit-learn 1.9.1). ml-api membungkus `prediksi_eta()` lewat adapter (lihat `contracts/CHANGELOG.md` 0.2.0). Model dilatih ulang di repo dari dataset, bukan disalin dari `.joblib` Drive, karena joblib menjalankan kode saat dimuat. Untuk itu DS menyerahkan ke `data-science/datasets/`: `dataset_model_order.csv`, `manifest_split.json`, `test_ids_beku.txt`, `preprocessor.json`, dan `pp6_eta_model.py`. Model intent dan ETA memakai versi scikit-learn yang sama.
+
 **Tidak disajikan di kontrak v0.2:** `cabang_id` (kode dummy C01–C07 tidak bisa dipetakan ke UUID cabang di app) dan `is_macet` (tidak ada sumber lalu lintas real-time saat prediksi). Model yang disajikan dilatih tanpa keduanya; versi dengan keduanya boleh ada di notebook sebagai pembanding.
 
 **Di luar kontrak ml-api:** `target_gagal` (klasifikasi gagal antar) dan `permintaan_harian_cabang` (forecast jumlah order) dipakai DS untuk analisis dan dasbor. Bila salah satunya disajikan lewat ml-api, endpoint baru ditambahkan ke kontrak dulu.
@@ -81,7 +83,9 @@ Fitur rekayasa (`jarak_log1p`, `jam_sin`, `jam_cos`, `hari_sin`, `hari_cos`, `is
 
 ## 3. Dataset ulasan (spesifikasi, belum ada)
 
-Kolom DS: `id`, `order_id`, `rating`, `komentar`, `label_sentimen`, `sumber_data`, `split`. Hanya order DELIVERED; label positif/negatif. Bahan model tambahan opsional (AE-P4, WP-52), belum masuk kontrak.
+Spesifikasi awal DS: `id`, `order_id`, `rating`, `komentar`, `label_sentimen`, `sumber_data`, `split`. Hanya order DELIVERED; label positif/negatif. Bahan model tambahan opsional (AE-P4, WP-52), belum masuk kontrak.
+
+**Status 2026-11-26: belum layak latih.** `dataset_ulasan_mentah.csv` (250 baris, kolom `ulasan_id, cabang, teks_ulasan, rating, sentimen, sumber_data`) membangkitkan teks, rating, dan sentimen secara terpisah, sehingga ketiganya tidak saling cocok (contoh `ulas_004`: teks positif, rating 2, label negatif). Pelabelan ulang dari rating tidak memperbaikinya karena rating juga acak. Perlu label ulang berdasarkan isi teks, rating diselaraskan, lalu kolom `split` ditambahkan. `dataset_ulasan_clean` berukuran sama persis dengan berkas mentah.
 
 ## 4. Serah-terima
 

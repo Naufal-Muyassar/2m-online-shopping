@@ -138,7 +138,7 @@
         "tags": ["eta"],
         "operationId": "predictEta",
         "summary": "Predict total delivery time for an order",
-        "description": "Predicts the minutes from the moment a courier claims the order (ACCEPTED to PICKING) until DELIVERED, matching the DS label `target_eta_menit`. Call it once the order has a courier; time before the claim (payment, branch acceptance, waiting in the job pool) is not part of the prediction. The model is trained on simulated orders (`sumber_data = SINTETIS_SIMULASI`, see data-science/data_dictionary.md), so treat it as an estimate for display, not a promise.",
+        "description": "Predicts the minutes from the moment a courier claims the order (ACCEPTED to PICKING) until DELIVERED, matching the DS label `target_eta_menit`. Call it once the order has a courier; time before the claim (payment, branch acceptance, waiting in the job pool) is not part of the prediction. The model is trained on simulated orders (`sumber_data = SINTETIS_SIMULASI`, see data-science/data_dictionary.md), so treat it as an estimate for display, not a promise. No branch or order identifier is sent; the model treats the branch as an unseen category.",
         "requestBody": {
           "required": true,
           "content": {
@@ -154,7 +154,7 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/EtaResponse" },
-                "example": { "eta_minutes": 21, "model_version": "eta-2026.11.0" }
+                "example": { "eta_minutes": 21, "eta_range_minutes": [17, 25], "weight_imputed": false, "model_version": "eta-2026.11.0" }
               }
             }
           },
@@ -334,9 +334,17 @@
       "EtaResponse": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["eta_minutes", "model_version"],
+        "required": ["eta_minutes", "eta_range_minutes", "weight_imputed", "model_version"],
         "properties": {
           "eta_minutes": { "type": "integer", "minimum": 1, "description": "Predicted minutes from courier claim to DELIVERED, rounded up." },
+          "eta_range_minutes": {
+            "type": "array",
+            "description": "Rough display range `[low, high]`: the prediction minus and plus the frozen-test RMSE, low rounded down and never below 1, high rounded up. Not a calibrated prediction interval.",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "type": "integer", "minimum": 1 }
+          },
+          "weight_imputed": { "type": "boolean", "description": "True when `weight_kg` was null and the training median was used (DS `berat_estimasi = 1`)." },
           "model_version": { "$ref": "#/components/schemas/ModelVersion" }
         }
       },
