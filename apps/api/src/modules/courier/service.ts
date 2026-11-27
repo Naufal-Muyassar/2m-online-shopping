@@ -13,6 +13,7 @@ import { AppError } from "../../shared/errors";
 import { isProofKeyFor, presignPut, proofKeyFor } from "../../shared/storage";
 import { lockOrder, transitionKeyExists } from "../orders/repo";
 import { transition } from "../orders/service";
+import { postReleaseNote } from "../chat/service";
 import * as repo from "./repo";
 
 async function requireCourier(courierId: string): Promise<repo.CourierRow> {
@@ -83,14 +84,21 @@ export async function pickItem(courierId: string, orderId: string, itemId: strin
 }
 
 export async function releaseOrder(courierId: string, orderId: string, body: CourierReleaseRequest) {
-  return withTransaction((tx) =>
-    transition(tx, {
+  return withTransaction(async (tx) => {
+    const result = await transition(tx, {
       orderId,
       to: "ACCEPTED",
       actor: { id: courierId, role: "courier" },
       meta: { reason: body.reason },
-    }),
-  );
+    });
+    await postReleaseNote(tx, {
+      courierId,
+      branchId: result.order.branch_id,
+      orderCode: result.order.code,
+      reason: body.reason,
+    });
+    return result;
+  });
 }
 
 export async function listOrders(courierId: string) {

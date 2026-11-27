@@ -5,6 +5,8 @@ import { closeRedis } from "../../src/shared/redis";
 import { createFixture, insertOrder, type Fixture } from "../../src/modules/orders/test-fixtures";
 import { listBoardOrders, listBranchCouriers } from "../../src/modules/admin/repo";
 import * as chat from "../../src/modules/chat/service";
+import * as adminService from "../../src/modules/admin/service";
+import * as courierService from "../../src/modules/courier/service";
 import type { Viewer } from "../../src/modules/chat/service";
 
 let fx: Fixture;
@@ -147,6 +149,39 @@ describe("customer and courier", () => {
     await expect(chat.openThread({ channel: "customer_courier", order_id: waiting }, customer)).rejects.toMatchObject({
       status: 409,
       code: "NO_COURIER",
+    });
+  });
+});
+
+describe("courier releasing an order", () => {
+  it("tells the branch admin why in the courier chat and keeps it in the courier's history", async () => {
+    const orderId = await insertOrder(pool, fx, "PICKING");
+    const code = (await pool.query<{ code: string }>(`SELECT code FROM orders WHERE id = $1`, [orderId])).rows[0]!.code;
+    await courierService.releaseOrder(fx.courierId, orderId, { reason: "Motor mogok" });
+
+    const inbox = await chat.listThreads(admin, fx.branchId, "courier_admin");
+    const row = inbox.threads.find((t) => t.courier_id === fx.courierId);
+    expect(row?.last_message?.body).toBe(`Melepas order ${code}. Alasan: Motor mogok`);
+    expect(row?.unread_count).toBeGreaterThan(0);
+
+    const history = await adminService.courierReleases(fx.courierId, fx.branchId);
+    expect(history.releases[0]).toMatchObject({ order_id: orderId, order_code: code, reason: "Motor mogok" });
+    await expect(adminService.courierReleases(fx.courierId, other.branchId)).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe("admin adding a courier", () => {
+  it("creates a courier of the branch who can be listed, and refuses a taken phone", async () => {
+    const partner = (await pool.query<{ partner_id: string }>(`SELECT partner_id FROM couriers WHERE user_id = $1`, [fx.courierId])).rows[0]!.partner_id;
+    const phone = `08${Date.now().toString().slice(-10)}`;
+    const body = { name: "Kurir Baru", phone, password: "rahasia123", partner_id: partner };
+    const actor = { id: fx.users.branch_admin, role: "branch_admin" as const };
+    const { courier: created } = await adminService.createCourier({ branchId: fx.branchId, actor, body });
+    const listed = await listBranchCouriers(pool, fx.branchId);
+    expect(listed.find((c) => c.user_id === created.user_id)).toMatchObject({ name: "Kurir Baru", status: "OFFLINE" });
+    await expect(adminService.createCourier({ branchId: fx.branchId, actor, body })).rejects.toMatchObject({
+      status: 409,
+      code: "ACCOUNT_EXISTS",
     });
   });
 });

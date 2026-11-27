@@ -11,6 +11,8 @@ import {
   courierIdParamsSchema,
   courierLedgerQuerySchema,
   courierWithdrawalRequestSchema,
+  createCourierRequestSchema,
+  type CreateCourierRequest,
   forcePaidRequestSchema,
   orderIdParamsSchema,
   type AdminAssignRequest,
@@ -67,6 +69,42 @@ adminRoutes.get(
   validate(adminBranchQuerySchema, "query"),
   asyncHandler(async (req, res) => {
     res.json(await service.branchCouriers(branchScope(req)));
+  }),
+);
+
+adminRoutes.get(
+  "/courier-partners",
+  authenticate,
+  requireRole("branch_admin", "super_admin"),
+  asyncHandler(async (_req, res) => {
+    res.json(await service.courierPartners());
+  }),
+);
+
+adminRoutes.post(
+  "/couriers",
+  authenticate,
+  requireRole("branch_admin", "super_admin"),
+  validate(createCourierRequestSchema),
+  asyncHandler(async (req, res) => {
+    res.status(201).json(
+      await service.createCourier({
+        branchId: branchScope(req),
+        actor: { id: req.auth!.sub, role: req.auth!.role as "branch_admin" | "super_admin" },
+        body: req.body as CreateCourierRequest,
+      }),
+    );
+  }),
+);
+
+adminRoutes.get(
+  "/couriers/:id/releases",
+  authenticate,
+  requireRole("branch_admin", "super_admin"),
+  validate(courierIdParamsSchema, "params"),
+  validate(adminBranchQuerySchema, "query"),
+  asyncHandler(async (req, res) => {
+    res.json(await service.courierReleases(req.params.id as string, branchScope(req)));
   }),
 );
 

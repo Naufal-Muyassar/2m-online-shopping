@@ -128,7 +128,7 @@ function ReleaseDialog({ orderId, onClose, onReleased }: { orderId: string; onCl
       <div className="sheet-panel">
         <span aria-hidden="true" className="sheet-grabber" />
         <h2 className="t-headline">Lepas order?</h2>
-        <p className="text-muted-foreground">Order kembali ke daftar job dan bisa diambil kurir lain.</p>
+        <p className="text-muted-foreground">Order kembali ke daftar job dan bisa diambil kurir lain. Alasan dikirim ke admin cabang lewat chat.</p>
         <label className="field-label flex flex-col gap-1.5">
           Alasan
           <textarea

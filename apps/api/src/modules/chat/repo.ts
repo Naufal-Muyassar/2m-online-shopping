@@ -1,4 +1,5 @@
 import type { Pool } from "pg";
+import type { Tx } from "../../shared/db";
 import type { ChatChannel, ChatSenderRole, OrderStatus } from "@2m/shared";
 
 export interface ThreadRow {
@@ -81,7 +82,7 @@ export async function listThreads(
 }
 
 export async function openThread(
-  db: Pool,
+  db: Pool | Tx,
   t: { channel: ChatChannel; branchId: string; customerId?: string; courierId?: string; orderId?: string },
 ): Promise<string> {
   const values = [t.channel, t.branchId, t.customerId ?? null, t.courierId ?? null, t.orderId ?? null];
@@ -120,7 +121,7 @@ export async function listMessages(db: Pool, threadId: string, limit: number): P
 }
 
 export async function insertMessage(
-  db: Pool,
+  db: Pool | Tx,
   m: { threadId: string; senderId: string; role: ChatSenderRole; body: string; clientId: string },
 ): Promise<MessageRow> {
   await db.query(

@@ -1,4 +1,5 @@
-import type { OrderStatus } from "@2m/shared";
+import bcrypt from "bcryptjs";
+import type { CreateCourierRequest, OrderStatus } from "@2m/shared";
 import { pool, withTransaction } from "../../shared/db";
 import { audit } from "../../shared/audit";
 import { AppError } from "../../shared/errors";
@@ -34,6 +35,53 @@ export async function cancelOrder(input: {
 
 export async function branchCouriers(branchId: string) {
   return { couriers: await repo.listBranchCouriers(pool, branchId) };
+}
+
+export async function courierPartners() {
+  return { partners: await repo.listActivePartners(pool) };
+}
+
+export async function createCourier(input: {
+  branchId: string;
+  actor: { id: string; role: "branch_admin" | "super_admin" };
+  body: CreateCourierRequest;
+}) {
+  const passwordHash = await bcrypt.hash(input.body.password, 10);
+  return withTransaction(async (tx) => {
+    if (!(await repo.partnerIsActive(tx, input.body.partner_id))) {
+      throw new AppError(400, "VALIDATION_ERROR", "Unknown courier partner", { missing: ["partner_id"] });
+    }
+    let courier: Awaited<ReturnType<typeof repo.insertCourier>>;
+    try {
+      courier = await repo.insertCourier(tx, {
+        branchId: input.branchId,
+        partnerId: input.body.partner_id,
+        name: input.body.name,
+        phone: input.body.phone,
+        passwordHash,
+      });
+    } catch (err) {
+      if ((err as { code?: string }).code === "23505") {
+        throw new AppError(409, "ACCOUNT_EXISTS", "Phone number is already registered");
+      }
+      throw err;
+    }
+    await audit(tx, {
+      actorId: input.actor.id,
+      actorRole: input.actor.role,
+      branchId: input.branchId,
+      action: "COURIER_CREATED",
+      entityType: "user",
+      entityId: courier.user_id,
+      after: { id: courier.user_id, role: "courier", branch_id: input.branchId, partner_id: input.body.partner_id },
+    });
+    return { courier };
+  });
+}
+
+export async function courierReleases(courierId: string, branchId: string) {
+  if (!(await repo.courierInBranch(pool, courierId, branchId))) throw new AppError(404, "NOT_FOUND", "Courier not found");
+  return { releases: await repo.listCourierReleases(pool, courierId) };
 }
 
 export async function confirmReturn(input: { orderId: string; adminId: string; branchId: string }) {
