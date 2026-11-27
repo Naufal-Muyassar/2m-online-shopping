@@ -55,6 +55,13 @@ function distanceText(route: DeliveryRoute | undefined): string | null {
   return route.source === "road" ? `${km} km via jalan ke tujuan${eta}` : `±${km} km ke tujuan${eta}, perkiraan`;
 }
 
+function unassignedTitle(couriers: AdminCourier[]): string {
+  const onMap = couriers.filter((c) => c.position).length;
+  const idle = couriers.filter((c) => c.status === "IDLE").length;
+  if (onMap === 0) return "Belum ada kurir, tidak ada kurir online";
+  return `Belum ada kurir, ${idle} siap dari ${onMap} di peta`;
+}
+
 interface Props {
   order: AdminOrder | null;
   couriers: AdminCourier[];
@@ -80,6 +87,11 @@ export function TrackingMap({ order, couriers, branch, panelWidth }: Props) {
       out.push({ id: "destination", kind: "destination", ...order.destination, label: order.receiver_name });
       if (courier && courierPos) {
         out.push({ id: "courier", kind: "courier", ...courierPos, label: courier.name, live: isFresh(courier.last_ping_at) });
+      } else if (!order.assigned_courier) {
+        // Still looking for a courier: show who is on duty and where, so the admin can see who is nearest.
+        for (const c of couriers) {
+          if (c.position) out.push({ id: c.user_id, kind: "courier", ...c.position, label: c.name, live: isFresh(c.last_ping_at) });
+        }
       }
       return out;
     }
@@ -112,7 +124,9 @@ export function TrackingMap({ order, couriers, branch, panelWidth }: Props) {
       >
         {order ? (
           <>
-            <p className="truncate font-extrabold leading-tight tracking-tight">{courier ? courier.name : "Belum ada kurir"}</p>
+            <p className="truncate font-extrabold leading-tight tracking-tight">
+              {courier ? courier.name : (order.assigned_courier?.name ?? unassignedTitle(couriers))}
+            </p>
             <p className="truncate text-sm text-muted-foreground">
               {courier || !distance ? (distance ?? `Tujuan ${order.receiver_name}`) : `Tujuan ${order.receiver_name}, ${distance}`}
               {courier ? `, ${pingText(courier.last_ping_at).toLowerCase()}` : ""}
