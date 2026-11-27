@@ -4,7 +4,7 @@ import { env } from "../../src/config/env";
 import { pool } from "../../src/shared/db";
 import { closeRedis } from "../../src/shared/redis";
 import { createFixture, insertOrder, type Fixture } from "../../src/modules/orders/test-fixtures";
-import { getTracking } from "../../src/modules/orders/tracking";
+import { adminOrderRoute, courierOrderRoute, getTracking } from "../../src/modules/orders/tracking";
 
 let fx: Fixture;
 let otherCustomerId: string;
@@ -77,6 +77,9 @@ describe("order tracking", () => {
     // 0.01 deg of latitude is about 1.112 km straight; x1.3 circuity.
     expect(t.distance_remaining_km).toBe(1.45);
     expect(t.eta_minutes).toBe(Math.max(1, Math.ceil((1.45 / env.TRACKING_AVG_SPEED_KMH) * 60)));
+    // Tests run with routing off, so this is the straight-line estimate with no road geometry.
+    expect(t.distance_source).toBe("estimate");
+    expect(t.route_path).toBeNull();
     expect(t.stale).toBe(false);
   });
 
@@ -114,7 +117,41 @@ describe("order tracking", () => {
     const keys = allKeys(JSON.parse(JSON.stringify(await getTracking(fx.users.customer, id))));
     for (const k of FORBIDDEN_KEYS) expect(keys.has(k)).toBe(false);
     expect([...keys].sort()).toEqual(
-      ["accuracy", "active", "courier", "destination", "distance_remaining_km", "eta_minutes", "lat", "lng", "stale", "updated_at"].sort(),
+      [
+        "accuracy",
+        "active",
+        "courier",
+        "destination",
+        "distance_remaining_km",
+        "distance_source",
+        "eta_minutes",
+        "lat",
+        "lng",
+        "route_path",
+        "stale",
+        "updated_at",
+      ].sort(),
     );
+  });
+});
+
+describe("order route for the courier and the admin", () => {
+  it("gives the holding courier and the branch the same numbers as the customer", async () => {
+    const id = await insertOrder(pool, fx, "ON_DELIVERY");
+    await addPing(id, -6.19, 106.8);
+    const expected = { path: null, distance_km: 1.45, eta_minutes: Math.max(1, Math.ceil((1.45 / env.TRACKING_AVG_SPEED_KMH) * 60)), source: "estimate" };
+    expect(await courierOrderRoute(fx.courierId, id)).toEqual(expected);
+    expect(await adminOrderRoute(fx.branchId, id)).toEqual(expected);
+  });
+
+  it("is scoped to the courier holding the order and to its branch", async () => {
+    const id = await insertOrder(pool, fx, "ON_DELIVERY");
+    await expect(courierOrderRoute(randomUUID(), id)).rejects.toMatchObject({ status: 404 });
+    await expect(adminOrderRoute(randomUUID(), id)).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("has no route outside PICKING and ON_DELIVERY", async () => {
+    const id = await insertOrder(pool, fx, "DELIVERED");
+    expect(await adminOrderRoute(fx.branchId, id)).toEqual({ path: null, distance_km: null, eta_minutes: null, source: "estimate" });
   });
 });

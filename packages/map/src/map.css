@@ -115,6 +115,14 @@
   stroke-dasharray: 2 9;
 }
 
+/* A road route from the routing provider: solid, so it reads as "the way there", not "as the crow flies". */
+.map-route.map-route-road {
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-dasharray: none;
+  stroke-opacity: 0.85;
+}
+
 /* Address picker: the branch's service area, its centre and the chosen point. */
 .map-area {
   stroke: hsl(var(--primary));

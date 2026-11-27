@@ -3,6 +3,14 @@ import { z } from "zod";
 // Empty values in .env count as unset.
 const optionalString = z.string().optional().transform((v) => (v ? v : undefined));
 
+const ROUTING_PROVIDER_NAMES = ["ors", "osrm"] as const;
+function parseRoutingProviders(raw: string): (typeof ROUTING_PROVIDER_NAMES)[number][] {
+  const names = raw.split(",").map((s) => s.trim().toLowerCase()).filter((s) => s && s !== "off");
+  return [...new Set(names)].filter((n): n is (typeof ROUTING_PROVIDER_NAMES)[number] =>
+    (ROUTING_PROVIDER_NAMES as readonly string[]).includes(n),
+  );
+}
+
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().default(3000),
@@ -41,6 +49,12 @@ const schema = z.object({
   RENDER_EXTERNAL_URL: z.string().url().optional(),
   // Average courier speed used only for the customer-facing ETA estimate.
   TRACKING_AVG_SPEED_KMH: z.coerce.number().positive().default(20),
+  // Road routing for tracking distance/ETA, tried in order: "ors,osrm" (default), "osrm", or "off". ors is skipped
+  // without ORS_API_KEY. Tests default to off so they never call out. Prices never use this (see ADR 0001).
+  ROUTING_PROVIDERS: optionalString,
+  ORS_API_KEY: optionalString,
+  ORS_BASE_URL: z.string().url().default("https://api.openrouteservice.org"),
+  OSRM_BASE_URL: z.string().url().default("https://router.project-osrm.org"),
   // Internal ML service. Without both, the assistant answers AI_UNAVAILABLE and the rest of the app is unaffected.
   ML_API_URL: optionalString.pipe(z.string().url().optional()),
   ML_API_KEY: optionalString,
@@ -77,6 +91,7 @@ const schema = z.object({
     DEMO_MODE: demoMode,
     PAYMENT_PROVIDER: e.PAYMENT_PROVIDER ?? (e.NODE_ENV === "production" ? ("xendit" as const) : ("mock" as const)),
     RUN_WORKER_IN_PROCESS: e.RUN_WORKER_IN_PROCESS ?? (e.NODE_ENV !== "production" || demoMode),
+    ROUTING_PROVIDERS: parseRoutingProviders(e.ROUTING_PROVIDERS ?? (e.NODE_ENV === "test" ? "off" : "ors,osrm")),
   };
 });
 

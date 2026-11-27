@@ -14,6 +14,13 @@ Setiap sumber baru dicatat di sini pada commit yang sama dengan kode yang memaka
 | [HTTPX](https://github.com/encode/httpx) | >=0.27,<1 | BSD-3-Clause | `services/ml-api` (dev) | Dipakai `TestClient` FastAPI |
 | [python:3.12-slim](https://hub.docker.com/_/python) | 3.12 | PSF (Python) dan lisensi paket Debian | `services/ml-api/Dockerfile` | Image dasar |
 
+## API eksternal
+
+| Nama | Lisensi / ketentuan | Dipakai di | Untuk apa |
+|---|---|---|---|
+| [openrouteservice Directions](https://openrouteservice.org/dev/#/api-docs/v2/directions) (HeiGIT), profil `driving-car` | Paket Standard gratis dengan API key (kuota harian dan per menit); data © OpenStreetMap contributors (ODbL) | `apps/api` (`modules/routing`) | Rute jalan utama untuk jarak tersisa, ETA, dan garis rute di peta tracking. Hanya koordinat kurir dan tujuan yang dikirim |
+| [OSRM](https://project-osrm.org/) server demo `router.project-osrm.org` | Software BSD-2-Clause; server demo tanpa key, tanpa SLA, hanya untuk pemakaian ringan; data © OpenStreetMap contributors (ODbL) | `apps/api` (`modules/routing`) | Cadangan bila openrouteservice gagal, kena batas, atau tanpa key. Bisa diganti server OSRM sendiri lewat `OSRM_BASE_URL` |
+
 ## Dataset
 
 | Nama | Asal | Lisensi | Dipakai di | Untuk apa |

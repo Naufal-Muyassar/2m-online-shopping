@@ -8,11 +8,11 @@ import { getFreshFix } from "@/platform/geo";
 import { ProofFlow } from "@/features/proof/ProofFlow";
 import { useMyPosition, useSecondsSinceLastPing } from "@/tracking";
 import { MapView, type MapMarker } from "@2m/map";
-import { useOrder, useOrderStatus, usePickItem, useReleaseOrder } from "./hooks";
+import { useOrder, useOrderRoute, useOrderStatus, usePickItem, useReleaseOrder } from "./hooks";
 import { STATUS_LABELS, STATUS_PILLS } from "./OrderCard";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { useChatThreads, useOpenChat } from "@/features/chat/hooks";
-import { FaArrowLeft, FaCheck, FaCommentDots, FaExclamationTriangle, FaMapMarkerAlt, FaPhone, FaTruck } from "react-icons/fa";
+import { FaArrowLeft, FaCheck, FaCommentDots, FaExclamationTriangle, FaMapMarkerAlt, FaPhone, FaRoute, FaTruck } from "react-icons/fa";
 
 type Panel = "none" | "deliver" | "fail";
 
@@ -183,6 +183,8 @@ function CustomerChatButton({ orderId }: { orderId: string }) {
 }
 
 const ROUTE = ["courier", "destination"];
+// Keeps both pins clear of the distance chip in the top-left corner.
+const MAP_PADDING: [number, number, number, number] = [64, 40, 40, 40];
 
 function DeliveryMap({ order }: { order: CourierOrder }) {
   const { lat, lng, receiver_name: receiver } = order.address;
@@ -193,14 +195,30 @@ function DeliveryMap({ order }: { order: CourierOrder }) {
     return out;
   }, [lat, lng, receiver, me?.lat, me?.lng]);
 
+  const route = useOrderRoute(order.id, me !== null).data;
+  const km = route?.distance_km ?? null;
+
   return (
     <section className="animate-rise" aria-label="Peta pengantaran">
-      <MapView
-        markers={markers}
-        route={ROUTE}
-        ariaLabel="Peta lokasi Anda dan tujuan"
-        className="isolate h-64 w-full overflow-hidden rounded-lg border border-border sm:h-72"
-      />
+      <div className="relative">
+        <MapView
+          markers={markers}
+          route={ROUTE}
+          routePath={route?.path}
+          ariaLabel="Peta lokasi Anda dan tujuan"
+          fitPadding={MAP_PADDING}
+          className="isolate h-64 w-full overflow-hidden rounded-lg border border-border sm:h-72"
+        />
+        {km !== null && (
+          <p className="material-chip pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-2 rounded-full px-3 py-1.5 text-sm">
+            <FaRoute aria-hidden="true" className="shrink-0 text-muted-foreground" />
+            <span className="font-extrabold tabular-nums">
+              {km.toLocaleString("id-ID", { maximumFractionDigits: 1 })} km · ±{route?.eta_minutes} mnt
+            </span>
+            <span className="text-muted-foreground">{route?.source === "road" ? "via jalan" : "perkiraan"}</span>
+          </p>
+        )}
+      </div>
       {!me && <p className="t-label mt-2">Menunggu lokasi Anda. Pastikan izin lokasi aktif.</p>}
     </section>
   );
@@ -279,7 +297,8 @@ export function OrderDetailPage() {
   }
 
   const a = order.address;
-  const maps = `https://www.google.com/maps/dir/?api=1&destination=${a.lat},${a.lng}`;
+  // No origin: Google Maps starts from the phone's live GPS. two-wheeler routes for a motorbike where Maps has it.
+  const maps = `https://www.google.com/maps/dir/?api=1&destination=${a.lat},${a.lng}&travelmode=two-wheeler`;
   const returning = order.status === "FAILED" && order.return_pending;
   const allPicked = order.items.every((i) => i.picked_qty >= i.qty);
 

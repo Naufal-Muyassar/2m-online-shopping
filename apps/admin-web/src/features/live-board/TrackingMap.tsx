@@ -1,6 +1,9 @@
 import { useMemo, useSyncExternalStore, type CSSProperties } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { MapView, type MapMarker } from "@2m/map";
-import { TRACKING_STALE_SEC, haversineKm, type AdminCourier, type AdminOrder, type BranchesResponse } from "@2m/shared";
+import { TRACKING_STALE_SEC, type AdminCourier, type AdminOrder, type BranchesResponse, type DeliveryRoute } from "@2m/shared";
+import { api } from "../../lib/api";
+import { useBranch } from "../branch-config/BranchProvider";
 import { isOnline } from "../couriers/hooks";
 
 const WIDE = "(min-width: 1280px)";
@@ -25,6 +28,28 @@ function pingText(iso: string | null): string {
 }
 
 const isFresh = (iso: string | null) => iso !== null && Date.now() - Date.parse(iso) < TRACKING_STALE_SEC * 1000;
+
+const ROUTED = new Set(["PICKING", "ON_DELIVERY"]);
+const ROUTE_POLL_MS = 15_000;
+
+// Same stored road route the courier and the customer see; polling only re-measures it on the server.
+function useOrderRoute(orderId: string | null, enabled: boolean) {
+  const { branchId } = useBranch();
+  return useQuery({
+    queryKey: ["admin-order-route", branchId, orderId],
+    enabled: enabled && !!orderId && !!branchId,
+    queryFn: async () =>
+      (await api.get<DeliveryRoute>(`/admin/orders/${orderId}/route`, { params: { branch_id: branchId } })).data,
+    refetchInterval: ROUTE_POLL_MS,
+  });
+}
+
+function distanceText(route: DeliveryRoute | undefined): string | null {
+  if (!route || route.distance_km === null) return null;
+  const km = route.distance_km.toLocaleString("id-ID", { maximumFractionDigits: 1 });
+  const eta = route.eta_minutes !== null ? ` (±${route.eta_minutes} mnt)` : "";
+  return route.source === "road" ? `${km} km via jalan ke tujuan${eta}` : `±${km} km ke tujuan${eta}, perkiraan`;
+}
 
 interface Props {
   order: AdminOrder | null;
@@ -61,13 +86,16 @@ export function TrackingMap({ order, couriers, branch, panelWidth }: Props) {
   }, [branch, order, courier, courierPos, couriers]);
 
   const online = couriers.filter(isOnline).length;
-  const distance = order && courierPos ? haversineKm(courierPos, order.destination) : null;
+  const routed = !!order && !!courierPos && ROUTED.has(order.status);
+  const route = useOrderRoute(order?.id ?? null, routed).data;
+  const distance = routed ? distanceText(route) : null;
 
   return (
     <>
       <MapView
         markers={markers}
         route={!order ? undefined : courierPos ? COURIER_ROUTE : BRANCH_ROUTE}
+        routePath={routed ? route?.path : null}
         fitKey={order?.id ?? "fleet"}
         fitPadding={padding}
         ariaLabel={order ? `Peta order ${order.code}` : "Peta kurir cabang"}
@@ -80,7 +108,7 @@ export function TrackingMap({ order, couriers, branch, panelWidth }: Props) {
           <>
             <p className="truncate font-extrabold leading-tight tracking-tight">{courier ? courier.name : "Belum ada kurir"}</p>
             <p className="truncate text-sm text-muted-foreground">
-              {distance !== null ? `${distance.toLocaleString("id-ID", { maximumFractionDigits: 1 })} km garis lurus ke tujuan` : `Tujuan ${order.receiver_name}`}
+              {distance ?? `Tujuan ${order.receiver_name}`}
               {courier ? `, ${pingText(courier.last_ping_at).toLowerCase()}` : ""}
             </p>
           </>

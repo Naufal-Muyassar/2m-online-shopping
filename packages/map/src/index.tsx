@@ -24,6 +24,9 @@ interface Props {
   markers: MapMarker[];
   // Marker ids joined by a dashed line, in order.
   route?: string[];
+  // Road geometry ([lat, lng]) between the first and the last `route` marker. Drawn as a solid road line instead of
+  // the straight dashed one, and kept in view when the map fits.
+  routePath?: [number, number][] | null;
   ariaLabel?: string;
   // Required: Tailwind does not scan this package, so size and shape must come from the app.
   className: string;
@@ -68,6 +71,7 @@ const iconKey = (k: MapMarker) => `${k.kind}|${k.label ?? ""}|${k.live ? 1 : 0}`
 export function MapView({
   markers,
   route,
+  routePath,
   ariaLabel = "Peta",
   className,
   fitKey = "",
@@ -114,15 +118,21 @@ export function MapView({
     if (!m) return;
 
     const drawRoute = () => {
-      const points = (route ?? []).flatMap((id) => {
+      let points = (route ?? []).flatMap((id) => {
         const pin = pins.current.get(id);
         return pin ? [pin.marker.getLatLng()] : [];
       });
+      const road = !!routePath && routePath.length >= 2 && points.length >= 2;
+      // The pins stay the ends, so the line follows the courier pin while it glides to a new fix.
+      if (road && routePath) points = [points[0]!, ...routePath.map(([lat, lng]) => L.latLng(lat, lng)), points[points.length - 1]!];
+      const className = road ? "map-route map-route-road" : "map-route";
       if (points.length < 2) {
         line.current?.remove();
         line.current = null;
-      } else if (line.current) line.current.setLatLngs(points);
-      else line.current = L.polyline(points, { className: "map-route", interactive: false }).addTo(m);
+      } else if (line.current) {
+        line.current.setLatLngs(points);
+        line.current.getElement()?.classList.toggle("map-route-road", road);
+      } else line.current = L.polyline(points, { className, interactive: false }).addTo(m);
     };
 
     const ids = new Set(markers.map((k) => k.id));
@@ -164,9 +174,12 @@ export function MapView({
     }
     drawRoute();
 
-    const key = `${fitKey}:${[...ids].sort().join(",")}`;
-    const bounds = L.latLngBounds(markers.map((k) => [k.lat, k.lng] as [number, number]));
-    const outside = bounds.isValid() && !m.getBounds().contains(bounds);
+    // A road line arriving after the first fit refits once, so a route that bends away from the pins is in view.
+    const key = `${fitKey}:${[...ids].sort().join(",")}:${routePath && routePath.length >= 2 ? "road" : ""}`;
+    const pinBounds = L.latLngBounds(markers.map((k) => [k.lat, k.lng] as [number, number]));
+    // Only pins leaving the view force a refit; the road line is included when a refit happens anyway.
+    const outside = pinBounds.isValid() && !m.getBounds().contains(pinBounds);
+    const bounds = L.latLngBounds([...markers.map((k) => [k.lat, k.lng] as [number, number]), ...(routePath ?? [])]);
     if (markers.length === 0 || (fitted.current === key && !outside)) return;
     fitted.current = key;
     const [top, right, bottom, left] = fitPadding;
@@ -176,7 +189,7 @@ export function MapView({
       maxZoom: markers.length === 1 ? 15 : 16,
       animate: !reducedMotion(),
     });
-  }, [markers, route, fitKey, fitPadding]);
+  }, [markers, route, routePath, fitKey, fitPadding]);
 
   return <div ref={el} className={`map-2m ${className}`} role="application" aria-label={ariaLabel} />;
 }

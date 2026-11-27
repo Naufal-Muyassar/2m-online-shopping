@@ -107,7 +107,8 @@ Check every screen at 375, 768, 1100 and 1440. The page never scrolls sideways. 
   - The header shows only the avatar, greeting and name; the panel is the one place the work status appears.
 - Actions use `Button` (full width, 3.5rem). Destructive actions sit last and use `variant="destructive"`.
 - The Chat tab is a list: the branch admin first, then the customer chats that are still open. Back in a chat room returns to the page it was opened from (the list, an order, Home); a room opened directly falls back to its order, else to the Chat tab.
-- The order detail shows the two-step progress rule, the delivery map (your position, the destination, a dashed line), then the receiver card.
+- The order detail shows the two-step progress rule, the delivery map (your position, the destination, the route line, and a `.material-chip` top-left with "km · ±mnt" plus "via jalan" or "perkiraan"), then the receiver card.
+- Route line on every map (`MapView` `routePath`): a solid `.map-route-road` line along the road when the API has a road route; the dashed `.map-route` straight line only when the distance is an estimate. The pins stay the line's ends.
 
 ### Customer web (phone first, wide from 768px)
 
