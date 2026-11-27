@@ -139,7 +139,13 @@ describe("order route for the courier and the admin", () => {
   it("gives the holding courier and the branch the same numbers as the customer", async () => {
     const id = await insertOrder(pool, fx, "ON_DELIVERY");
     await addPing(id, -6.19, 106.8);
-    const expected = { path: null, distance_km: 1.45, eta_minutes: Math.max(1, Math.ceil((1.45 / env.TRACKING_AVG_SPEED_KMH) * 60)), source: "estimate" };
+    const expected = {
+      path: null,
+      distance_km: 1.45,
+      eta_minutes: Math.max(1, Math.ceil((1.45 / env.TRACKING_AVG_SPEED_KMH) * 60)),
+      source: "estimate",
+      origin: "courier",
+    };
     expect(await courierOrderRoute(fx.courierId, id)).toEqual(expected);
     expect(await adminOrderRoute(fx.branchId, id)).toEqual(expected);
   });
@@ -150,8 +156,27 @@ describe("order route for the courier and the admin", () => {
     await expect(adminOrderRoute(randomUUID(), id)).rejects.toMatchObject({ status: 404 });
   });
 
-  it("has no route outside PICKING and ON_DELIVERY", async () => {
+  it("routes the admin board from the branch until a courier is on the way", async () => {
+    // The fixture branch is 0.01° south of the destination: ~1.112 km straight, x1.3 circuity.
+    await pool.query(`UPDATE branches SET lat = -6.19 WHERE id = $1`, [fx.branchId]);
+    try {
+      const id = await insertOrder(pool, fx, "PAID");
+      expect(await adminOrderRoute(fx.branchId, id)).toMatchObject({ origin: "branch", source: "estimate", distance_km: 1.45 });
+    } finally {
+      await pool.query(`UPDATE branches SET lat = -6.2 WHERE id = $1`, [fx.branchId]);
+    }
+  });
+
+  it("routes the courier app only from the courier's own position", async () => {
+    const id = await insertOrder(pool, fx, "PICKING");
+    await pool.query(`UPDATE couriers SET current_lat = NULL, current_lng = NULL, last_ping_at = NULL WHERE user_id = $1`, [fx.courierId]);
+    const none = { path: null, distance_km: null, eta_minutes: null, source: "estimate", origin: null };
+    expect(await courierOrderRoute(fx.courierId, id)).toEqual(none);
+    expect((await adminOrderRoute(fx.branchId, id)).origin).toBe("branch");
+  });
+
+  it("has no route once the order is finished", async () => {
     const id = await insertOrder(pool, fx, "DELIVERED");
-    expect(await adminOrderRoute(fx.branchId, id)).toEqual({ path: null, distance_km: null, eta_minutes: null, source: "estimate" });
+    expect(await adminOrderRoute(fx.branchId, id)).toEqual({ path: null, distance_km: null, eta_minutes: null, source: "estimate", origin: null });
   });
 });

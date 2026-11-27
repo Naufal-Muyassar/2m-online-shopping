@@ -144,7 +144,7 @@ export async function deliveryRoute(args: {
   from: { lat: number; lng: number } | null;
   to: { lat: number; lng: number };
   circuityFactor: number;
-}): Promise<DeliveryRoute> {
+}): Promise<Omit<DeliveryRoute, "origin">> {
   const { orderId, from, to, circuityFactor } = args;
   if (!from) return { path: null, distance_km: null, eta_minutes: null, source: "estimate" };
 
