@@ -10,7 +10,8 @@ import type {
   OrderStatus,
   Role,
 } from "@2m/shared";
-import { pool } from "../../shared/db";
+import { randomUUID } from "node:crypto";
+import { pool, type Tx } from "../../shared/db";
 import { AppError } from "../../shared/errors";
 import * as repo from "./repo";
 
@@ -172,4 +173,20 @@ export async function send(id: string, req: ChatSendRequest, v: Viewer): Promise
 export async function markRead(id: string, v: Viewer): Promise<void> {
   await loadThread(id, v);
   await repo.markRead(pool, id, senderRole(v.role));
+}
+
+// A courier giving an order back tells the branch why, in their admin chat, so the admin sees it in
+// the Kurir inbox as an unread message. Runs in the release transaction: no release without its note.
+export async function postReleaseNote(
+  tx: Tx,
+  r: { courierId: string; branchId: string; orderCode: string; reason: string },
+): Promise<void> {
+  const threadId = await repo.openThread(tx, { channel: "courier_admin", branchId: r.branchId, courierId: r.courierId });
+  await repo.insertMessage(tx, {
+    threadId,
+    senderId: r.courierId,
+    role: "courier",
+    body: `Melepas order ${r.orderCode}. Alasan: ${r.reason}`,
+    clientId: randomUUID(),
+  });
 }

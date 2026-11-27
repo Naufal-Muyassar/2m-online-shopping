@@ -27,10 +27,7 @@ function RowShell({ selected, onClick, children }: { selected: boolean; onClick:
       <button
         onClick={onClick}
         aria-pressed={selected}
-        className={cn(
-          "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-[background-color,border-color,transform] duration-150 active:scale-[0.985]",
-          selected ? "border-foreground bg-surface" : "border-transparent hover:bg-muted/70",
-        )}
+        className="inbox-row"
       >
         {children}
       </button>
@@ -46,7 +43,7 @@ function ThreadRow({ thread, selected, onClick }: { thread: ChatThread; selected
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline justify-between gap-2">
-          <span className="truncate font-bold">{thread.title}</span>
+          <span className="inbox-row-title truncate font-bold">{thread.title}</span>
           {thread.last_message && <span className="t-label shrink-0 tabular-nums">{fmtTime(thread.last_message.at)}</span>}
         </span>
         <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
@@ -77,7 +74,7 @@ function CourierRow({ courier, thread, selected, onClick }: { courier: AdminCour
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center justify-between gap-2">
-          <span className="truncate font-bold">{courier.name}</span>
+          <span className="inbox-row-title truncate font-bold">{courier.name}</span>
           <Presence online={isOnline(courier)} />
         </span>
         <span className="flex items-center justify-between gap-2 text-sm text-muted-foreground">

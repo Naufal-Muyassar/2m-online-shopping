@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { AdminCourier } from "@2m/shared";
+import { IconPlus } from "../../components/Icons";
 import { api, errorMessage } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { useToast } from "../../lib/toast";
 import { cn } from "../../lib/utils";
 import { useBranch } from "../branch-config/BranchProvider";
+import { NewCourierDialog, ReleasesDialog } from "./CourierDialogs";
 import { COURIER_LABELS, isOnline, useBranchCouriers } from "./hooks";
 
 const COURIER_PILL: Record<string, string> = {
@@ -44,6 +48,8 @@ export function CouriersTab({ onOpenChat }: { onOpenChat: (courierId: string) =>
   const toast = useToast();
   const queryClient = useQueryClient();
   const isBranchAdmin = user?.role === "branch_admin";
+  const [adding, setAdding] = useState(false);
+  const [releasesOf, setReleasesOf] = useState<AdminCourier | null>(null);
 
   const { data, isLoading, isError, error } = useBranchCouriers();
 
@@ -82,12 +88,19 @@ export function CouriersTab({ onOpenChat }: { onOpenChat: (courierId: string) =>
 
   return (
     <div className="flex flex-col gap-5 p-4 md:p-6">
-      <div className="flex items-end justify-between gap-4">
-        <h1 className="t-headline">Kurir</h1>
-        <p className="t-label pb-1 tabular-nums">
-          {online} dari {couriers.length} kurir online
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="t-headline">Kurir</h1>
+          <p className="t-label tabular-nums">
+            {online} dari {couriers.length} kurir online
+          </p>
+        </div>
+        <button className="btn btn-primary" onClick={() => setAdding(true)}>
+          <IconPlus aria-hidden="true" /> Tambah kurir
+        </button>
       </div>
+      {adding && <NewCourierDialog onClose={() => setAdding(false)} />}
+      {releasesOf && <ReleasesDialog courier={releasesOf} onClose={() => setReleasesOf(null)} />}
       {couriers.length > 0 && (
         <div className="card animate-rise overflow-hidden p-0 md:p-0">
           <table className="data-table">
@@ -144,6 +157,9 @@ export function CouriersTab({ onOpenChat }: { onOpenChat: (courierId: string) =>
                             Konfirmasi barang kembali
                           </button>
                         )}
+                        <button className="btn btn-secondary btn-sm" onClick={() => setReleasesOf(c)}>
+                          Riwayat lepas
+                        </button>
                         <button className="btn btn-secondary btn-sm" onClick={() => onOpenChat(c.user_id)}>
                           Chat
                         </button>
@@ -158,7 +174,7 @@ export function CouriersTab({ onOpenChat }: { onOpenChat: (courierId: string) =>
       )}
       {couriers.length === 0 && (
         <div className="empty-state">
-          <p>Belum ada kurir.</p>
+          <p>Belum ada kurir. Tambahkan akun kurir agar bisa mengambil order.</p>
         </div>
       )}
     </div>

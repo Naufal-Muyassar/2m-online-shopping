@@ -1,5 +1,6 @@
 import type { Pool } from "pg";
-import type { AdminCourier, AdminOrder } from "@2m/shared";
+import type { AdminCourier, AdminOrder, CourierRelease } from "@2m/shared";
+import type { Tx } from "../../shared/db";
 
 interface AdminOrderRow {
   id: string;
@@ -107,5 +108,54 @@ export async function listBranchCouriers(db: Pool, branchId: string): Promise<Ad
     balance: r.balance,
     position: r.status !== "OFFLINE" && r.current_lat !== null && r.current_lng !== null ? { lat: r.current_lat, lng: r.current_lng } : null,
     current_order: r.order_id && r.order_code && r.order_status ? { id: r.order_id, code: r.order_code, status: r.order_status } : null,
+  }));
+}
+
+export async function listActivePartners(db: Pool): Promise<{ id: string; name: string }[]> {
+  const res = await db.query<{ id: string; name: string }>(
+    `SELECT id, name FROM courier_partners WHERE is_active ORDER BY name`,
+  );
+  return res.rows;
+}
+
+export async function partnerIsActive(tx: Tx, partnerId: string): Promise<boolean> {
+  const res = await tx.query(`SELECT 1 FROM courier_partners WHERE id = $1 AND is_active`, [partnerId]);
+  return (res.rowCount ?? 0) > 0;
+}
+
+export async function insertCourier(
+  tx: Tx,
+  c: { branchId: string; partnerId: string; name: string; phone: string; passwordHash: string },
+): Promise<{ user_id: string; name: string; phone: string }> {
+  const user = await tx.query<{ id: string; name: string; phone: string }>(
+    `INSERT INTO users (role, name, phone, password_hash, branch_id)
+     VALUES ('courier', $1, $2, $3, $4) RETURNING id, name, phone`,
+    [c.name, c.phone, c.passwordHash, c.branchId],
+  );
+  const u = user.rows[0]!;
+  await tx.query(`INSERT INTO couriers (user_id, partner_id, branch_id) VALUES ($1, $2, $3)`, [u.id, c.partnerId, c.branchId]);
+  return { user_id: u.id, name: u.name, phone: u.phone };
+}
+
+export async function courierInBranch(db: Pool, courierId: string, branchId: string): Promise<boolean> {
+  const res = await db.query(`SELECT 1 FROM couriers WHERE user_id = $1 AND branch_id = $2`, [courierId, branchId]);
+  return (res.rowCount ?? 0) > 0;
+}
+
+// A courier giving an order back is a PICKING -> ACCEPTED transition they made themselves.
+export async function listCourierReleases(db: Pool, courierId: string, limit = 50): Promise<CourierRelease[]> {
+  const res = await db.query<{ order_id: string; order_code: string; reason: string | null; server_ts: Date }>(
+    `SELECT t.order_id, o.code AS order_code, t.reason, t.server_ts
+     FROM order_state_transitions t JOIN orders o ON o.id = t.order_id
+     WHERE t.actor_id = $1 AND t.actor_role = 'courier'
+       AND t.from_status = 'PICKING' AND t.to_status = 'ACCEPTED'
+     ORDER BY t.server_ts DESC LIMIT $2`,
+    [courierId, limit],
+  );
+  return res.rows.map((r) => ({
+    order_id: r.order_id,
+    order_code: r.order_code,
+    reason: r.reason ?? "-",
+    released_at: r.server_ts.toISOString(),
   }));
 }
