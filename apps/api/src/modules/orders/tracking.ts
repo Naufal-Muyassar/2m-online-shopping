@@ -68,28 +68,53 @@ export async function getTracking(userId: string, orderId: string): Promise<Trac
   });
 }
 
-const ROUTED_STATUSES = new Set(["PICKING", "ON_DELIVERY"]);
-const NO_ROUTE: DeliveryRoute = { path: null, distance_km: null, eta_minutes: null, source: "estimate" };
+// A courier on the order is the route's start from PICKING on; before that the admin board routes from the branch.
+const COURIER_STATUSES = new Set(["PICKING", "READY", "ASSIGNED", "ON_DELIVERY"]);
+const BRANCH_STATUSES = new Set(["PAID", "ACCEPTED", ...COURIER_STATUSES]);
+const NO_ROUTE: DeliveryRoute = { path: null, distance_km: null, eta_minutes: null, source: "estimate", origin: null };
 
-// Courier → destination for the courier app and the admin live board. Scoped by the caller: the courier must hold the
-// order, the admin must own its branch. Same numbers as the customer tracking, from the same stored route.
+// Route to the destination for the courier app and the admin live board. Scoped by the caller: the courier must hold
+// the order, the admin must own its branch. Same numbers as the customer tracking, from the same stored route. The
+// admin board falls back to the branch while no courier position exists; the courier app never does, since its map
+// starts the line at the courier's pin. The route from the branch is stored for the order like any other, so a
+// courier who sets off from the branch reuses it without a new provider call.
 async function orderRoute(orderId: string, scope: { courierId: string } | { branchId: string }): Promise<DeliveryRoute> {
   const byCourier = "courierId" in scope;
-  const res = await pool.query<{ status: string; assigned_courier_id: string | null; lat: number; lng: number; circuity_factor: number }>(
-    `SELECT o.status, o.assigned_courier_id, a.lat, a.lng, COALESCE(p.circuity_factor, 1.3)::float8 AS circuity_factor
+  const res = await pool.query<{
+    status: string;
+    assigned_courier_id: string | null;
+    lat: number;
+    lng: number;
+    branch_lat: number;
+    branch_lng: number;
+    circuity_factor: number;
+  }>(
+    `SELECT o.status, o.assigned_courier_id, a.lat, a.lng, b.lat AS branch_lat, b.lng AS branch_lng,
+            COALESCE(p.circuity_factor, 1.3)::float8 AS circuity_factor
      FROM orders o
      JOIN addresses a ON a.id = o.address_id
+     JOIN branches b ON b.id = o.branch_id
      LEFT JOIN branch_pricing_config p ON p.branch_id = o.branch_id
      WHERE o.id = $1 AND ${byCourier ? "o.assigned_courier_id" : "o.branch_id"} = $2`,
     [orderId, byCourier ? scope.courierId : scope.branchId],
   );
   const o = res.rows[0];
   if (!o) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
-  if (!ROUTED_STATUSES.has(o.status) || !o.assigned_courier_id) return NO_ROUTE;
-  const pos = await lastCourierPosition(orderId, o.assigned_courier_id);
-  return deliveryRouteSchema.parse(
-    await deliveryRoute({ orderId, from: pos ?? null, to: { lat: o.lat, lng: o.lng }, circuityFactor: o.circuity_factor }),
-  );
+
+  const courierPos =
+    COURIER_STATUSES.has(o.status) && o.assigned_courier_id ? await lastCourierPosition(orderId, o.assigned_courier_id) : undefined;
+  let from: { lat: number; lng: number } | null = null;
+  let origin: DeliveryRoute["origin"] = null;
+  if (courierPos) {
+    from = courierPos;
+    origin = "courier";
+  } else if (!byCourier && BRANCH_STATUSES.has(o.status)) {
+    from = { lat: o.branch_lat, lng: o.branch_lng };
+    origin = "branch";
+  }
+  if (!from) return NO_ROUTE;
+  const route = await deliveryRoute({ orderId, from, to: { lat: o.lat, lng: o.lng }, circuityFactor: o.circuity_factor });
+  return deliveryRouteSchema.parse({ ...route, origin });
 }
 
 export const courierOrderRoute = (courierId: string, orderId: string) => orderRoute(orderId, { courierId });
