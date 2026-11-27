@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ORDER_STATUSES } from "../constants";
 import { customerRefundSchema } from "./refunds";
+import { routePathSchema, routeSourceSchema } from "./routing";
 
 export const PAYMENT_METHODS = ["QRIS", "VA_BCA", "VA_BNI", "VA_BRI", "VA_MANDIRI", "EWALLET"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
@@ -283,6 +284,9 @@ export const trackingResponseSchema = z.discriminatedUnion("active", [
     destination: z.object({ lat: z.number(), lng: z.number() }),
     distance_remaining_km: z.number().nullable(),
     eta_minutes: z.number().int().nullable(),
+    // Road geometry ahead of the courier; null when the distance is a straight-line estimate.
+    route_path: routePathSchema.nullable(),
+    distance_source: routeSourceSchema,
     stale: z.boolean(),
   }),
 ]);

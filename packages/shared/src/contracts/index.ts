@@ -12,3 +12,4 @@ export * from "./branch-config";
 export * from "./refunds";
 export * from "./assistant";
 export * from "./platform-wallet";
+export * from "./routing";

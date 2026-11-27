@@ -72,7 +72,7 @@ function Figures({ t }: { t: ActiveTracking }) {
         </dd>
       </div>
       <div>
-        <dt className="t-label">Jarak tersisa</dt>
+        <dt className="t-label">{t.distance_source === "road" ? "Jarak tersisa via jalan" : "Perkiraan jarak"}</dt>
         <dd className="mt-0.5 text-2xl font-extrabold tracking-tight tabular-nums">
           {km} <span className="text-sm font-semibold text-muted-foreground">km</span>
         </dd>
@@ -112,7 +112,7 @@ function FullscreenTracking({
 
   return (
     <div role="dialog" aria-modal="true" aria-label="Lacak kurir" className="map-fullscreen">
-      <MapView markers={markers} route={ROUTE} ariaLabel="Peta lokasi kurir" className="absolute inset-0 isolate" fitKey={`full-${fit}`} fitPadding={padding} />
+      <MapView markers={markers} route={ROUTE} routePath={t.route_path} ariaLabel="Peta lokasi kurir" className="absolute inset-0 isolate" fitKey={`full-${fit}`} fitPadding={padding} />
 
       <div className="map-fullscreen-bar">
         <button ref={back} type="button" onClick={onClose} className="material-chip map-chip-btn">
@@ -216,7 +216,7 @@ export function TrackingCard(props: Props) {
   return (
     <section className="card animate-rise overflow-hidden p-0 text-sm md:p-0">
       <div className="relative">
-        <MapView markers={markers} route={ROUTE} ariaLabel="Peta lokasi kurir" className="isolate h-64 w-full sm:h-80" />
+        <MapView markers={markers} route={ROUTE} routePath={active.route_path} ariaLabel="Peta lokasi kurir" className="isolate h-64 w-full sm:h-80" />
         <button type="button" onClick={openFull} className="material-chip map-chip-btn absolute right-3 top-3 z-10">
           <IconExpand />
           Layar penuh

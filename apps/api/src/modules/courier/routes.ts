@@ -23,6 +23,7 @@ import {
 import { asyncHandler, sendPdf, validate } from "../../shared/http";
 import { authenticate, requireRole } from "../auth/middleware";
 import * as earnings from "../earnings/service";
+import { courierOrderRoute } from "../orders/tracking";
 import * as service from "./service";
 
 export const courierRoutes = Router();
@@ -108,6 +109,15 @@ courierRoutes.post(
   validate(courierReleaseRequestSchema),
   asyncHandler(async (req, res) => {
     res.json(await service.releaseOrder(req.auth!.sub, req.params.id as string, req.body as CourierReleaseRequest));
+  }),
+);
+
+// Road route from the courier's last ping to the destination; the PWA polls it while the order is open.
+courierRoutes.get(
+  "/orders/:id/route",
+  validate(orderIdParamsSchema, "params"),
+  asyncHandler(async (req, res) => {
+    res.json(await courierOrderRoute(req.auth!.sub, req.params.id as string));
   }),
 );
 

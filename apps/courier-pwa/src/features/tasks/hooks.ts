@@ -8,6 +8,7 @@ import type {
   CourierOrdersResponse,
   CourierStatusRequest,
   CourierStatusResponse,
+  DeliveryRoute,
   PickItemResponse,
 } from "@2m/shared";
 import axios from "axios";
@@ -24,6 +25,7 @@ export const keys = {
   orders: ["courier", "orders"] as const,
   jobs: ["courier", "jobs"] as const,
   order: (id: string) => ["courier", "orders", id] as const,
+  route: (id: string) => ["courier", "orders", id, "route"] as const,
 };
 
 export function useMe(enabled = true) {
@@ -50,6 +52,18 @@ export function useOrder(id: string) {
     queryKey: keys.order(id),
     queryFn: async () => (await api.get<CourierOrder>(`/courier/orders/${id}`)).data,
     refetchInterval: POLL_MS,
+  });
+}
+
+// Road route from the last ping the server has. The server re-measures it on every poll and only asks the routing
+// provider again when the courier leaves the route, so polling here costs no provider calls.
+export function useOrderRoute(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.route(id),
+    queryFn: async () => (await api.get<DeliveryRoute>(`/courier/orders/${id}/route`)).data,
+    enabled,
+    refetchInterval: 15_000,
+    retry: retryTwice,
   });
 }
 

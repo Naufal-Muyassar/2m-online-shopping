@@ -24,6 +24,7 @@ import {
 import { asyncHandler, sendPdf, validate } from "../../shared/http";
 import { authenticate, branchScope, requireRole } from "../auth/middleware";
 import * as earnings from "../earnings/service";
+import { adminOrderRoute } from "../orders/tracking";
 import * as service from "./service";
 
 export const adminRoutes = Router();
@@ -110,6 +111,18 @@ adminRoutes.get(
   validate(adminBranchQuerySchema, "query"),
   asyncHandler(async (req, res) => {
     sendPdf(res, await earnings.branchWithdrawalSlip(req.params.id as string, req.params.entryId as string, branchScope(req)));
+  }),
+);
+
+// Road route of the selected order on the live board (super_admin passes branch_id).
+adminRoutes.get(
+  "/orders/:id/route",
+  authenticate,
+  requireRole("branch_admin", "super_admin"),
+  validate(orderIdParamsSchema, "params"),
+  validate(adminBranchQuerySchema, "query"),
+  asyncHandler(async (req, res) => {
+    res.json(await adminOrderRoute(branchScope(req), req.params.id as string));
   }),
 );
 
